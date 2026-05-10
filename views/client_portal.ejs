@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Portal — Integrator</title>
+    <meta name="description" content="Client Portal API Gateway — Generate token JWT dan uji integrasi ke 6 aplikasi ekosistem UMKM.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+
+        .page-header { text-align: center; margin-bottom: 36px; }
+        .page-header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+        .page-header h1 span { color: #3b82f6; }
+        .page-header p { color: #64748b; font-size: 14px; }
+
+        .card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 28px; margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .card:hover { border-color: rgba(59,130,246,0.15); }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .card-desc { font-size: 13px; color: #64748b; margin-bottom: 18px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-input, .form-select {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0; font-size: 14px; font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-select:focus { outline: none; border-color: #3b82f6; }
+        .form-input::placeholder { color: #475569; }
+        .form-select { color-scheme: dark; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+        .form-select option { background: #1e293b; color: #e2e8f0; padding: 10px; }
+
+        .form-input-group { display: flex; gap: 8px; }
+        .form-input-group .form-input { flex: 1; }
+
+        .btn {
+            padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;
+            border: none; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); }
+        .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
+        .btn-success:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(34,197,94,0.3); }
+        .btn-outline {
+            background: transparent; color: #94a3b8; border: 1px solid rgba(148,163,184,0.2);
+        }
+        .btn-outline:hover { border-color: #3b82f6; color: #3b82f6; }
+        .btn-w-full { width: 100%; }
+        .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+        .code-area {
+            background: #111827; color: #38bdf8; font-family: 'Courier New', monospace;
+            border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.06);
+            font-size: 13px; line-height: 1.6;
+            white-space: pre-wrap; word-wrap: break-word;
+            max-height: 300px; overflow-y: auto;
+        }
+
+        .highlight-card { border-color: rgba(59,130,246,0.3); }
+
+        .guide-code {
+            background: #111827; color: #94a3b8; font-family: 'Courier New', monospace;
+            border-radius: 6px; padding: 12px; font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .guide-code .key { color: #f59e0b; }
+        .guide-code .val { color: #38bdf8; }
+
+        .nav-top {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px;
+        }
+        .nav-top a {
+            color: #64748b; text-decoration: none; font-size: 13px; font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-top a:hover { color: #3b82f6; }
+
+        .status-text { font-size: 12px; margin-top: 8px; font-weight: 500; }
+        .status-ok { color: #4ade80; }
+        .status-err { color: #f87171; }
+
+        footer { text-align: center; margin-top: 40px; color: #334155; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-top">
+            <a href="/">← Kembali ke Landing Page</a>
+            <a href="/dashboard">📊 Dashboard Admin</a>
+        </div>
+
+        <div class="page-header">
+            <h1>Client <span>Portal</span></h1>
+            <p>Generate token JWT dan uji integrasi ke 6 aplikasi ekosistem UMKM</p>
+        </div>
+
+        <!-- SECTION 1: Generate Token -->
+        <div class="card">
+            <div class="card-title">🔑 Generate Access Token</div>
+            <div class="card-desc">Token JWT diperlukan untuk otentikasi Bearer pada setiap request API. Berlaku 24 jam.</div>
+
+            <div class="form-row" style="margin-bottom: 12px;">
+                <div class="form-group">
+                    <label class="form-label">User ID / NPM</label>
+                    <input type="text" id="inputUserId" class="form-input" placeholder="cth: 714240061" value="714240061">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nama</label>
+                    <input type="text" id="inputName" class="form-input" placeholder="cth: Ahmad Fauzan" value="Test User">
+                </div>
+            </div>
+
+            <div class="form-input-group" style="margin-bottom: 10px;">
+                <input type="text" id="tokenOutput" class="form-input" placeholder="Klik Generate untuk membuat token..." readonly style="font-family: monospace; font-size: 12px;">
+                <button class="btn btn-primary" onclick="generateToken()">Generate</button>
+            </div>
+            <button class="btn btn-outline btn-sm btn-w-full" onclick="copyToken()">📋 Salin Token ke Clipboard</button>
+            <div id="tokenStatus"></div>
+        </div>
+
+        <!-- SECTION 2: API Simulator -->
+        <div class="card highlight-card">
+            <div class="card-title" style="color: #60a5fa;">🚀 API Simulator — Test 6 Aplikasi</div>
+            <div class="card-desc">Uji kirim request ke semua layanan ekosistem. Fee 0.5% dari amount transaksi.</div>
+
+            <div class="form-group">
+                <label class="form-label">1. Pilih Aplikasi Tujuan</label>
+                <select id="testEndpoint" class="form-select" onchange="updateFeePreview()">
+                    <option value="/integrator/smartbank/pembayaran_transaksi" data-svc="smartbank" data-ep="pembayaran_transaksi">1. SmartBank — Pembayaran Transaksi</option>
+                    <option value="/integrator/smartbank/manajemen_saldo" data-svc="smartbank" data-ep="manajemen_saldo">1. SmartBank — Manajemen Saldo</option>
+                    <option value="/integrator/marketplace/checkout" data-svc="marketplace" data-ep="checkout">2. Marketplace — Checkout</option>
+                    <option value="/integrator/marketplace/browse_produk" data-svc="marketplace" data-ep="browse_produk">2. Marketplace — Browse Produk</option>
+                    <option value="/integrator/pos/input_transaksi" data-svc="pos" data-ep="input_transaksi">3. POS — Input Transaksi</option>
+                    <option value="/integrator/supplierhub/order_bahan" data-svc="supplierhub" data-ep="order_bahan">4. SupplierHub — Order Bahan</option>
+                    <option value="/integrator/logistikita/request_pengiriman" data-svc="logistikita" data-ep="request_pengiriman">5. LogistiKita — Request Pengiriman</option>
+                    <option value="/integrator/umkm_insight/ambil_data_transaksi" data-svc="umkm_insight" data-ep="ambil_data_transaksi">6. UMKM Insight — Ambil Data</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">2. Token Bearer</label>
+                    <input type="text" id="testToken" class="form-input" placeholder="Paste token di sini..." style="font-size: 11px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">3. Amount Transaksi (Rp)</label>
+                    <input type="number" id="testAmount" class="form-input" placeholder="cth: 50000" value="50000" oninput="updateFeePreview()">
+                </div>
+            </div>
+
+            <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 10px 14px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">💰 Fee Gateway (0.5%)</span>
+                <span id="feePreview" style="font-size: 14px; color: #fbbf24; font-weight: 700;">Rp 250</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                <button onclick="jalankanDemo()" class="btn btn-success btn-w-full">🎬 Demo (Simulasi Sukses)</button>
+                <button onclick="jalankanLive()" class="btn btn-w-full" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff;">⚡ Live Request</button>
+            </div>
+            <div style="display: flex; gap: 16px; margin-top: 6px; justify-content: center;">
+                <span style="font-size: 11px; color: #4ade80;">🎬 Demo = selalu sukses + fee tercatat</span>
+                <span style="font-size: 11px; color: #a5b4fc;">⚡ Live = request ke service asli</span>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <label class="form-label">Server Response:</label>
+                <div class="code-area" id="jsonResponse">// Pilih mode Demo atau Live, lalu klik tombol di atas...</div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Quick Test Endpoints -->
+        <div class="card">
+            <div class="card-title">🧪 Quick Test — Endpoint Integrator</div>
+            <div class="card-desc">Test 4 endpoint internal gateway (tanpa perlu service lain berjalan)</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn btn-outline btn-sm" onclick="testIntegrator('/integrator/routing_api')">📡 Routing API</button>
+                <button class="btn btn-outline btn-sm" onclick="testIntegrator('/integrator/validasi_request')">🛡️ Validasi Request</button>
+                <button class="btn btn-outline btn-sm" onclick="testIntegrator('/integrator/logging')">📋 Logging</button>
+                <button class="btn btn-outline btn-sm" onclick="testIntegrator('/integrator/biaya_layanan_integrasi')">💰 Biaya Layanan</button>
+            </div>
+            <div style="margin-top: 12px;">
+                <div class="code-area" id="quickResponse" style="font-size: 12px;">// Klik salah satu tombol di atas (perlu token)...</div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Guide -->
+        <div class="card">
+            <div class="card-title">📖 Panduan Integrasi</div>
+            <div class="card-desc">Cara menggunakan API Gateway dari aplikasi kelompok lain</div>
+            <div class="guide-code">
+<span class="key">Base URL:</span> <span class="val">http://localhost:3000/integrator/{service}/{endpoint}</span>
+
+<span class="key">Header Wajib:</span>
+  <span class="key">Authorization:</span> <span class="val">Bearer [TOKEN_JWT]</span>
+  <span class="key">Content-Type:</span>  <span class="val">application/json</span>
+
+<span class="key">Body (POST):</span>
+{
+  <span class="key">"user_id":</span>  <span class="val">"714240061"</span>,
+  <span class="key">"amount":</span>   <span class="val">50000</span>,
+  <span class="key">"parameter":</span> <span class="val">"deskripsi transaksi"</span>
+}
+
+<span class="key">Fee Gateway:</span> <span class="val">0.5% dari amount transaksi</span>
+<span class="key">Service:</span>     <span class="val">smartbank, marketplace, pos, supplierhub, logistikita, umkm_insight</span>
+            </div>
+        </div>
+
+        <footer>
+            Integrator System &copy; 2026 — Kelompok 7 | D4 Teknik Informatika ULBI
+        </footer>
+    </div>
+
+    <script>
+        async function generateToken() {
+            const userId = document.getElementById('inputUserId').value || '714240061';
+            const name = document.getElementById('inputName').value || 'Test User';
+            const statusEl = document.getElementById('tokenStatus');
+
+            try {
+                const res = await fetch('/generate-test-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, name: name, npm: userId })
+                });
+                const data = await res.json();
+                document.getElementById('tokenOutput').value = data.token;
+                document.getElementById('testToken').value = data.token;
+                statusEl.innerHTML = '<div class="status-text status-ok">✓ Token berhasil dibuat untuk ' + name + ' (' + userId + ')</div>';
+            } catch (err) {
+                statusEl.innerHTML = '<div class="status-text status-err">✗ Gagal generate token: ' + err.message + '</div>';
+            }
+        }
+
+        async function copyToken() {
+            const token = document.getElementById("tokenOutput").value;
+            if (!token) return alert("Generate token dulu!");
+            try {
+                await navigator.clipboard.writeText(token);
+                alert("Token berhasil disalin!");
+            } catch (err) {
+                // Fallback for older browsers
+                const el = document.getElementById("tokenOutput");
+                el.select();
+                document.execCommand("copy");
+                alert("Token berhasil disalin!");
+            }
+        }
+
+        function updateFeePreview() {
+            const amount = parseFloat(document.getElementById('testAmount').value) || 0;
+            const fee = Math.round(amount * 0.005);
+            document.getElementById('feePreview').textContent = 'Rp ' + fee.toLocaleString('id-ID');
+        }
+
+        function getSelectedService() {
+            const sel = document.getElementById('testEndpoint');
+            const opt = sel.options[sel.selectedIndex];
+            return { service: opt.dataset.svc, endpoint: opt.dataset.ep };
+        }
+
+        async function jalankanDemo() {
+            const token = document.getElementById('testToken').value;
+            const amount = parseFloat(document.getElementById('testAmount').value) || 50000;
+            const { service, endpoint } = getSelectedService();
+            const responseBox = document.getElementById('jsonResponse');
+
+            responseBox.innerText = "// 🎬 Menjalankan simulasi ke " + service + "/" + endpoint + "...";
+            responseBox.style.color = "#fbbf24";
+
+            try {
+                const res = await fetch('/api/demo/simulate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + (token || '')
+                    },
+                    body: JSON.stringify({ service, endpoint, amount })
+                });
+                const data = await res.json();
+                responseBox.innerText = JSON.stringify(data, null, 2);
+                responseBox.style.color = "#4ade80";
+            } catch (err) {
+                responseBox.innerText = "// ✗ Error: " + err.message;
+                responseBox.style.color = "#f87171";
+            }
+        }
+
+        async function jalankanLive() {
+            const endpoint = document.getElementById('testEndpoint').value;
+            const token = document.getElementById('testToken').value;
+            const amount = parseFloat(document.getElementById('testAmount').value) || 0;
+            const userId = document.getElementById('inputUserId').value || '714240061';
+            const responseBox = document.getElementById('jsonResponse');
+
+            if (!token) return alert("Error: Token wajib diisi! Klik Generate dulu.");
+
+            responseBox.innerText = "// ⚡ Mengirim live request ke " + endpoint + "...";
+            responseBox.style.color = "#fbbf24";
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ user_id: userId, amount, parameter: "Live request via Client Portal" })
+                });
+                const data = await res.json();
+                responseBox.innerText = JSON.stringify(data, null, 2);
+                responseBox.style.color = res.ok ? "#38bdf8" : "#f87171";
+            } catch (err) {
+                responseBox.innerText = "// ✗ Error: " + err.message + "\n// Service tujuan belum berjalan.";
+                responseBox.style.color = "#f87171";
+            }
+        }
+
+        async function testIntegrator(path) {
+            const token = document.getElementById('testToken').value;
+            const responseBox = document.getElementById('quickResponse');
+
+            if (!token) return alert("Generate token dulu sebelum test!");
+
+            responseBox.innerText = "// ⏳ Testing " + path + "...";
+            responseBox.style.color = "#fbbf24";
+
+            try {
+                const res = await fetch(path, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                responseBox.innerText = JSON.stringify(data, null, 2);
+                responseBox.style.color = "#38bdf8";
+            } catch (err) {
+                responseBox.innerText = "// Error: " + err.message;
+                responseBox.style.color = "#f87171";
+            }
+        }
+    </script>
+</body>
+</html>
