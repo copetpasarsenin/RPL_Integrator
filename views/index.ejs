@@ -1,145 +1,327 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Gateway Integrator — Ekosistem UMKM</title>
-    <meta name="description" content="API Gateway / Integrator — Middleware pengendali ekosistem ekonomi UMKM. Kelompok 7 RPL 2 ULBI.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="description"
+        content="API Gateway / Integrator — Middleware pengendali ekosistem ekonomi UMKM. Kelompok 7 RPL 2 ULBI.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0a0e1a; color: #e2e8f0; overflow-x: hidden; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
 
         /* Hero */
         .hero {
             min-height: 100vh;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
             background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0f172a 100%);
             position: relative;
             padding: 40px 20px;
         }
+
         .hero::before {
             content: '';
-            position: absolute; inset: 0;
+            position: absolute;
+            inset: 0;
             background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
             pointer-events: none;
         }
+
         .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 100px; padding: 6px 16px;
-            font-size: 13px; color: #60a5fa; font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 13px;
+            color: #60a5fa;
+            font-weight: 500;
             margin-bottom: 24px;
             animation: fadeInUp 0.6s ease;
         }
-        .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
 
         .hero h1 {
-            font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800;
-            line-height: 1.1; margin-bottom: 16px;
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
             background: linear-gradient(135deg, #f8fafc, #94a3b8);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             animation: fadeInUp 0.8s ease;
         }
+
         .hero h1 span {
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .hero p {
-            font-size: 1.1rem; color: #94a3b8; max-width: 600px; margin: 0 auto 32px;
-            line-height: 1.7; animation: fadeInUp 1s ease;
-        }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; animation: fadeInUp 1.2s ease; }
-        .btn {
-            padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600;
-            text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none;
+        .hero p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+            animation: fadeInUp 1s ease;
         }
-        .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35); }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1.2s ease;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+        }
+
         .btn-outline {
-            background: transparent; color: #94a3b8;
+            background: transparent;
+            color: #94a3b8;
             border: 1px solid rgba(148, 163, 184, 0.3);
         }
-        .btn-outline:hover { border-color: #3b82f6; color: #3b82f6; transform: translateY(-2px); }
-        .btn-ghost { background: transparent; color: #60a5fa; font-size: 14px; }
-        .btn-ghost:hover { color: #93c5fd; }
+
+        .btn-outline:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #60a5fa;
+            font-size: 14px;
+        }
+
+        .btn-ghost:hover {
+            color: #93c5fd;
+        }
 
         /* Features */
         .features {
             padding: 80px 20px;
             background: #0f1320;
         }
+
         .features-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px; max-width: 1100px; margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
         }
+
         .feature-card {
-            background: rgba(255,255,255, 0.03);
-            border: 1px solid rgba(255,255,255, 0.06);
-            border-radius: 14px; padding: 28px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 28px;
             transition: all 0.35s ease;
         }
+
         .feature-card:hover {
             background: rgba(59, 130, 246, 0.06);
             border-color: rgba(59, 130, 246, 0.2);
             transform: translateY(-4px);
         }
+
         .feature-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; margin-bottom: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
         }
-        .fi-blue { background: rgba(59, 130, 246, 0.15); }
-        .fi-green { background: rgba(34, 197, 94, 0.15); }
-        .fi-purple { background: rgba(139, 92, 246, 0.15); }
-        .fi-amber { background: rgba(245, 158, 11, 0.15); }
-        .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #f1f5f9; }
-        .feature-card p { font-size: 13px; color: #64748b; line-height: 1.6; }
+
+        .fi-blue {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .fi-green {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .fi-purple {
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .fi-amber {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #f1f5f9;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+        }
 
         /* Services */
         .services {
             padding: 60px 20px 80px;
             background: #0a0e1a;
         }
-        .section-title { text-align: center; margin-bottom: 40px; }
-        .section-title h2 { font-size: 1.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
-        .section-title p { color: #64748b; font-size: 15px; }
-        .services-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px; max-width: 900px; margin: 0 auto;
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
         }
+
+        .section-title h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .section-title p {
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
         .svc-card {
-            background: rgba(255,255,255, 0.03); border: 1px solid rgba(255,255,255, 0.06);
-            border-radius: 10px; padding: 20px; text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
             transition: all 0.3s ease;
         }
-        .svc-card:hover { border-color: rgba(59,130,246,0.3); transform: translateY(-3px); }
-        .svc-card .svc-num { font-size: 11px; color: #3b82f6; font-weight: 700; margin-bottom: 6px; }
-        .svc-card .svc-name { font-size: 14px; font-weight: 600; color: #e2e8f0; }
-        .svc-card .svc-desc { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+        .svc-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .svc-card .svc-num {
+            font-size: 11px;
+            color: #3b82f6;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .svc-card .svc-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .svc-card .svc-desc {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
 
         /* Footer */
         footer {
-            text-align: center; padding: 30px 20px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            color: #475569; font-size: 13px;
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            color: #475569;
+            font-size: 13px;
         }
     </style>
 </head>
+
 <body>
     <section class="hero">
         <div class="hero-badge"><span class="dot"></span> Sistem Aktif — Kelompok 7</div>
         <h1>API Gateway <span>Integrator</span></h1>
-        <p>Middleware orchestrator yang menghubungkan 6 aplikasi dalam ekosistem ekonomi UMKM. Routing, keamanan JWT, logging, dan monetisasi 0.5% per transaksi.</p>
+        <p>Middleware orchestrator yang menghubungkan 6 aplikasi dalam ekosistem ekonomi UMKM. Routing, keamanan JWT,
+            logging, dan monetisasi 0.5% per transaksi.</p>
 
         <div class="hero-btns">
             <a href="/dashboard" class="btn btn-primary">📊 Dashboard Admin</a>
             <a href="/client-portal" class="btn btn-outline">🔑 Client Portal</a>
-            <a href="/download-docs" class="btn btn-outline">📄 Dokumentasi API</a>
+            <!-- <a href="/download-docs" class="btn btn-outline">📄 Dokumentasi API</a> -->
         </div>
         <div style="margin-top: 16px;">
             <a href="/api/status" class="btn btn-ghost">📡 Cek Status API →</a>
@@ -151,22 +333,26 @@
             <div class="feature-card">
                 <div class="feature-icon fi-blue">🛡️</div>
                 <h3>Validasi JWT</h3>
-                <p>Setiap request wajib menyertakan token JWT yang valid. Token diverifikasi sebelum request diteruskan ke service tujuan.</p>
+                <p>Setiap request wajib menyertakan token JWT yang valid. Token diverifikasi sebelum request diteruskan
+                    ke service tujuan.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon fi-green">📑</div>
                 <h3>Real-time Logging</h3>
-                <p>Semua request dicatat: IP, user, metode, endpoint, status response, dan fee. Data tersedia di dashboard admin.</p>
+                <p>Semua request dicatat: IP, user, metode, endpoint, status response, dan fee. Data tersedia di
+                    dashboard admin.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon fi-purple">🚀</div>
                 <h3>API Routing</h3>
-                <p>Orchestrator tunggal untuk 6 aplikasi ekosistem. Semua komunikasi antar service wajib melewati gateway ini.</p>
+                <p>Orchestrator tunggal untuk 6 aplikasi ekosistem. Semua komunikasi antar service wajib melewati
+                    gateway ini.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon fi-amber">💰</div>
                 <h3>Fee 0.5% per Transaksi</h3>
-                <p>Setiap transaksi yang melewati gateway dikenakan biaya infrastruktur 0.5% — dikirim otomatis ke SmartBank.</p>
+                <p>Setiap transaksi yang melewati gateway dikenakan biaya infrastruktur 0.5% — dikirim otomatis ke
+                    SmartBank.</p>
             </div>
         </div>
     </section>
@@ -214,4 +400,5 @@
         D4 Teknik Informatika — ULBI &copy; 2026 | Kelompok 7 — API Gateway / Integrator
     </footer>
 </body>
+
 </html>
