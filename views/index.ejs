@@ -1,404 +1,140 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Gateway Integrator — Ekosistem UMKM</title>
-    <meta name="description"
-        content="API Gateway / Integrator — Middleware pengendali ekosistem ekonomi UMKM. Kelompok 7 RPL 2 ULBI.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <meta name="description" content="API Gateway / Integrator — Middleware pengendali ekosistem ekonomi UMKM. Kelompok 7 RPL 2 ULBI.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/kong-theme.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0e1a;
-            color: #e2e8f0;
-            overflow-x: hidden;
-        }
-
-        /* Hero */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        .hero-container {
+            max-width: 800px;
             text-align: center;
-            background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0f172a 100%);
-            position: relative;
             padding: 40px 20px;
         }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .hero-badge {
-            display: inline-flex;
+        .hero-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #0033d4, #00a4ff);
+            border-radius: 16px;
+            display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 100px;
-            padding: 6px 16px;
-            font-size: 13px;
-            color: #60a5fa;
-            font-weight: 500;
-            margin-bottom: 24px;
-            animation: fadeInUp 0.6s ease;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin: 0 auto 24px;
+            box-shadow: 0 10px 25px rgba(0, 51, 212, 0.3);
         }
-
-        .hero-badge .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
-        }
-
-        .hero h1 {
-            font-size: clamp(2.2rem, 5vw, 3.8rem);
+        .hero-title {
+            font-size: 48px;
             font-weight: 800;
-            line-height: 1.1;
+            color: white;
             margin-bottom: 16px;
-            background: linear-gradient(135deg, #f8fafc, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: fadeInUp 0.8s ease;
+            letter-spacing: -1px;
         }
-
-        .hero h1 span {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero p {
-            font-size: 1.1rem;
+        .hero-subtitle {
+            font-size: 18px;
             color: #94a3b8;
-            max-width: 600px;
-            margin: 0 auto 32px;
-            line-height: 1.7;
-            animation: fadeInUp 1s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .hero-btns {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            animation: fadeInUp 1.2s ease;
-        }
-
-        .btn {
-            padding: 12px 28px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: #94a3b8;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-        }
-
-        .btn-outline:hover {
-            border-color: #3b82f6;
-            color: #3b82f6;
-            transform: translateY(-2px);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: #60a5fa;
-            font-size: 14px;
-        }
-
-        .btn-ghost:hover {
-            color: #93c5fd;
-        }
-
-        /* Features */
-        .features {
-            padding: 80px 20px;
-            background: #0f1320;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 14px;
-            padding: 28px;
-            transition: all 0.35s ease;
-        }
-
-        .feature-card:hover {
-            background: rgba(59, 130, 246, 0.06);
-            border-color: rgba(59, 130, 246, 0.2);
-            transform: translateY(-4px);
-        }
-
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 16px;
-        }
-
-        .fi-blue {
-            background: rgba(59, 130, 246, 0.15);
-        }
-
-        .fi-green {
-            background: rgba(34, 197, 94, 0.15);
-        }
-
-        .fi-purple {
-            background: rgba(139, 92, 246, 0.15);
-        }
-
-        .fi-amber {
-            background: rgba(245, 158, 11, 0.15);
-        }
-
-        .feature-card h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #f1f5f9;
-        }
-
-        .feature-card p {
-            font-size: 13px;
-            color: #64748b;
+            margin-bottom: 40px;
             line-height: 1.6;
         }
-
-        /* Services */
-        .services {
-            padding: 60px 20px 80px;
-            background: #0a0e1a;
-        }
-
-        .section-title {
-            text-align: center;
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            text-align: left;
             margin-bottom: 40px;
         }
-
-        .section-title h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #f1f5f9;
+        .feature-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
             margin-bottom: 8px;
         }
-
-        .section-title p {
-            color: #64748b;
-            font-size: 15px;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .svc-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .svc-card:hover {
-            border-color: rgba(59, 130, 246, 0.3);
-            transform: translateY(-3px);
-        }
-
-        .svc-card .svc-num {
-            font-size: 11px;
-            color: #3b82f6;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .svc-card .svc-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e2e8f0;
-        }
-
-        .svc-card .svc-desc {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 30px 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            color: #475569;
+        .feature-desc {
             font-size: 13px;
+            color: #94a3b8;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        .btn-hero {
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .btn-outline-light {
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            background: transparent;
+        }
+        .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
         }
     </style>
 </head>
+<body class="no-sidebar">
+    <div class="hero-container">
+        <div class="hero-logo">IG</div>
+        <h1 class="hero-title">Gateway Integrator</h1>
+        <p class="hero-subtitle">
+            Enterprise-grade API Gateway Middleware untuk Ekosistem Ekonomi UMKM.<br>
+            Menangani Routing, Validasi JWT, Logging, dan Fee Management.
+        </p>
 
-<body>
-    <section class="hero">
-        <div class="hero-badge"><span class="dot"></span> Sistem Aktif — Kelompok 7</div>
-        <h1>API Gateway <span>Integrator</span></h1>
-        <p>Middleware orchestrator yang menghubungkan 6 aplikasi dalam ekosistem ekonomi UMKM. Routing, keamanan JWT,
-            logging, dan monetisasi 0.5% per transaksi.</p>
-
-        <div class="hero-btns">
-            <a href="/dashboard" class="btn btn-primary">📊 Dashboard Admin</a>
-            <a href="/client-portal" class="btn btn-outline">🔑 Client Portal</a>
-            <!-- <a href="/download-docs" class="btn btn-outline">📄 Dokumentasi API</a> -->
-        </div>
-        <div style="margin-top: 16px;">
-            <a href="/api/status" class="btn btn-ghost">📡 Cek Status API →</a>
-        </div>
-    </section>
-
-    <section class="features">
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon fi-blue">🛡️</div>
-                <h3>Validasi JWT</h3>
-                <p>Setiap request wajib menyertakan token JWT yang valid. Token diverifikasi sebelum request diteruskan
-                    ke service tujuan.</p>
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">Validasi JWT Otomatis</div>
+                <div class="feature-desc">Mencegah akses ilegal dengan verifikasi token berstandar industri sebelum diteruskan ke tujuan.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon fi-green">📑</div>
-                <h3>Real-time Logging</h3>
-                <p>Semua request dicatat: IP, user, metode, endpoint, status response, dan fee. Data tersedia di
-                    dashboard admin.</p>
+                <div class="feature-icon">🔀</div>
+                <div class="feature-title">Dynamic API Routing</div>
+                <div class="feature-desc">Meneruskan request secara cerdas ke 6 layanan microservices dalam ekosistem UMKM.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon fi-purple">🚀</div>
-                <h3>API Routing</h3>
-                <p>Orchestrator tunggal untuk 6 aplikasi ekosistem. Semua komunikasi antar service wajib melewati
-                    gateway ini.</p>
+                <div class="feature-icon">💰</div>
+                <div class="feature-title">Monetisasi Otomatis</div>
+                <div class="feature-desc">Pemotongan fee gateway 0.5% secara otomatis untuk setiap transaksi yang berhasil.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon fi-amber">💰</div>
-                <h3>Fee 0.5% per Transaksi</h3>
-                <p>Setiap transaksi yang melewati gateway dikenakan biaya infrastruktur 0.5% — dikirim otomatis ke
-                    SmartBank.</p>
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Audit Logging Real-time</div>
+                <div class="feature-desc">Pencatatan menyeluruh untuk IP, waktu, metode, URL, dan response status.</div>
             </div>
         </div>
-    </section>
 
-    <section class="services">
-        <div class="section-title">
-            <h2>6 Aplikasi Ekosistem Terhubung</h2>
-            <p>Semua komunikasi antar aplikasi wajib melalui API Gateway</p>
+        <div class="action-buttons">
+            <a href="/dashboard" class="btn btn-primary btn-hero">Buka Dashboard</a>
+            <a href="/client-portal" class="btn btn-outline-light btn-hero">Client Portal (API Test)</a>
         </div>
-        <div class="services-grid">
-            <div class="svc-card">
-                <div class="svc-num">Kelompok 1</div>
-                <div class="svc-name">SmartBank</div>
-                <div class="svc-desc">Core Banking</div>
-            </div>
-            <div class="svc-card">
-                <div class="svc-num">Kelompok 2</div>
-                <div class="svc-name">Marketplace</div>
-                <div class="svc-desc">PasarKita</div>
-            </div>
-            <div class="svc-card">
-                <div class="svc-num">Kelompok 3</div>
-                <div class="svc-name">POS</div>
-                <div class="svc-desc">WarungPOS</div>
-            </div>
-            <div class="svc-card">
-                <div class="svc-num">Kelompok 4</div>
-                <div class="svc-name">SupplierHub</div>
-                <div class="svc-desc">Supply Chain</div>
-            </div>
-            <div class="svc-card">
-                <div class="svc-num">Kelompok 5</div>
-                <div class="svc-name">LogistiKita</div>
-                <div class="svc-desc">Pengiriman</div>
-            </div>
-            <div class="svc-card">
-                <div class="svc-num">Kelompok 6</div>
-                <div class="svc-name">UMKM Insight</div>
-                <div class="svc-desc">Analytics</div>
-            </div>
+        
+        <div style="margin-top: 32px;">
+            <a href="/api/status" style="color: #94a3b8; font-size: 13px; text-decoration: none;">📡 Cek Status API (Health Check)</a>
         </div>
-    </section>
-
-    <footer>
-        D4 Teknik Informatika — ULBI &copy; 2026 | Kelompok 7 — API Gateway / Integrator
-    </footer>
+    </div>
 </body>
-
 </html>

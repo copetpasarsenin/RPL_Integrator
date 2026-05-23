@@ -3,198 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin — Integrator</title>
-    <meta name="description" content="Dashboard admin API Gateway Integrator — monitoring traffic, revenue, dan audit log real-time.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; }
-
-        /* Navbar */
-        .navbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 30px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            position: sticky; top: 0; z-index: 100;
-        }
-        .navbar-brand { font-weight: 700; font-size: 16px; color: #f1f5f9; text-decoration: none; }
-        .navbar-brand span { color: #3b82f6; }
-        .nav-links { display: flex; gap: 8px; }
-        .nav-links a {
-            padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
-            text-decoration: none; transition: all 0.2s;
-        }
-        .nav-btn-outline { color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
-        .nav-btn-outline:hover { border-color: #3b82f6; color: #3b82f6; }
-        .nav-btn-primary { background: rgba(59,130,246,0.15); color: #60a5fa; }
-        .nav-btn-primary:hover { background: rgba(59,130,246,0.25); }
-
-        .container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
-
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
-        .stat-card {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px; padding: 22px;
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover { border-color: rgba(59,130,246,0.2); transform: translateY(-2px); }
-        .stat-card .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .stat-card .stat-value { font-size: 28px; font-weight: 800; }
-        .stat-card .stat-sub { font-size: 12px; color: #64748b; margin-top: 4px; }
-
-        .st-revenue .stat-label { color: #f59e0b; }
-        .st-revenue .stat-value { color: #fbbf24; }
-        .st-revenue { border-top: 3px solid #f59e0b; }
-
-        .st-traffic .stat-label { color: #3b82f6; }
-        .st-traffic .stat-value { color: #60a5fa; }
-        .st-traffic { border-top: 3px solid #3b82f6; }
-
-        .st-success .stat-label { color: #22c55e; }
-        .st-success .stat-value { color: #4ade80; }
-        .st-success { border-top: 3px solid #22c55e; }
-
-        .st-error .stat-label { color: #ef4444; }
-        .st-error .stat-value { color: #f87171; }
-        .st-error { border-top: 3px solid #ef4444; }
-
-        /* Table */
-        .table-container {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px; overflow: hidden;
-        }
-        .table-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 22px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-        .table-header h3 { font-size: 15px; font-weight: 700; }
-        .btn-refresh {
-            background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2);
-            padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-refresh:hover { background: rgba(59,130,246,0.2); }
-
-        table { width: 100%; border-collapse: collapse; }
-        thead th {
-            text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;
-            background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-        tbody td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        tbody tr:hover { background: rgba(59,130,246,0.04); }
-
-        .badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
-        }
-        .badge-method { background: rgba(59,130,246,0.12); color: #60a5fa; }
-        .badge-success { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .badge-error { background: rgba(239,68,68,0.12); color: #f87171; }
-        .badge-pending { background: rgba(245,158,11,0.12); color: #fbbf24; }
-
-        .empty-state { text-align: center; padding: 60px 20px; color: #475569; }
-        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-    </style>
+    <title>Dashboard Admin — Gateway Integrator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/kong-theme.css">
 </head>
 <body>
-    <nav class="navbar">
-        <a class="navbar-brand" href="/">🛡️ Integrator <span>Dashboard</span></a>
-        <div class="nav-links">
-            <a href="/client-portal" class="nav-btn-primary">🔑 Client Portal</a>
-            <a href="/api/status" class="nav-btn-outline">📡 API Status</a>
-            <a href="/" class="nav-btn-outline">← Kembali</a>
-        </div>
-    </nav>
-
-    <div class="container">
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card st-revenue">
-                <div class="stat-label">💰 Pendapatan Fee Gateway</div>
-                <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %></div>
-                <div class="stat-sub">Dari fee gateway 0.5% per transaksi</div>
-            </div>
-            <div class="stat-card st-traffic">
-                <div class="stat-label">📡 Total Traffic</div>
-                <div class="stat-value"><%= logs.length %></div>
-                <div class="stat-sub">Request yang melewati gateway</div>
-            </div>
-            <div class="stat-card st-success">
-                <div class="stat-label">✅ Sukses</div>
-                <div class="stat-value"><%= totalSuccess %></div>
-                <div class="stat-sub">Request berhasil diteruskan</div>
-            </div>
-            <div class="stat-card st-error">
-                <div class="stat-label">❌ Error</div>
-                <div class="stat-value"><%= totalError %></div>
-                <div class="stat-sub">Request gagal / service offline</div>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo">IG</div>
+            <div>
+                <div class="brand-title">Gateway Integrator</div>
+                <div class="brand-subtitle">API Gateway Integrator</div>
             </div>
         </div>
+        <div class="sidebar-menu">
+            <div class="menu-group">Workspace: Default</div>
+            <a href="/dashboard" class="menu-item active">
+                <span class="menu-icon">📊</span> Overview
+            </a>
+            <a href="/client-portal" class="menu-item">
+                <span class="menu-icon">⚡</span> API Simulator
+            </a>
+            
+            <div class="menu-group">Gateway Services</div>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">📦</span> Services (6)
+            </a>
+            <a href="#" class="menu-item">
+                <span class="menu-icon">🔀</span> Routes
+            </a>
+            <a href="/api/logs" class="menu-item" target="_blank">
+                <span class="menu-icon">📋</span> Request Logs
+            </a>
+            
+            <div class="menu-group">System</div>
+            <a href="/api/status" class="menu-item" target="_blank">
+                <span class="menu-icon">📡</span> System Status
+            </a>
+        </div>
+    </div>
 
-        <!-- Log Table -->
-        <div class="table-container">
-            <div class="table-header">
-                <h3>📋 Traffic Monitor — Audit Log</h3>
-                <button class="btn-refresh" onclick="location.reload()">⟳ Refresh Data</button>
+    <!-- MAIN CONTENT -->
+    <div class="main-wrapper">
+        <div class="topbar">
+            <div class="breadcrumb">
+                <a href="/">Home</a> <span style="margin:0 8px;">/</span>
+                <a href="#">Gateway System</a> <span style="margin:0 8px;">/</span>
+                <span style="color: #1f2937; font-weight: 500;">Overview</span>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Waktu</th>
-                        <th>IP</th>
-                        <th>User</th>
-                        <th>Metode</th>
-                        <th>Endpoint</th>
-                        <th>Status</th>
-                        <th>Fee</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (logs.length === 0) { %>
-                        <tr>
-                            <td colspan="8">
-                                <div class="empty-state">
-                                    <div class="icon">📭</div>
-                                    <p>Belum ada aktivitas terekam.<br>Kirim request melalui Client Portal untuk memulai.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    <% } else { %>
-                        <% [...logs].reverse().forEach((log, i) => { %>
-                        <tr>
-                            <td style="color: #475569;">#<%= log.id || (logs.length - i) %></td>
-                            <td style="color: #94a3b8; font-size: 12px;"><%= log.waktu %></td>
-                            <td style="color: #64748b; font-size: 12px;"><%= log.ip || '-' %></td>
-                            <td style="font-size: 12px;"><%= log.user_id || '-' %></td>
-                            <td><span class="badge badge-method"><%= log.metode %></span></td>
-                            <td style="font-weight: 600; font-size: 12px;"><%= log.url_tujuan %></td>
-                            <td>
-                                <% if (log.status === 'SUCCESS') { %>
-                                    <span class="badge badge-success">✓ Success</span>
-                                <% } else if (log.status === 'ERROR') { %>
-                                    <span class="badge badge-error">✗ Error</span>
-                                <% } else { %>
-                                    <span class="badge badge-pending">⏳ Pending</span>
-                                <% } %>
-                            </td>
-                            <td style="color: #fbbf24; font-weight: 600; font-size: 12px;">
-                                <% if (log.fee_terpotong > 0) { %>
-                                    Rp <%= log.fee_terpotong.toLocaleString('id-ID') %>
-                                <% } else { %>
-                                    <span style="color: #475569;">-</span>
-                                <% } %>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
+            <div class="topbar-actions">
+                <a href="/client-portal" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Generate Token</a>
+                <a href="#" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Documentation</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="page-title">Overview</div>
+
+            <div class="stats-grid">
+                <div class="stat-box" style="border-top: 3px solid var(--status-warning);">
+                    <div class="stat-title">Pendapatan Gateway (0.5%)</div>
+                    <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %></div>
+                    <div class="stat-desc">Total fee terpotong dari transaksi</div>
+                </div>
+                <div class="stat-box" style="border-top: 3px solid var(--kong-blue);">
+                    <div class="stat-title">Total Requests</div>
+                    <div class="stat-value"><%= logs.length %></div>
+                    <div class="stat-desc">Jumlah request yang diproses</div>
+                </div>
+                <div class="stat-box" style="border-top: 3px solid var(--status-success);">
+                    <div class="stat-title">Sukses</div>
+                    <div class="stat-value"><%= totalSuccess %></div>
+                    <div class="stat-desc">Request berhasil diteruskan</div>
+                </div>
+                <div class="stat-box" style="border-top: 3px solid var(--status-error);">
+                    <div class="stat-title">Error</div>
+                    <div class="stat-value"><%= totalError %></div>
+                    <div class="stat-desc">Gagal atau service offline</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Recent Traffic Logs</div>
+                    <button class="btn btn-outline" onclick="location.reload()" style="padding: 6px 12px; font-size: 12px;">⟳ Refresh</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Waktu</th>
+                                <th>IP & User</th>
+                                <th>Metode</th>
+                                <th>Endpoint / Route</th>
+                                <th>Status</th>
+                                <th>Fee (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (logs.length === 0) { %>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--kong-text-muted);">
+                                        Belum ada aktivitas terekam.
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% [...logs].reverse().forEach((log, i) => { %>
+                                <tr>
+                                    <td style="color: var(--kong-text-muted);">#<%= log.id || (logs.length - i) %></td>
+                                    <td style="color: var(--kong-text-muted); font-size: 12px;"><%= log.waktu %></td>
+                                    <td>
+                                        <div style="font-weight: 500;"><%= log.user_id || '-' %></div>
+                                        <div style="font-size: 11px; color: var(--kong-text-muted);"><%= log.ip || '-' %></div>
+                                    </td>
+                                    <td><span class="badge badge-info"><%= log.metode %></span></td>
+                                    <td style="font-family: monospace; font-size: 12px; font-weight: 600;"><%= log.url_tujuan %></td>
+                                    <td>
+                                        <% if (log.status === 'SUCCESS') { %>
+                                            <span class="badge badge-success">✓ Success</span>
+                                        <% } else if (log.status === 'ERROR') { %>
+                                            <span class="badge badge-error">✗ Error</span>
+                                        <% } else { %>
+                                            <span class="badge badge-warning">⏳ Pending</span>
+                                        <% } %>
+                                    </td>
+                                    <td style="font-weight: 600;">
+                                        <% if (log.fee_terpotong > 0) { %>
+                                            <span style="color: var(--status-warning);"><%= log.fee_terpotong.toLocaleString('id-ID') %></span>
+                                        <% } else { %>
+                                            <span style="color: var(--kong-text-muted);">-</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </body>
