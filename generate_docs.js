@@ -267,7 +267,7 @@ const doc = new Document({
 
 (async () => {
     const buffer = await Packer.toBuffer(doc);
-    const outPath = path.join(__dirname, 'Docs', 'Dokumentasi_API_Gateway_Integrator.docx');
+    const outPath = path.join(__dirname, 'Docs', 'Laporan_RPL2_API_Gateway_Kelompok7.docx');
     fs.writeFileSync(outPath, buffer);
     console.log('Word document created:', outPath);
 })();

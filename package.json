@@ -8,6 +8,7 @@
     "mysql2": "^3.22.3"
   },
   "devDependencies": {
-    "docx": "^9.6.1"
+    "docx": "^9.6.1",
+    "puppeteer": "^25.0.4"
   }
 }
