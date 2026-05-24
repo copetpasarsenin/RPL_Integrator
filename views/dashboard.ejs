@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
 </head>
+
 <body>
     <!-- SIDEBAR -->
     <div class="sidebar">
@@ -25,7 +27,7 @@
             <a href="/client-portal" class="menu-item">
                 <span class="menu-icon">⚡</span> API Simulator
             </a>
-            
+
             <div class="menu-group">Gateway Services</div>
             <a href="#" class="menu-item">
                 <span class="menu-icon">📦</span> Services (6)
@@ -36,7 +38,7 @@
             <a href="/api/logs" class="menu-item" target="_blank">
                 <span class="menu-icon">📋</span> Request Logs
             </a>
-            
+
             <div class="menu-group">System</div>
             <a href="/api/status" class="menu-item" target="_blank">
                 <span class="menu-icon">📡</span> System Status
@@ -53,8 +55,9 @@
                 <span style="color: #1f2937; font-weight: 500;">Overview</span>
             </div>
             <div class="topbar-actions">
-                <a href="/client-portal" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Generate Token</a>
-                <a href="#" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Documentation</a>
+                <a href="/client-portal" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Generate
+                    Token</a>
+                <!-- <a href="#" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Documentation</a> -->
             </div>
         </div>
 
@@ -64,22 +67,29 @@
             <div class="stats-grid">
                 <div class="stat-box" style="border-top: 3px solid var(--status-warning);">
                     <div class="stat-title">Pendapatan Gateway (0.5%)</div>
-                    <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %></div>
+                    <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %>
+                    </div>
                     <div class="stat-desc">Total fee terpotong dari transaksi</div>
                 </div>
                 <div class="stat-box" style="border-top: 3px solid var(--kong-blue);">
                     <div class="stat-title">Total Requests</div>
-                    <div class="stat-value"><%= logs.length %></div>
+                    <div class="stat-value">
+                        <%= logs.length %>
+                    </div>
                     <div class="stat-desc">Jumlah request yang diproses</div>
                 </div>
                 <div class="stat-box" style="border-top: 3px solid var(--status-success);">
                     <div class="stat-title">Sukses</div>
-                    <div class="stat-value"><%= totalSuccess %></div>
+                    <div class="stat-value">
+                        <%= totalSuccess %>
+                    </div>
                     <div class="stat-desc">Request berhasil diteruskan</div>
                 </div>
                 <div class="stat-box" style="border-top: 3px solid var(--status-error);">
                     <div class="stat-title">Error</div>
-                    <div class="stat-value"><%= totalError %></div>
+                    <div class="stat-value">
+                        <%= totalError %>
+                    </div>
                     <div class="stat-desc">Gagal atau service offline</div>
                 </div>
             </div>
@@ -87,7 +97,8 @@
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Recent Traffic Logs</div>
-                    <button class="btn btn-outline" onclick="location.reload()" style="padding: 6px 12px; font-size: 12px;">⟳ Refresh</button>
+                    <button class="btn btn-outline" onclick="location.reload()"
+                        style="padding: 6px 12px; font-size: 12px;">⟳ Refresh</button>
                 </div>
                 <div class="table-wrapper">
                     <table>
@@ -103,42 +114,57 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% if (logs.length === 0) { %>
+                            <% if (logs.length===0) { %>
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--kong-text-muted);">
+                                    <td colspan="7"
+                                        style="text-align: center; padding: 40px; color: var(--kong-text-muted);">
                                         Belum ada aktivitas terekam.
                                     </td>
                                 </tr>
-                            <% } else { %>
-                                <% [...logs].reverse().forEach((log, i) => { %>
-                                <tr>
-                                    <td style="color: var(--kong-text-muted);">#<%= log.id || (logs.length - i) %></td>
-                                    <td style="color: var(--kong-text-muted); font-size: 12px;"><%= log.waktu %></td>
-                                    <td>
-                                        <div style="font-weight: 500;"><%= log.user_id || '-' %></div>
-                                        <div style="font-size: 11px; color: var(--kong-text-muted);"><%= log.ip || '-' %></div>
-                                    </td>
-                                    <td><span class="badge badge-info"><%= log.metode %></span></td>
-                                    <td style="font-family: monospace; font-size: 12px; font-weight: 600;"><%= log.url_tujuan %></td>
-                                    <td>
-                                        <% if (log.status === 'SUCCESS') { %>
-                                            <span class="badge badge-success">✓ Success</span>
-                                        <% } else if (log.status === 'ERROR') { %>
-                                            <span class="badge badge-error">✗ Error</span>
-                                        <% } else { %>
-                                            <span class="badge badge-warning">⏳ Pending</span>
-                                        <% } %>
-                                    </td>
-                                    <td style="font-weight: 600;">
-                                        <% if (log.fee_terpotong > 0) { %>
-                                            <span style="color: var(--status-warning);"><%= log.fee_terpotong.toLocaleString('id-ID') %></span>
-                                        <% } else { %>
-                                            <span style="color: var(--kong-text-muted);">-</span>
-                                        <% } %>
-                                    </td>
-                                </tr>
-                                <% }) %>
-                            <% } %>
+                                <% } else { %>
+                                    <% [...logs].reverse().forEach((log, i)=> { %>
+                                        <tr>
+                                            <td style="color: var(--kong-text-muted);">#<%= log.id || (logs.length - i)
+                                                    %>
+                                            </td>
+                                            <td style="color: var(--kong-text-muted); font-size: 12px;">
+                                                <%= log.waktu %>
+                                            </td>
+                                            <td>
+                                                <div style="font-weight: 500;">
+                                                    <%= log.user_id || '-' %>
+                                                </div>
+                                                <div style="font-size: 11px; color: var(--kong-text-muted);">
+                                                    <%= log.ip || '-' %>
+                                                </div>
+                                            </td>
+                                            <td><span class="badge badge-info">
+                                                    <%= log.metode %>
+                                                </span></td>
+                                            <td style="font-family: monospace; font-size: 12px; font-weight: 600;">
+                                                <%= log.url_tujuan %>
+                                            </td>
+                                            <td>
+                                                <% if (log.status==='SUCCESS' ) { %>
+                                                    <span class="badge badge-success">✓ Success</span>
+                                                    <% } else if (log.status==='ERROR' ) { %>
+                                                        <span class="badge badge-error">✗ Error</span>
+                                                        <% } else { %>
+                                                            <span class="badge badge-warning">⏳ Pending</span>
+                                                            <% } %>
+                                            </td>
+                                            <td style="font-weight: 600;">
+                                                <% if (log.fee_terpotong> 0) { %>
+                                                    <span style="color: var(--status-warning);">
+                                                        <%= log.fee_terpotong.toLocaleString('id-ID') %>
+                                                    </span>
+                                                    <% } else { %>
+                                                        <span style="color: var(--kong-text-muted);">-</span>
+                                                        <% } %>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } %>
                         </tbody>
                     </table>
                 </div>
@@ -146,4 +172,5 @@
         </div>
     </div>
 </body>
+
 </html>

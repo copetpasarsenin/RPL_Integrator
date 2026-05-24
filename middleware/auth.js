@@ -10,8 +10,9 @@
  */
 
 const jwt = require('jsonwebtoken');
+const { pool } = require('../config/database');
 
-const validateRequest = (req, res, next) => {
+const validateRequest = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -26,11 +27,15 @@ const validateRequest = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         
-        // Update log entry dengan user_id setelah token tervalidasi
-        if (global.requestLogs && global.requestLogs.length > 0) {
-            const currentLog = global.requestLogs[global.requestLogs.length - 1];
-            if (currentLog) {
-                currentLog.user_id = decoded.user_id || decoded.npm || 'unknown';
+        // Update log entry dengan user_id setelah token tervalidasi (MySQL)
+        if (req.logId) {
+            try {
+                await pool.query(
+                    'UPDATE request_logs SET user_id = ? WHERE id = ?',
+                    [decoded.user_id || decoded.npm || 'unknown', req.logId]
+                );
+            } catch (err) {
+                console.error('[AUTH] Gagal update user_id di log:', err.message);
             }
         }
         

@@ -12,8 +12,10 @@
  * Fitur Utama (Doc2):
  * 1. Routing API        — Routing request antar 6 service
  * 2. Validasi Request   — Validasi token JWT
- * 3. Logging            — Mencatat seluruh request
+ * 3. Logging            — Mencatat seluruh request ke MySQL
  * 4. Biaya Layanan      — Fee 0.5% per transaksi (Doc6)
+ * 
+ * Database: MySQL (via Laragon)
  * =============================================================
  */
 
@@ -21,6 +23,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken'); 
+const { pool, initDatabase } = require('./config/database');
 const loggerMiddleware = require('./middleware/logger');
 const validateRequest = require('./middleware/auth');
 const gatewayRoutes = require('./routes/gateway');
@@ -35,9 +38,6 @@ app.use(express.json());
 // Folder public untuk file statis (PDF, Gambar, CSS)
 app.use(express.static('public'));
 
-// Variabel Global untuk menyimpan Log
-global.requestLogs = []; 
-
 // --- 1. ROUTE HALAMAN UTAMA (LANDING PAGE) ---
 app.get('/', (req, res) => {
     res.render('index');
@@ -46,18 +46,32 @@ app.get('/', (req, res) => {
 // --- 2. ROUTE ANTARMUKA PENGGUNA LAINNYA ---
 
 // Dashboard Admin — menampilkan log dan revenue sesuai Doc6
-app.get('/dashboard', (req, res) => {
-    // Hitung total revenue dari fee yang benar-benar terpotong (Doc6: 0.5%)
-    const totalRevenue = global.requestLogs.reduce((sum, log) => sum + (log.fee_terpotong || 0), 0);
-    const totalSuccess = global.requestLogs.filter(log => log.status === 'SUCCESS').length;
-    const totalError = global.requestLogs.filter(log => log.status === 'ERROR').length;
+app.get('/dashboard', async (req, res) => {
+    try {
+        const [logs] = await pool.query('SELECT * FROM request_logs ORDER BY id DESC LIMIT 100');
+        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(fee_terpotong), 0) AS total FROM request_logs');
+        const [successResult] = await pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'SUCCESS'");
+        const [errorResult] = await pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'ERROR'");
 
-    res.render('dashboard', { 
-        logs: global.requestLogs,
-        totalRevenue: totalRevenue,
-        totalSuccess: totalSuccess,
-        totalError: totalError
-    });
+        const totalRevenue = parseFloat(revenueResult[0].total);
+        const totalSuccess = successResult[0].total;
+        const totalError = errorResult[0].total;
+
+        res.render('dashboard', { 
+            logs: logs.reverse(),
+            totalRevenue: totalRevenue,
+            totalSuccess: totalSuccess,
+            totalError: totalError
+        });
+    } catch (err) {
+        console.error('[DASHBOARD] Error:', err.message);
+        res.render('dashboard', {
+            logs: [],
+            totalRevenue: 0,
+            totalSuccess: 0,
+            totalError: 0
+        });
+    }
 });
 
 // Client Portal (Halaman ambil token & simulator)
@@ -116,35 +130,50 @@ app.get('/generate-test-token', (req, res) => {
 });
 
 // --- 4. API ENDPOINT STATUS/HEALTH ---
-app.get('/api/status', (req, res) => {
-    res.json({
-        status: 'online',
-        application: 'API Gateway / Integrator',
-        kelompok: 7,
-        version: '2.0.0',
-        uptime: process.uptime(),
-        total_requests: global.requestLogs.length,
-        total_revenue: global.requestLogs.reduce((sum, log) => sum + (log.fee_terpotong || 0), 0),
-        fee_gateway: '0.5%',
-        services: ['smartbank', 'marketplace', 'pos', 'supplierhub', 'logistikita', 'umkm_insight'],
-        timestamp: new Date().toISOString()
-    });
+app.get('/api/status', async (req, res) => {
+    try {
+        const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
+        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(fee_terpotong), 0) AS total FROM request_logs');
+
+        res.json({
+            status: 'online',
+            application: 'API Gateway / Integrator',
+            kelompok: 7,
+            version: '2.0.0',
+            database: 'MySQL (Laragon)',
+            uptime: process.uptime(),
+            total_requests: countResult[0].total,
+            total_revenue: parseFloat(revenueResult[0].total),
+            fee_gateway: '0.5%',
+            services: ['smartbank', 'marketplace', 'pos', 'supplierhub', 'logistikita', 'umkm_insight'],
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal query database', detail: err.message });
+    }
 });
 
 // --- 5. API ENDPOINT LOGS (publik, tanpa auth) ---
-app.get('/api/logs', (req, res) => {
-    const limit = parseInt(req.query.limit) || 50;
-    res.json({
-        status: 'success',
-        total: global.requestLogs.length,
-        data: global.requestLogs.slice(-limit).reverse()
-    });
+app.get('/api/logs', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const [rows] = await pool.query('SELECT * FROM request_logs ORDER BY id DESC LIMIT ?', [limit]);
+        const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
+
+        res.json({
+            status: 'success',
+            total: countResult[0].total,
+            data: rows
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal membaca log', detail: err.message });
+    }
 });
 
 // --- 6. DEMO / SIMULASI MODE (untuk presentasi) ---
 // Endpoint ini mensimulasikan response sukses lengkap dengan fee,
 // tanpa perlu service lain berjalan.
-app.post('/api/demo/simulate', (req, res) => {
+app.post('/api/demo/simulate', async (req, res) => {
     const token = (req.headers['authorization'] || '').split(' ')[1];
     let user = { user_id: 'demo_user', name: 'Demo User' };
     
@@ -168,57 +197,75 @@ app.post('/api/demo/simulate', (req, res) => {
         umkm_insight: { report_id: 'RPT-' + Date.now(), total_transaksi: 150, omzet_bulan: 7500000, profit_margin: '23%' }
     };
 
-    // Catat ke log global (seperti request asli)
-    const logEntry = {
-        id: global.requestLogs.length + 1,
-        waktu: new Date().toLocaleString("id-ID"),
-        timestamp: new Date().toISOString(),
-        ip: req.ip || '::1',
-        metode: 'POST',
-        url_tujuan: `/integrator/${service}/${endpoint}`,
-        user_id: user.user_id || user.npm || 'demo',
-        service_tujuan: service,
-        status: 'SUCCESS',
-        response_status: 200,
-        fee_terpotong: gatewayFee,
-        fee_status: 'terpotong',
-        mode: 'DEMO'
-    };
-    global.requestLogs.push(logEntry);
+    try {
+        // Catat ke MySQL (seperti request asli)
+        const [result] = await pool.query(
+            `INSERT INTO request_logs (waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status, fee_terpotong, fee_status, mode)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                new Date().toLocaleString("id-ID"),
+                new Date(),
+                req.ip || '::1',
+                'POST',
+                `/integrator/${service}/${endpoint}`,
+                user.user_id || user.npm || 'demo',
+                service,
+                'SUCCESS',
+                200,
+                gatewayFee,
+                'terpotong',
+                'DEMO'
+            ]
+        );
 
-    res.json({
-        status: 'success',
-        mode: 'DEMO_SIMULASI',
-        message: `Simulasi request ke ${service}/${endpoint} berhasil`,
-        integrator_info: {
-            service_tujuan: service,
-            endpoint: endpoint,
-            fee_percent: `${feePercent}%`,
-            transaction_amount: amount,
-            fee_terpotong: gatewayFee,
-            fee_status: 'terpotong',
-            forwarded_to: `http://localhost:300X/${service}/${endpoint}`
-        },
-        data: serviceResponses[service] || serviceResponses.smartbank
-    });
+        res.json({
+            status: 'success',
+            mode: 'DEMO_SIMULASI',
+            message: `Simulasi request ke ${service}/${endpoint} berhasil`,
+            integrator_info: {
+                service_tujuan: service,
+                endpoint: endpoint,
+                fee_percent: `${feePercent}%`,
+                transaction_amount: amount,
+                fee_terpotong: gatewayFee,
+                fee_status: 'terpotong',
+                forwarded_to: `http://localhost:300X/${service}/${endpoint}`
+            },
+            data: serviceResponses[service] || serviceResponses.smartbank
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal simpan log simulasi', detail: err.message });
+    }
 });
 
 // --- 7. MIDDLEWARE & ORCHESTRATOR ---
 // Semua request ke /integrator/* melewati: Logger → Auth → Gateway
 app.use('/integrator', loggerMiddleware, validateRequest, gatewayRoutes);
 
-// Menjalankan Server
+// Menjalankan Server (dengan inisialisasi database)
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`=================================================`);
-    console.log(`   API GATEWAY / INTEGRATOR — Kelompok 7         `);
-    console.log(`   Tugas Besar RPL 2 — ULBI                     `);
-    console.log(`=================================================`);
-    console.log(`   🌐 Landing Page : http://localhost:${PORT}        `);
-    console.log(`   📊 Dashboard    : http://localhost:${PORT}/dashboard`);
-    console.log(`   🔑 Client Portal: http://localhost:${PORT}/client-portal`);
-    console.log(`   📡 API Status   : http://localhost:${PORT}/api/status`);
-    console.log(`=================================================`);
-    console.log(`   Fee Gateway: ${process.env.GATEWAY_FEE_PERCENT || 0.5}% per transaksi`);
-    console.log(`=================================================`);
+
+async function startServer() {
+    // Inisialisasi database terlebih dahulu
+    await initDatabase();
+
+    app.listen(PORT, () => {
+        console.log(`=================================================`);
+        console.log(`   API GATEWAY / INTEGRATOR — Kelompok 7         `);
+        console.log(`   Tugas Besar RPL 2 — ULBI                     `);
+        console.log(`=================================================`);
+        console.log(`   💾 Database    : MySQL (Laragon)              `);
+        console.log(`   🌐 Landing Page : http://localhost:${PORT}        `);
+        console.log(`   📊 Dashboard    : http://localhost:${PORT}/dashboard`);
+        console.log(`   🔑 Client Portal: http://localhost:${PORT}/client-portal`);
+        console.log(`   📡 API Status   : http://localhost:${PORT}/api/status`);
+        console.log(`=================================================`);
+        console.log(`   Fee Gateway: ${process.env.GATEWAY_FEE_PERCENT || 0.5}% per transaksi`);
+        console.log(`=================================================`);
+    });
+}
+
+startServer().catch(err => {
+    console.error('Gagal menjalankan server:', err.message);
+    process.exit(1);
 });

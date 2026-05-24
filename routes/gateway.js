@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const { pool } = require('../config/database');
 
 // === Fee Gateway sesuai Doc6 Aturan No.10: 0.5% dari setiap transaksi ===
 const GATEWAY_FEE_PERCENT = parseFloat(process.env.GATEWAY_FEE_PERCENT) || 0.5;
@@ -55,36 +56,48 @@ router.get('/validasi_request', (req, res) => {
 
 // ============================================================
 // FITUR 3 — Logging (Doc2: /integrator/logging)
-// Deskripsi: Mencatat request — menampilkan log
+// Deskripsi: Mencatat request — menampilkan log dari MySQL
 // ============================================================
-router.get('/logging', (req, res) => {
-    res.json({
-        status: 'success',
-        message: 'Log aktivitas gateway',
-        data: {
-            total_logs: global.requestLogs.length,
-            logs: global.requestLogs.slice(-50).reverse()
-        }
-    });
+router.get('/logging', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM request_logs ORDER BY id DESC LIMIT 50'
+        );
+        res.json({
+            status: 'success',
+            message: 'Log aktivitas gateway',
+            data: {
+                total_logs: rows.length,
+                logs: rows
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal membaca log', detail: err.message });
+    }
 });
 
 // ============================================================
 // FITUR 4 — Biaya Layanan Integrasi (Doc2: /integrator/biaya_layanan_integrasi)
 // Deskripsi: Info biaya service per request antar aplikasi
 // ============================================================
-router.get('/biaya_layanan_integrasi', (req, res) => {
-    const totalFee = global.requestLogs.reduce((sum, log) => sum + (log.fee_terpotong || 0), 0);
+router.get('/biaya_layanan_integrasi', async (req, res) => {
+    try {
+        const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
+        const [feeResult] = await pool.query('SELECT COALESCE(SUM(fee_terpotong), 0) AS total_fee FROM request_logs');
 
-    res.json({
-        status: 'success',
-        message: 'Informasi biaya layanan integrasi',
-        data: {
-            fee_percent: `${GATEWAY_FEE_PERCENT}%`,
-            total_transaksi: global.requestLogs.length,
-            total_pendapatan_fee: totalFee,
-            keterangan: `Fee ${GATEWAY_FEE_PERCENT}% dipotong otomatis dari setiap transaksi yang melewati gateway`
-        }
-    });
+        res.json({
+            status: 'success',
+            message: 'Informasi biaya layanan integrasi',
+            data: {
+                fee_percent: `${GATEWAY_FEE_PERCENT}%`,
+                total_transaksi: countResult[0].total,
+                total_pendapatan_fee: parseFloat(feeResult[0].total_fee),
+                keterangan: `Fee ${GATEWAY_FEE_PERCENT}% dipotong otomatis dari setiap transaksi yang melewati gateway`
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal membaca data biaya', detail: err.message });
+    }
 });
 
 // ============================================================
@@ -130,13 +143,12 @@ router.all('/:service/{*path}', async (req, res) => {
             }
         }
 
-        // Update log entry dengan fee info
-        const currentLog = global.requestLogs[global.requestLogs.length - 1];
-        if (currentLog) {
-            currentLog.fee_terpotong = feeStatus === 'terpotong' ? gatewayFee : 0;
-            currentLog.fee_status = feeStatus;
-            currentLog.service_tujuan = service;
-            currentLog.status = 'FORWARDED';
+        // Update log entry dengan fee info (MySQL)
+        if (req.logId) {
+            await pool.query(
+                `UPDATE request_logs SET fee_terpotong = ?, fee_status = ?, service_tujuan = ?, status = 'FORWARDED' WHERE id = ?`,
+                [feeStatus === 'terpotong' ? gatewayFee : 0, feeStatus, service, req.logId]
+            );
         }
 
         // === Forward Request ke service tujuan (Doc4 Aturan 5) ===
@@ -151,10 +163,12 @@ router.all('/:service/{*path}', async (req, res) => {
             timeout: 10000
         });
 
-        // Update status di log
-        if (currentLog) {
-            currentLog.status = 'SUCCESS';
-            currentLog.response_status = response.status;
+        // Update status di log (MySQL)
+        if (req.logId) {
+            await pool.query(
+                'UPDATE request_logs SET status = ?, response_status = ? WHERE id = ?',
+                ['SUCCESS', response.status, req.logId]
+            );
         }
 
         res.json({
@@ -171,11 +185,12 @@ router.all('/:service/{*path}', async (req, res) => {
         });
 
     } catch (error) {
-        // Update status di log
-        const currentLog = global.requestLogs[global.requestLogs.length - 1];
-        if (currentLog) {
-            currentLog.status = 'ERROR';
-            currentLog.response_status = error.response?.status || 500;
+        // Update status di log (MySQL)
+        if (req.logId) {
+            await pool.query(
+                'UPDATE request_logs SET status = ?, response_status = ? WHERE id = ?',
+                ['ERROR', error.response?.status || 500, req.logId]
+            );
         }
 
         res.status(error.response?.status || 502).json({
@@ -226,12 +241,12 @@ router.all('/:service', async (req, res) => {
             }
         }
 
-        const currentLog = global.requestLogs[global.requestLogs.length - 1];
-        if (currentLog) {
-            currentLog.fee_terpotong = feeStatus === 'terpotong' ? gatewayFee : 0;
-            currentLog.fee_status = feeStatus;
-            currentLog.service_tujuan = service;
-            currentLog.status = 'FORWARDED';
+        // Update log (MySQL)
+        if (req.logId) {
+            await pool.query(
+                `UPDATE request_logs SET fee_terpotong = ?, fee_status = ?, service_tujuan = ?, status = 'FORWARDED' WHERE id = ?`,
+                [feeStatus === 'terpotong' ? gatewayFee : 0, feeStatus, service, req.logId]
+            );
         }
 
         const response = await axios({
@@ -245,9 +260,11 @@ router.all('/:service', async (req, res) => {
             timeout: 10000
         });
 
-        if (currentLog) {
-            currentLog.status = 'SUCCESS';
-            currentLog.response_status = response.status;
+        if (req.logId) {
+            await pool.query(
+                'UPDATE request_logs SET status = ?, response_status = ? WHERE id = ?',
+                ['SUCCESS', response.status, req.logId]
+            );
         }
 
         res.json({
@@ -264,10 +281,11 @@ router.all('/:service', async (req, res) => {
         });
 
     } catch (error) {
-        const currentLog = global.requestLogs[global.requestLogs.length - 1];
-        if (currentLog) {
-            currentLog.status = 'ERROR';
-            currentLog.response_status = error.response?.status || 500;
+        if (req.logId) {
+            await pool.query(
+                'UPDATE request_logs SET status = ?, response_status = ? WHERE id = ?',
+                ['ERROR', error.response?.status || 500, req.logId]
+            );
         }
 
         res.status(error.response?.status || 502).json({
