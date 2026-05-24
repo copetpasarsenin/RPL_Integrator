@@ -13,7 +13,7 @@ API Gateway / Integrator adalah **middleware orchestrator** yang menjadi pintu m
 |-------|--------|
 | **Peran** | Middleware/Orchestrator — penjaga keamanan dan konsistensi |
 | **Tanggung Jawab** | Routing API, Validasi JWT, Logging, Fee 0.5% |
-| **Tech Stack** | Node.js + Express v5 + EJS + JWT |
+| **Tech Stack** | Node.js + Express v5 + EJS + JWT + MySQL (Laragon) |
 | **Port** | 3000 |
 
 ### Stakeholder
@@ -200,25 +200,29 @@ Gateway terintegrasi ke SmartBank untuk pemotongan fee otomatis:
 
 ## 7. Desain Database
 
-Aplikasi menggunakan **in-memory storage** (array global):
+Aplikasi menggunakan database **MySQL** yang di-host menggunakan **Laragon**. Database yang digunakan bernama `rpl_integrator` dengan tabel `request_logs` untuk menyimpan seluruh riwayat transaksi gateway secara permanen (persisten).
 
-```javascript
-global.requestLogs[] = {
-  id: Number,              // Auto-increment
-  waktu: String,           // Waktu lokal Indonesia
-  timestamp: String,       // ISO 8601
-  ip: String,              // IP address pengirim
-  metode: String,          // HTTP method
-  url_tujuan: String,      // URL path lengkap
-  user_id: String,         // Dari decoded JWT
-  service_tujuan: String,  // Nama service target
-  status: String,          // PENDING / SUCCESS / ERROR
-  response_status: Number, // HTTP status code
-  fee_terpotong: Number,   // Fee dalam Rupiah
-  fee_status: String,      // terpotong / gagal_potong
-  mode: String             // null atau "DEMO"
-}
-```
+### Skema Tabel `request_logs`
+
+| Kolom | Tipe Data | Atribut | Keterangan |
+|---|---|---|---|
+| `id` | `INT` | `PRIMARY KEY`, `AUTO_INCREMENT` | ID unik log |
+| `waktu` | `VARCHAR(100)` | | Format waktu lokal (`id-ID`) saat request masuk |
+| `timestamp` | `DATETIME` | `DEFAULT CURRENT_TIMESTAMP` | Timestamp standar untuk sorting/filtering |
+| `ip` | `VARCHAR(50)` | | IP address asal request |
+| `metode` | `VARCHAR(10)` | | HTTP Method (`GET`, `POST`, `PUT`, `DELETE`) |
+| `url_tujuan` | `VARCHAR(500)` | | Endpoint/URL tujuan request |
+| `user_id` | `VARCHAR(100)` | | NPM atau User ID pengirim dari JWT payload |
+| `service_tujuan`| `VARCHAR(100)`| | Nama service ekosistem target |
+| `status` | `VARCHAR(20)` | `DEFAULT 'PENDING'` | Status request (`PENDING`, `SUCCESS`, `ERROR`, `FORWARDED`) |
+| `response_status`| `INT` | | HTTP Status Code dari service tujuan |
+| `fee_terpotong` | `DECIMAL(12,2)` | `DEFAULT 0` | Fee gateway (0.5% dari nominal transaksi) dalam Rupiah |
+| `fee_status` | `VARCHAR(50)` | | Status potong fee (`terpotong`, `gagal_potong`, `tidak_ada_amount`) |
+| `mode` | `VARCHAR(20)` | `DEFAULT NULL` | Mode testing (`DEMO` jika via simulator, `NULL` jika request asli) |
+
+> [!NOTE]
+> Tabel ini telah dioptimalkan menggunakan indexing pada kolom `status`, `service_tujuan`, dan `timestamp` untuk mempercepat query statistik pada dashboard admin.
+
 
 ---
 
@@ -317,17 +321,20 @@ Aplikasi memiliki 3 halaman utama:
 
 ```
 RPL_Integrator-main/
-├── .env                     # Environment variables
-├── server.js                # Entry point + routes + demo endpoint
-├── package.json             # Dependencies
+├── .env                     # Environment variables (termasuk konfigurasi DB)
+├── server.js                # Entry point + koneksi & inisialisasi DB + demo
+├── package.json             # Dependencies (Express, EJS, JWT, mysql2)
+├── config/
+│   ├── database.js          # [NEW] Konfigurasi pool koneksi MySQL (mysql2)
+│   └── init.sql             # [NEW] Script SQL inisialisasi database & tabel
 ├── middleware/
-│   ├── auth.js              # JWT validation middleware
-│   └── logger.js            # Request logging middleware
+│   ├── auth.js              # JWT validation middleware (update log user_id)
+│   └── logger.js            # Request logging middleware (simpan log awal)
 ├── routes/
-│   └── gateway.js           # Routing + fee + forwarding + 4 endpoints
+│   └── gateway.js           # Routing + fee + forwarding + update status log
 ├── views/
 │   ├── index.ejs            # Landing page
-│   ├── dashboard.ejs        # Dashboard admin (stats + log)
+│   ├── dashboard.ejs        # Dashboard admin (query stats langsung dari DB)
 │   └── client_portal.ejs    # Client portal (token + demo/live)
 ├── public/
 │   └── Panduan_*.pdf        # Dokumentasi PDF
@@ -340,11 +347,22 @@ RPL_Integrator-main/
 
 ## 🔧 Cara Menjalankan
 
+### Persiapan Database (Laragon MySQL)
+1. Buka aplikasi **Laragon** dan pastikan service **MySQL** sudah berjalan (klik **Start All**).
+2. Buat database baru bernama `rpl_integrator`. Anda bisa membuatnya melalui **HeidiSQL** (bawaan Laragon) atau menjalankan perintah berikut di terminal:
+   ```bash
+   # Masuk ke MySQL Laragon dan buat database
+   mysql -u root -e "CREATE DATABASE IF NOT EXISTS rpl_integrator CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+   ```
+3. Sesuaikan konfigurasi database pada file `.env` jika diperlukan (default: Host `localhost`, Port `3306`, User `root`, tanpa Password).
+
+### Menjalankan Server
 ```bash
-# 1. Install dependencies
+# 1. Install dependencies (termasuk driver mysql2)
 npm install
 
 # 2. Jalankan server
+# Database dan tabel request_logs akan dibuat otomatis jika belum ada saat server start!
 node server.js
 
 # 3. Akses di browser
