@@ -119,13 +119,13 @@
                     <label class="form-label">1. Pilih Aplikasi Tujuan</label>
                     <select id="testEndpoint" class="form-control" onchange="updateFeePreview()">
                         <option value="/integrator/smartbank/pembayaran_transaksi" data-svc="smartbank" data-ep="pembayaran_transaksi">1. SmartBank — Pembayaran Transaksi</option>
-                        <option value="/integrator/smartbank/manajemen_saldo" data-svc="smartbank" data-ep="manajemen_saldo">1. SmartBank — Manajemen Saldo</option>
+                        <option value="/integrator/smartbank/manajemen_saldo" data-svc="smartbank" data-ep="manajemen_saldo" data-fee="false">1. SmartBank — Manajemen Saldo</option>
                         <option value="/integrator/marketplace/checkout" data-svc="marketplace" data-ep="checkout">2. Marketplace — Checkout</option>
-                        <option value="/integrator/marketplace/browse_produk" data-svc="marketplace" data-ep="browse_produk">2. Marketplace — Browse Produk</option>
+                        <option value="/integrator/marketplace/browse_produk" data-svc="marketplace" data-ep="browse_produk" data-fee="false">2. Marketplace — Browse Produk</option>
                         <option value="/integrator/pos/input_transaksi" data-svc="pos" data-ep="input_transaksi">3. POS — Input Transaksi</option>
                         <option value="/integrator/supplierhub/order_bahan" data-svc="supplierhub" data-ep="order_bahan">4. SupplierHub — Order Bahan</option>
                         <option value="/integrator/logistikita/request_pengiriman" data-svc="logistikita" data-ep="request_pengiriman">5. LogistiKita — Request Pengiriman</option>
-                        <option value="/integrator/umkm_insight/ambil_data_transaksi" data-svc="umkm_insight" data-ep="ambil_data_transaksi">6. UMKM Insight — Ambil Data</option>
+                        <option value="/integrator/umkm_insight/ambil_data_transaksi" data-svc="umkm_insight" data-ep="ambil_data_transaksi" data-fee="false">6. UMKM Insight — Ambil Data</option>
                     </select>
                 </div>
 
@@ -218,10 +218,27 @@
         }
 
         function updateFeePreview() {
-            const amount = parseFloat(document.getElementById('testAmount').value) || 0;
-            const fee = Math.round(amount * 0.005);
-            document.getElementById('feePreview').textContent = 'Rp ' + fee.toLocaleString('id-ID');
+            const sel = document.getElementById('testEndpoint');
+            const opt = sel.options[sel.selectedIndex];
+            const hasFee = opt.dataset.fee !== 'false';
+            
+            const amountInput = document.getElementById('testAmount');
+            
+            if (!hasFee) {
+                amountInput.disabled = true;
+                amountInput.value = 0;
+                document.getElementById('feePreview').innerHTML = 'Rp 0 <span style="font-weight:normal; font-size:12px; color:var(--kong-text-muted);">(Non-Transaksi)</span>';
+            } else {
+                amountInput.disabled = false;
+                if (amountInput.value == 0) amountInput.value = 50000;
+                const amount = parseFloat(amountInput.value) || 0;
+                const fee = Math.round(amount * 0.005);
+                document.getElementById('feePreview').textContent = 'Rp ' + fee.toLocaleString('id-ID');
+            }
         }
+
+        // Jalankan saat halaman siap
+        window.addEventListener('DOMContentLoaded', updateFeePreview);
 
         function getSelectedService() {
             const sel = document.getElementById('testEndpoint');
@@ -231,7 +248,8 @@
 
         async function jalankanDemo() {
             const token = document.getElementById('testToken').value;
-            const amount = parseFloat(document.getElementById('testAmount').value) || 50000;
+            let amount = parseFloat(document.getElementById('testAmount').value);
+            if (isNaN(amount)) amount = 50000;
             const { service, endpoint } = getSelectedService();
             const responseBox = document.getElementById('jsonResponse');
 

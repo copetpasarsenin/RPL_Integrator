@@ -183,9 +183,10 @@ app.post('/api/demo/simulate', async (req, res) => {
 
     const service = req.body.service || 'smartbank';
     const endpoint = req.body.endpoint || 'pembayaran_transaksi';
-    const amount = parseFloat(req.body.amount) || 50000;
+    const amount = (req.body.amount !== undefined && !isNaN(parseFloat(req.body.amount))) ? parseFloat(req.body.amount) : 50000;
     const feePercent = parseFloat(process.env.GATEWAY_FEE_PERCENT) || 0.5;
     const gatewayFee = Math.round(amount * (feePercent / 100));
+    const feeStatus = amount > 0 ? 'terpotong' : 'tidak_ada_amount';
 
     // Simulasi data response dari service tujuan
     const serviceResponses = {
@@ -213,7 +214,7 @@ app.post('/api/demo/simulate', async (req, res) => {
                 'SUCCESS',
                 200,
                 gatewayFee,
-                'terpotong',
+                feeStatus,
                 'DEMO'
             ]
         );
@@ -228,7 +229,7 @@ app.post('/api/demo/simulate', async (req, res) => {
                 fee_percent: `${feePercent}%`,
                 transaction_amount: amount,
                 fee_terpotong: gatewayFee,
-                fee_status: 'terpotong',
+                fee_status: feeStatus,
                 forwarded_to: `http://localhost:300X/${service}/${endpoint}`
             },
             data: serviceResponses[service] || serviceResponses.smartbank

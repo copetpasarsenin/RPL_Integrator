@@ -21,7 +21,7 @@
         </div>
         <div class="sidebar-menu">
             <div class="menu-group">Workspace: Default</div>
-            <a href="/dashboard" class="menu-item active">
+            <a href="javascript:void(0)" onclick="showSection('overview')" id="menu-overview" class="menu-item active">
                 <span class="menu-icon">📊</span> Overview
             </a>
             <a href="/client-portal" class="menu-item">
@@ -29,10 +29,10 @@
             </a>
 
             <div class="menu-group">Gateway Services</div>
-            <a href="#" class="menu-item">
+            <a href="javascript:void(0)" onclick="showSection('services')" id="menu-services" class="menu-item">
                 <span class="menu-icon">📦</span> Services (6)
             </a>
-            <a href="#" class="menu-item">
+            <a href="javascript:void(0)" onclick="showSection('routes')" id="menu-routes" class="menu-item">
                 <span class="menu-icon">🔀</span> Routes
             </a>
             <a href="/api/logs" class="menu-item" target="_blank">
@@ -52,125 +52,289 @@
             <div class="breadcrumb">
                 <a href="/">Home</a> <span style="margin:0 8px;">/</span>
                 <a href="#">Gateway System</a> <span style="margin:0 8px;">/</span>
-                <span style="color: #1f2937; font-weight: 500;">Overview</span>
+                <span id="breadcrumb-current" style="color: #1f2937; font-weight: 500;">Overview</span>
             </div>
             <div class="topbar-actions">
-                <a href="/client-portal" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Generate
-                    Token</a>
-                <!-- <a href="#" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;">Documentation</a> -->
+                <a href="/client-portal" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Generate Token</a>
             </div>
         </div>
 
         <div class="content">
-            <div class="page-title">Overview</div>
+            <div class="page-title" id="content-title">Overview</div>
 
-            <div class="stats-grid">
-                <div class="stat-box" style="border-top: 3px solid var(--status-warning);">
-                    <div class="stat-title">Pendapatan Gateway (0.5%)</div>
-                    <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %>
+            <!-- OVERVIEW SECTION (STATS & LOGS) -->
+            <div id="overview-section">
+                <div class="stats-grid">
+                    <div class="stat-box" style="border-top: 3px solid var(--status-warning);">
+                        <div class="stat-title">Pendapatan Gateway (0.5%)</div>
+                        <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %></div>
+                        <div class="stat-desc">Total fee terpotong dari transaksi</div>
                     </div>
-                    <div class="stat-desc">Total fee terpotong dari transaksi</div>
-                </div>
-                <div class="stat-box" style="border-top: 3px solid var(--kong-blue);">
-                    <div class="stat-title">Total Requests</div>
-                    <div class="stat-value">
-                        <%= logs.length %>
+                    <div class="stat-box" style="border-top: 3px solid var(--kong-blue);">
+                        <div class="stat-title">Total Requests</div>
+                        <div class="stat-value"><%= logs.length %></div>
+                        <div class="stat-desc">Jumlah request yang diproses</div>
                     </div>
-                    <div class="stat-desc">Jumlah request yang diproses</div>
-                </div>
-                <div class="stat-box" style="border-top: 3px solid var(--status-success);">
-                    <div class="stat-title">Sukses</div>
-                    <div class="stat-value">
-                        <%= totalSuccess %>
+                    <div class="stat-box" style="border-top: 3px solid var(--status-success);">
+                        <div class="stat-title">Sukses</div>
+                        <div class="stat-value"><%= totalSuccess %></div>
+                        <div class="stat-desc">Request berhasil diteruskan</div>
                     </div>
-                    <div class="stat-desc">Request berhasil diteruskan</div>
-                </div>
-                <div class="stat-box" style="border-top: 3px solid var(--status-error);">
-                    <div class="stat-title">Error</div>
-                    <div class="stat-value">
-                        <%= totalError %>
+                    <div class="stat-box" style="border-top: 3px solid var(--status-error);">
+                        <div class="stat-title">Error</div>
+                        <div class="stat-value"><%= totalError %></div>
+                        <div class="stat-desc">Gagal atau service offline</div>
                     </div>
-                    <div class="stat-desc">Gagal atau service offline</div>
                 </div>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Recent Traffic Logs</div>
-                    <button class="btn btn-outline" onclick="location.reload()"
-                        style="padding: 6px 12px; font-size: 12px;">⟳ Refresh</button>
-                </div>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Waktu</th>
-                                <th>IP & User</th>
-                                <th>Metode</th>
-                                <th>Endpoint / Route</th>
-                                <th>Status</th>
-                                <th>Fee (Rp)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (logs.length===0) { %>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Traffic Logs</div>
+                        <button class="btn btn-outline" onclick="location.reload()" style="padding: 6px 12px; font-size: 12px;">⟳ Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colspan="7"
-                                        style="text-align: center; padding: 40px; color: var(--kong-text-muted);">
-                                        Belum ada aktivitas terekam.
-                                    </td>
+                                    <th>#</th>
+                                    <th>Waktu</th>
+                                    <th>IP & User</th>
+                                    <th>Metode</th>
+                                    <th>Endpoint / Route</th>
+                                    <th>Status</th>
+                                    <th>Fee (Rp)</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                <% if (logs.length===0) { %>
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--kong-text-muted);">
+                                            Belum ada aktivitas terekam.
+                                        </td>
+                                    </tr>
                                 <% } else { %>
                                     <% [...logs].reverse().forEach((log, i)=> { %>
                                         <tr>
-                                            <td style="color: var(--kong-text-muted);">#<%= log.id || (logs.length - i)
-                                                    %>
-                                            </td>
-                                            <td style="color: var(--kong-text-muted); font-size: 12px;">
-                                                <%= log.waktu %>
-                                            </td>
+                                            <td style="color: var(--kong-text-muted);">#<%= log.id || (logs.length - i) %></td>
+                                            <td style="color: var(--kong-text-muted); font-size: 12px;"><%= log.waktu %></td>
                                             <td>
-                                                <div style="font-weight: 500;">
-                                                    <%= log.user_id || '-' %>
-                                                </div>
-                                                <div style="font-size: 11px; color: var(--kong-text-muted);">
-                                                    <%= log.ip || '-' %>
-                                                </div>
+                                                <div style="font-weight: 500;"><%= log.user_id || '-' %></div>
+                                                <div style="font-size: 11px; color: var(--kong-text-muted);"><%= log.ip || '-' %></div>
                                             </td>
-                                            <td><span class="badge badge-info">
-                                                    <%= log.metode %>
-                                                </span></td>
-                                            <td style="font-family: monospace; font-size: 12px; font-weight: 600;">
-                                                <%= log.url_tujuan %>
-                                            </td>
+                                            <td><span class="badge badge-info"><%= log.metode %></span></td>
+                                            <td style="font-family: monospace; font-size: 12px; font-weight: 600;"><%= log.url_tujuan %></td>
                                             <td>
                                                 <% if (log.status==='SUCCESS' ) { %>
                                                     <span class="badge badge-success">✓ Success</span>
-                                                    <% } else if (log.status==='ERROR' ) { %>
-                                                        <span class="badge badge-error">✗ Error</span>
-                                                        <% } else { %>
-                                                            <span class="badge badge-warning">⏳ Pending</span>
-                                                            <% } %>
+                                                <% } else if (log.status==='ERROR' ) { %>
+                                                    <span class="badge badge-error">✗ Error</span>
+                                                <% } else { %>
+                                                    <span class="badge badge-warning">⏳ Pending</span>
+                                                <% } %>
                                             </td>
                                             <td style="font-weight: 600;">
                                                 <% if (log.fee_terpotong> 0) { %>
-                                                    <span style="color: var(--status-warning);">
-                                                        <%= log.fee_terpotong.toLocaleString('id-ID') %>
-                                                    </span>
-                                                    <% } else { %>
-                                                        <span style="color: var(--kong-text-muted);">-</span>
-                                                        <% } %>
+                                                    <span style="color: var(--status-warning);"><%= log.fee_terpotong.toLocaleString('id-ID') %></span>
+                                                <% } else { %>
+                                                    <span style="color: var(--kong-text-muted);">-</span>
+                                                <% } %>
                                             </td>
                                         </tr>
-                                        <% }) %>
-                                            <% } %>
-                        </tbody>
-                    </table>
+                                    <% }) %>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SERVICES SECTION -->
+            <div id="services-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Registered Services</div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service Name</th>
+                                    <th>Host URL</th>
+                                    <th>Port</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>smartbank</strong></td>
+                                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">http://localhost:3001</code></td>
+                                    <td>3001</td>
+                                    <td>Pusat transaksi finansial, manajemen saldo, transfer, & pembayaran</td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>marketplace</strong></td>
+                                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">http://localhost:3002</code></td>
+                                    <td>3002</td>
+                                    <td>E-Commerce UMKM, browse produk, checkout, & integrasi pembayaran</td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>pos</strong></td>
+                                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">http://localhost:3003</code></td>
+                                    <td>3003</td>
+                                    <td>Point of Sale kasir, input transaksi, & generate tagihan offline</td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>supplierhub</strong></td>
+                                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">http://localhost:3004</code></td>
+                                    <td>3004</td>
+                                    <td>Manajemen bahan baku UMKM, pemesanan ke supplier, & cek stok</td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>logistikita</strong></td>
+                                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">http://localhost:3005</code></td>
+                                    <td>3005</td>
+                                    <td>Pengiriman barang, hitung ongkir otomatis, & tracking kurir</td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>umkm_insight</strong></td>
+                                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">http://localhost:3006</code></td>
+                                    <td>3006</td>
+                                    <td>Analytics dashboard, statistik omzet penjualan, & report premium</td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">Active</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROUTES SECTION -->
+            <div id="routes-section" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">API Routes Config</div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>HTTP Method</th>
+                                    <th>Gateway Route Path</th>
+                                    <th>Target Downstream URL</th>
+                                    <th>Auth</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">POST</span></td>
+                                    <td><code>/integrator/smartbank/pembayaran_transaksi</code></td>
+                                    <td><code>http://localhost:3001/pembayaran_transaksi</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Proses debet dana transaksi dari akun pengguna</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">GET</span></td>
+                                    <td><code>/integrator/smartbank/manajemen_saldo</code></td>
+                                    <td><code>http://localhost:3001/manajemen_saldo</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Melihat data saldo & riwayat keuangan nasabah</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">POST</span></td>
+                                    <td><code>/integrator/marketplace/checkout</code></td>
+                                    <td><code>http://localhost:3002/checkout</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Pembelian barang belanjaan oleh pembeli</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">GET</span></td>
+                                    <td><code>/integrator/marketplace/browse_produk</code></td>
+                                    <td><code>http://localhost:3002/browse_produk</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Melihat daftar produk jualan seller UMKM</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">POST</span></td>
+                                    <td><code>/integrator/pos/input_transaksi</code></td>
+                                    <td><code>http://localhost:3003/input_transaksi</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Kasir memasukkan item belanjaan kasir offline</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">POST</span></td>
+                                    <td><code>/integrator/supplierhub/order_bahan</code></td>
+                                    <td><code>http://localhost:3004/order_bahan</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Pemesanan bahan baku dari pelaku UMKM ke Supplier</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">POST</span></td>
+                                    <td><code>/integrator/logistikita/request_pengiriman</code></td>
+                                    <td><code>http://localhost:3005/request_pengiriman</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Permintaan kurir penjemputan & pengantaran barang</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">GET</span></td>
+                                    <td><code>/integrator/umkm_insight/ambil_data_transaksi</code></td>
+                                    <td><code>http://localhost:3006/ambil_data_transaksi</code></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Penarikan data laporan penjualan untuk analytics</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-info" style="min-width:65px; justify-content:center; background:#dbeafe; color:#3b82f6;">GET</span></td>
+                                    <td><code>/integrator/routing_api</code></td>
+                                    <td><span style="color:var(--kong-text-muted);">[Internal Gateway]</span></td>
+                                    <td><span class="badge badge-success" style="background:#d1fae5; color:#10b981;">JWT Bearer</span></td>
+                                    <td>Endpoint internal info routing list service</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- SCRIPT FOR SWITCHING SECTIONS -->
+    <script>
+        function showSection(sectionName) {
+            // Hide all sections
+            document.getElementById('overview-section').style.display = 'none';
+            document.getElementById('services-section').style.display = 'none';
+            document.getElementById('routes-section').style.display = 'none';
+
+            // Deactivate all sidebar items
+            document.getElementById('menu-overview').classList.remove('active');
+            document.getElementById('menu-services').classList.remove('active');
+            document.getElementById('menu-routes').classList.remove('active');
+
+            // Update active section & UI
+            if (sectionName === 'overview') {
+                document.getElementById('overview-section').style.display = 'block';
+                document.getElementById('menu-overview').classList.add('active');
+                document.getElementById('content-title').innerText = 'Overview';
+                document.getElementById('breadcrumb-current').innerText = 'Overview';
+            } else if (sectionName === 'services') {
+                document.getElementById('services-section').style.display = 'block';
+                document.getElementById('menu-services').classList.add('active');
+                document.getElementById('content-title').innerText = 'Registered Services';
+                document.getElementById('breadcrumb-current').innerText = 'Services';
+            } else if (sectionName === 'routes') {
+                document.getElementById('routes-section').style.display = 'block';
+                document.getElementById('menu-routes').classList.add('active');
+                document.getElementById('content-title').innerText = 'Gateway Routing Map';
+                document.getElementById('breadcrumb-current').innerText = 'Routes';
+            }
+        }
+    </script>
 </body>
 
 </html>
