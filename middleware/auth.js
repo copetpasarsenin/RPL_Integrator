@@ -70,6 +70,11 @@ async function requireAuth(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Pastikan hanya session token yang bisa akses dashboard
+        if (decoded.type && decoded.type !== 'dashboard_session') {
+            if (req.accepts('html')) return res.redirect('/login');
+            return res.status(401).json({ status: 'error', message: 'Token ini bukan session token. Gunakan login untuk akses dashboard.' });
+        }
         req.sessionUser = {
             id: decoded.id,
             username: decoded.username,
@@ -94,8 +99,7 @@ function requireRole(roles) {
 
             return res.status(403).json({
                 status: 'error',
-                message: 'Role tidak memiliki izin',
-                allowed_roles: allowedRoles
+                message: 'Role tidak memiliki izin untuk mengakses resource ini'
             });
         }
 
@@ -133,8 +137,7 @@ async function validateApiToken(req, res, next) {
     } catch (err) {
         return res.status(403).json({
             status: 'error',
-            message: 'Token tidak valid atau sudah kadaluwarsa',
-            detail: err.message
+            message: 'Token tidak valid atau sudah kadaluwarsa'
         });
     }
 }

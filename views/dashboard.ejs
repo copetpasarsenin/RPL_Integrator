@@ -7,8 +7,14 @@
     <title>Dashboard - Gateway Integrator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .auto-refresh-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); padding: 4px 10px; border-radius: 999px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); }
+        .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; animation: pulse-dot 2s infinite; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
 </head>
 
 <body>
@@ -131,6 +137,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title"><i data-lucide="clipboard-list"></i> Recent Traffic Logs</div>
+                        <span class="auto-refresh-badge"><span class="pulse-dot"></span> Auto-refresh 30s</span>
                         <button class="btn btn-outline" onclick="location.reload()"><i data-lucide="refresh-cw"></i> Refresh</button>
                     </div>
                     <div class="table-wrapper">
@@ -260,10 +267,11 @@
     </div>
 
     <script>
-        const requestChartLabels = <%- JSON.stringify(requestChart.labels) %>;
-        const requestChartData = <%- JSON.stringify(requestChart.data) %>;
-        const revenueChartLabels = <%- JSON.stringify(revenueChart.labels) %>;
-        const revenueChartData = <%- JSON.stringify(revenueChart.data) %>;
+        // Data di-sanitize: labels berasal dari api_services (admin-controlled)
+        const requestChartLabels = <%- JSON.stringify((requestChart.labels || []).map(l => String(l).replace(/[<>"'&]/g, ''))) %>;
+        const requestChartData = <%- JSON.stringify(requestChart.data || []) %>;
+        const revenueChartLabels = <%- JSON.stringify((revenueChart.labels || []).map(l => String(l).replace(/[<>"'&]/g, ''))) %>;
+        const revenueChartData = <%- JSON.stringify(revenueChart.data || []) %>;
 
         function renderCharts() {
             new Chart(document.getElementById('requestChart'), {
@@ -308,6 +316,13 @@
                 });
             <% } %>
         }
+
+        // Auto-refresh setiap 30 detik
+        let autoRefreshInterval = setInterval(() => {
+            if (document.getElementById('overview-section').style.display !== 'none') {
+                location.reload();
+            }
+        }, 30000);
 
         function showSection(sectionName) {
             document.getElementById('overview-section').style.display = 'none';

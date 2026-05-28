@@ -15,6 +15,8 @@ const {
     requireRole
 } = require('./middleware/auth');
 const gatewayRoutes = require('./routes/gateway');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -25,6 +27,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting
+const loginLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { status: 'error', message: 'Terlalu banyak percobaan login. Coba lagi setelah 1 menit.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    message: { status: 'error', message: 'Terlalu banyak request. Coba lagi setelah 1 menit.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 app.get('/', (req, res) => {
     res.render('index');
 });
@@ -33,7 +57,7 @@ app.get('/login', (req, res) => {
     res.render('login', { error: null });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -66,25 +90,38 @@ app.get('/dashboard', requireAuth, requireRole(['admin', 'operator']), async (re
     const canViewRevenue = req.sessionUser.role === 'admin';
 
     try {
-        const [logs] = await pool.query('SELECT * FROM request_logs ORDER BY id DESC LIMIT 100');
-        const [requestCount] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
-        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(nominal_fee), 0) AS total FROM revenue_logs');
-        const [successResult] = await pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'SUCCESS'");
-        const [errorResult] = await pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'ERROR'");
-        const [services] = await pool.query('SELECT * FROM api_services ORDER BY nama_service ASC');
-        const [requestChartRows] = await pool.query(`
-            SELECT COALESCE(service_tujuan, 'unknown') AS label, COUNT(*) AS total
-            FROM request_logs
-            GROUP BY COALESCE(service_tujuan, 'unknown')
-            ORDER BY total DESC
-        `);
-        const [revenueChartRows] = await pool.query(`
-            SELECT DATE_FORMAT(waktu, '%Y-%m-%d') AS label, SUM(nominal_fee) AS total
-            FROM revenue_logs
-            GROUP BY DATE(waktu), DATE_FORMAT(waktu, '%Y-%m-%d')
-            ORDER BY DATE(waktu) ASC
-            LIMIT 14
-        `);
+        // Paralelisasi query untuk performa optimal
+        const [
+            [logs],
+            [requestCount],
+            [revenueResult],
+            [successResult],
+            [errorResult],
+            [services],
+            [requestChartRows],
+            [revenueChartRows]
+        ] = await Promise.all([
+            pool.query('SELECT * FROM request_logs ORDER BY id DESC LIMIT 100'),
+            pool.query('SELECT COUNT(*) AS total FROM request_logs'),
+            pool.query('SELECT COALESCE(SUM(nominal_fee), 0) AS total FROM revenue_logs'),
+            pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'SUCCESS'"),
+            pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'ERROR'"),
+            pool.query('SELECT * FROM api_services ORDER BY nama_service ASC'),
+            pool.query(`
+                SELECT s.nama_service AS label, COUNT(r.id) AS total
+                FROM api_services s
+                LEFT JOIN request_logs r ON r.service_tujuan = s.nama_service
+                GROUP BY s.nama_service
+                ORDER BY total DESC
+            `),
+            pool.query(`
+                SELECT DATE_FORMAT(waktu, '%Y-%m-%d') AS label, SUM(nominal_fee) AS total
+                FROM revenue_logs
+                GROUP BY DATE(waktu), DATE_FORMAT(waktu, '%Y-%m-%d')
+                ORDER BY DATE(waktu) ASC
+                LIMIT 14
+            `)
+        ]);
 
         res.render('dashboard', {
             logs,
@@ -151,45 +188,27 @@ app.post('/generate-test-token', requireAuth, requireRole(['admin', 'operator', 
     });
 });
 
-app.get('/generate-test-token', requireAuth, requireRole(['admin', 'operator', 'user']), (req, res) => {
-    const payload = {
-        user_id: req.query.user_id || String(req.sessionUser.id),
-        name: req.query.name || req.sessionUser.username,
-        npm: req.query.npm || req.query.user_id || String(req.sessionUser.id),
-        role: req.sessionUser.role,
-        generated_at: new Date().toISOString()
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({
-        status: 'success',
-        message: 'Token berhasil dibuat (berlaku 24 jam)',
-        token,
-        payload
-    });
-});
+// GET /generate-test-token dihapus — token hanya boleh dibuat via POST
 
 app.get('/api/status', async (req, res) => {
     try {
         const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
-        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(nominal_fee), 0) AS total FROM revenue_logs');
-        const [services] = await pool.query('SELECT nama_service, url_tujuan, status_aktif FROM api_services ORDER BY nama_service ASC');
+        const [services] = await pool.query('SELECT nama_service, status_aktif FROM api_services ORDER BY nama_service ASC');
 
         res.json({
             status: 'online',
             application: 'API Gateway / Integrator',
             kelompok: 7,
             version: '3.0.0',
-            database: 'MySQL (Laragon)',
-            uptime: process.uptime(),
+            uptime: Math.floor(process.uptime()) + 's',
             total_requests: countResult[0].total,
-            total_revenue: parseFloat(revenueResult[0].total),
+            registered_services: services.length,
+            active_services: services.filter(s => s.status_aktif).length,
             fee_gateway: `${process.env.GATEWAY_FEE_PERCENT || 0.5}%`,
-            services,
             timestamp: new Date().toISOString()
         });
     } catch (err) {
-        res.status(500).json({ status: 'error', message: 'Gagal query database', detail: err.message });
+        res.status(500).json({ status: 'error', message: 'Gagal query database' });
     }
 });
 
@@ -290,7 +309,7 @@ app.post('/api/demo/simulate', requireAuth, requireRole(['admin', 'operator', 'u
     }
 });
 
-app.use('/integrator', loggerMiddleware, validateApiToken, gatewayRoutes);
+app.use('/integrator', apiLimiter, loggerMiddleware, validateApiToken, gatewayRoutes);
 
 const PORT = process.env.PORT || 3000;
 
