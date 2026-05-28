@@ -104,6 +104,8 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
         });
 
         const targetUrl = joinUrl(targetService.url_tujuan, forwardPath);
+        console.log(`[PROXY] Forwarding ${req.method} to: ${targetUrl}`);
+        
         const response = await axios({
             method: req.method,
             url: targetUrl,
@@ -152,7 +154,8 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
                 fee_terpotong: gatewayFee,
                 fee_status: feeStatus
             },
-            error_detail: error.message
+            error_detail: error.message,
+            target_response: error.response?.data || null
         });
     }
 }

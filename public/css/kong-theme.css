@@ -1027,3 +1027,73 @@ code {
     padding: 4px 10px;
     font-size: 12px;
 }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* SESSION SWITCHER (multi-tab login)                        */
+/* ═══════════════════════════════════════════════════════════ */
+
+.session-switcher {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+}
+
+.session-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.session-tab:hover {
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--ink-2);
+}
+
+.session-tab.active {
+    background: #ffffff;
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.session-role-label {
+    opacity: 0.6;
+    font-weight: 600;
+}
+
+.session-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.session-dot-admin {
+    background: var(--danger);
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.4);
+}
+
+.session-dot-operator {
+    background: var(--brand);
+    box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+}
+
+.session-dot-user {
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(5, 150, 105, 0.4);
+}
+
+.session-tab.active .session-dot {
+    animation: pulse-dot 2s infinite;
+}

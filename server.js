@@ -12,6 +12,10 @@ const {
     issueSessionToken,
     setSessionCookie,
     clearSessionCookie,
+    clearAllSessionCookies,
+    getAllSessions,
+    ROLE_COOKIES,
+    ACTIVE_COOKIE,
     requireAuth,
     requireRole
 } = require('./middleware/auth');
@@ -70,7 +74,7 @@ app.post('/login', loginLimiter, async (req, res) => {
             return res.status(401).render('login', { error: 'Username atau password salah.' });
         }
         const token = issueSessionToken(user);
-        setSessionCookie(res, token);
+        setSessionCookie(res, token, user.role);
         return res.redirect(user.role === 'user' ? '/client-portal' : '/dashboard');
     } catch (err) {
         console.error('[LOGIN] Error:', err.message);
@@ -78,9 +82,33 @@ app.post('/login', loginLimiter, async (req, res) => {
     }
 });
 
+// Logout — hapus session role yang aktif
 app.post('/logout', (req, res) => {
-    clearSessionCookie(res);
+    const role = req.body.role;
+    if (role) {
+        clearSessionCookie(res, role);
+    } else {
+        clearAllSessionCookies(res);
+    }
     res.redirect('/login');
+});
+
+// Logout semua session
+app.post('/logout-all', (req, res) => {
+    clearAllSessionCookies(res);
+    res.redirect('/login');
+});
+
+// Switch session — pindah ke role lain tanpa login ulang
+app.get('/switch-session/:role', (req, res) => {
+    const role = req.params.role;
+    if (!ROLE_COOKIES[role]) return res.redirect('/dashboard');
+    res.cookie(ACTIVE_COOKIE, role, {
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 8 * 60 * 60 * 1000
+    });
+    return res.redirect(role === 'user' ? '/client-portal' : '/dashboard');
 });
 
 app.get('/register', (req, res) => res.render('register', { error: null, success: null }));

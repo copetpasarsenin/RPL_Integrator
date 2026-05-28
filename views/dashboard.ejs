@@ -53,8 +53,26 @@
                 </span>
             </div>
             <div class="topbar-actions">
-                <span class="user-pill"><i data-lucide="user-round"></i><%= currentUser.username %> (<%= currentUser.role %>)</span>
-                <form class="logout-form" method="POST" action="/logout"><button class="btn btn-outline"><i data-lucide="log-out"></i> Logout</button></form>
+                <% const sessions = allSessions || {}; const sessionCount = Object.keys(sessions).length; %>
+                <% if (sessionCount > 1) { %>
+                    <div class="session-switcher">
+                        <% for (const [role, info] of Object.entries(sessions)) { %>
+                            <a href="/switch-session/<%= role %>" class="session-tab <%= role === activeRole ? 'active' : '' %>" title="Switch ke <%= info.username %> (<%= role %>)">
+                                <span class="session-dot session-dot-<%= role %>"></span>
+                                <%= info.username %> <span class="session-role-label">(<%= role %>)</span>
+                            </a>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <span class="user-pill"><i data-lucide="user-round"></i><%= currentUser.username %> (<%= currentUser.role %>)</span>
+                <% } %>
+                <form class="logout-form" method="POST" action="/logout">
+                    <input type="hidden" name="role" value="<%= currentUser.role %>">
+                    <button class="btn btn-outline" title="Logout <%= currentUser.role %>"><i data-lucide="log-out"></i> Logout</button>
+                </form>
+                <% if (sessionCount > 1) { %>
+                    <form class="logout-form" method="POST" action="/logout-all"><button class="btn btn-outline" style="color:var(--danger)" title="Logout semua session"><i data-lucide="x-circle"></i></button></form>
+                <% } %>
             </div>
         </div>
 

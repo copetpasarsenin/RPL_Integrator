@@ -2,6 +2,15 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
+// Per-role cookie names — memungkinkan login multi-tab bersamaan
+const ROLE_COOKIES = {
+    admin: 'gw_admin',
+    operator: 'gw_operator',
+    user: 'gw_user'
+};
+const ACTIVE_COOKIE = 'gw_active';
+
+// Legacy cookie name (for backward compat)
 const SESSION_COOKIE = 'gateway_session';
 
 function createPasswordHash(password) {
@@ -44,24 +53,111 @@ function issueSessionToken(user) {
     );
 }
 
-function setSessionCookie(res, token) {
-    const secure = process.env.NODE_ENV === 'production';
-    res.cookie(SESSION_COOKIE, token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure,
-        maxAge: 8 * 60 * 60 * 1000
-    });
+const cookieOpts = () => ({
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 8 * 60 * 60 * 1000
+});
+
+/**
+ * Set session cookie untuk role tertentu.
+ * Cookie lama untuk role lain TIDAK dihapus — agar bisa multi-login.
+ */
+function setSessionCookie(res, token, role) {
+    const roleCookie = ROLE_COOKIES[role];
+    if (roleCookie) {
+        res.cookie(roleCookie, token, cookieOpts());
+    }
+    // Set active role
+    res.cookie(ACTIVE_COOKIE, role, { ...cookieOpts(), httpOnly: false });
+    // Legacy fallback
+    res.cookie(SESSION_COOKIE, token, cookieOpts());
 }
 
-function clearSessionCookie(res) {
+/**
+ * Hapus session cookie untuk role tertentu.
+ * Jika role tidak diisi, hapus cookie role yang aktif.
+ */
+function clearSessionCookie(res, role) {
+    if (role && ROLE_COOKIES[role]) {
+        res.clearCookie(ROLE_COOKIES[role]);
+    }
+    // Selalu hapus legacy + active
     res.clearCookie(SESSION_COOKIE);
+    res.clearCookie(ACTIVE_COOKIE);
+}
+
+/**
+ * Hapus SEMUA session cookies (logout all).
+ */
+function clearAllSessionCookies(res) {
+    Object.values(ROLE_COOKIES).forEach(name => res.clearCookie(name));
+    res.clearCookie(SESSION_COOKIE);
+    res.clearCookie(ACTIVE_COOKIE);
+}
+
+/**
+ * Ambil semua session yang aktif dari cookies.
+ * Return: { admin: {...}, operator: {...}, user: {...} }
+ */
+function getAllSessions(req) {
+    const sessions = {};
+    for (const [role, cookieName] of Object.entries(ROLE_COOKIES)) {
+        const token = getCookie(req, cookieName);
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded.type === 'dashboard_session') {
+                    sessions[role] = {
+                        id: decoded.id,
+                        username: decoded.username,
+                        role: decoded.role
+                    };
+                }
+            } catch (_) {
+                // Token expired/invalid — abaikan
+            }
+        }
+    }
+    return sessions;
 }
 
 async function requireAuth(req, res, next) {
-    const cookieToken = getCookie(req, SESSION_COOKIE);
-    const bearerToken = (req.headers.authorization || '').split(' ')[1];
-    const token = cookieToken || bearerToken;
+    // 1. Cek role aktif dari cookie atau query param (?as=admin)
+    const requestedRole = req.query.as || getCookie(req, ACTIVE_COOKIE);
+
+    // 2. Coba ambil token dari role-specific cookie
+    let token = null;
+    let resolvedRole = null;
+
+    if (requestedRole && ROLE_COOKIES[requestedRole]) {
+        token = getCookie(req, ROLE_COOKIES[requestedRole]);
+        resolvedRole = requestedRole;
+    }
+
+    // 3. Fallback: cek semua role cookies (prioritas admin > operator > user)
+    if (!token) {
+        for (const [role, cookieName] of Object.entries(ROLE_COOKIES)) {
+            const t = getCookie(req, cookieName);
+            if (t) {
+                token = t;
+                resolvedRole = role;
+                break;
+            }
+        }
+    }
+
+    // 4. Fallback: legacy cookie
+    if (!token) {
+        token = getCookie(req, SESSION_COOKIE);
+    }
+
+    // 5. Fallback: bearer header
+    if (!token) {
+        const bearerToken = (req.headers.authorization || '').split(' ')[1];
+        if (bearerToken) token = bearerToken;
+    }
 
     if (!token) {
         if (req.accepts('html')) return res.redirect('/login');
@@ -81,6 +177,11 @@ async function requireAuth(req, res, next) {
             role: decoded.role
         };
         res.locals.currentUser = req.sessionUser;
+
+        // Tambahkan info semua session aktif ke res.locals
+        res.locals.allSessions = getAllSessions(req);
+        res.locals.activeRole = decoded.role;
+
         next();
     } catch (err) {
         if (req.accepts('html')) return res.redirect('/login');
@@ -144,11 +245,15 @@ async function validateApiToken(req, res, next) {
 
 module.exports = {
     SESSION_COOKIE,
+    ROLE_COOKIES,
+    ACTIVE_COOKIE,
     createPasswordHash,
     verifyPassword,
     issueSessionToken,
     setSessionCookie,
     clearSessionCookie,
+    clearAllSessionCookies,
+    getAllSessions,
     requireAuth,
     requireRole,
     validateApiToken

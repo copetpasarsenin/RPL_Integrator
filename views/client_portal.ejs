@@ -63,11 +63,24 @@
                 <span style="color: var(--ink); font-weight: 700;">API Simulator</span>
             </div>
             <div class="topbar-actions">
-                <span class="user-pill"><i data-lucide="user-round"></i><%= currentUser.username %> (<%= currentUser.role %>)</span>
+                <% const sessions = allSessions || {}; const sessionCount = Object.keys(sessions).length; %>
+                <% if (sessionCount > 1) { %>
+                    <div class="session-switcher">
+                        <% for (const [role, info] of Object.entries(sessions)) { %>
+                            <a href="/switch-session/<%= role %>" class="session-tab <%= role === activeRole ? 'active' : '' %>" title="Switch ke <%= info.username %> (<%= role %>)">
+                                <span class="session-dot session-dot-<%= role %>"></span>
+                                <%= info.username %> <span class="session-role-label">(<%= role %>)</span>
+                            </a>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <span class="user-pill"><i data-lucide="user-round"></i><%= currentUser.username %> (<%= currentUser.role %>)</span>
+                <% } %>
                 <% if (currentUser.role !== 'user') { %>
                     <a href="/dashboard" class="btn btn-outline"><i data-lucide="layout-dashboard"></i> Dashboard</a>
                 <% } %>
                 <form method="POST" action="/logout" class="logout-form">
+                    <input type="hidden" name="role" value="<%= currentUser.role %>">
                     <button class="btn btn-outline"><i data-lucide="log-out"></i> Logout</button>
                 </form>
             </div>
@@ -134,7 +147,8 @@
                         <option value="/integrator/marketplace/browse_produk" data-svc="marketplace" data-ep="browse_produk" data-fee="false">2. Marketplace - Browse Produk</option>
                         <option value="/integrator/pos/input_transaksi" data-svc="pos" data-ep="input_transaksi">3. POS - Input Transaksi</option>
                         <option value="/integrator/supplierhub/order_bahan" data-svc="supplierhub" data-ep="order_bahan">4. SupplierHub - Order Bahan</option>
-                        <option value="/integrator/logistikita/request_pengiriman" data-svc="logistikita" data-ep="request_pengiriman">5. LogistiKita - Request Pengiriman</option>
+                        <option value="/integrator/logistikita/gateway/lookup" data-svc="logistikita" data-ep="gateway/lookup">5. LogistiKita - Lookup UMKM</option>
+                        <option value="/integrator/logistikita/gateway/profiles" data-svc="logistikita" data-ep="gateway/profiles" data-fee="false">5. LogistiKita - Daftar Profil</option>
                         <option value="/integrator/umkm_insight/ambil_data_transaksi" data-svc="umkm_insight" data-ep="ambil_data_transaksi" data-fee="false">6. UMKM Insight - Ambil Data</option>
                     </select>
                 </div>
@@ -319,13 +333,21 @@
             responseBox.style.color = "#fbbf24";
 
             try {
+                // Buat payload dinamis (LogistiKita butuh user_id berupa SmartBank ID)
+                const isLogistiKita = endpoint.includes('logistikita');
+                const payload = { 
+                    user_id: isLogistiKita ? "SB-714240035" : userId, // ID valid Asha Clean
+                    amount, 
+                    parameter: "Live request via Client Portal" 
+                };
+
                 const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + token
                     },
-                    body: JSON.stringify({ user_id: userId, amount, parameter: "Live request via Client Portal" })
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
                 responseBox.innerText = JSON.stringify(data, null, 2);
