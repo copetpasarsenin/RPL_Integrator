@@ -60,6 +60,20 @@
             border-radius: var(--radius);
             padding: 20px;
             backdrop-filter: blur(10px);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.5s ease both;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.3s; }
+        .feature-card:nth-child(2) { animation-delay: 0.4s; }
+        .feature-card:nth-child(3) { animation-delay: 0.5s; }
+        .feature-card:nth-child(4) { animation-delay: 0.6s; }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.24);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
         }
 
         .feature-icon {
@@ -72,6 +86,12 @@
             color: #67e8f9;
             background: rgba(8, 145, 178, 0.18);
             margin-bottom: 14px;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.15) rotate(-5deg);
+            background: rgba(8, 145, 178, 0.3);
         }
 
         .feature-title {
@@ -123,14 +143,15 @@
 
 <body class="no-sidebar">
     <div class="hero-container">
-        <div class="hero-top"><i data-lucide="network"></i> API Gateway Integrator</div>
-        <h1 class="hero-title">Gateway Integrator untuk Ekosistem UMKM</h1>
-        <p class="hero-subtitle">
+        <div class="hero-top" style="animation: fadeInUp 0.5s ease both;"><i data-lucide="network"></i> API Gateway Integrator</div>
+        <h1 class="hero-title" style="animation: fadeInUp 0.6s ease 0.08s both;">Gateway Integrator untuk Ekosistem UMKM</h1>
+        <p class="hero-subtitle" style="animation: fadeInUp 0.6s ease 0.16s both;">
             Middleware operasional untuk routing API, validasi token, logging request, dan pencatatan pendapatan gateway dalam satu panel yang mudah dipantau.
         </p>
 
-        <div class="action-buttons">
+        <div class="action-buttons" style="animation: fadeInUp 0.6s ease 0.24s both;">
             <a href="/login" class="btn btn-primary"><i data-lucide="log-in"></i> Login Dashboard</a>
+            <a href="/register" class="btn btn-outline-light"><i data-lucide="user-plus"></i> Daftar Akun</a>
             <a href="/api/status" class="btn btn-outline-light"><i data-lucide="activity"></i> Cek Status API</a>
         </div>
 
