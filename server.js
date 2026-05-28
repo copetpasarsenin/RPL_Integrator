@@ -83,6 +83,36 @@ app.post('/logout', (req, res) => {
     res.redirect('/login');
 });
 
+app.get('/register', (req, res) => res.render('register', { error: null, success: null }));
+
+app.post('/register', loginLimiter, async (req, res) => {
+    const { username, password, confirm_password } = req.body;
+    if (!username || !password) {
+        return res.render('register', { error: 'Username dan password wajib diisi.', success: null });
+    }
+    if (username.length < 3) {
+        return res.render('register', { error: 'Username minimal 3 karakter.', success: null });
+    }
+    if (password.length < 6) {
+        return res.render('register', { error: 'Password minimal 6 karakter.', success: null });
+    }
+    if (password !== confirm_password) {
+        return res.render('register', { error: 'Konfirmasi password tidak cocok.', success: null });
+    }
+    try {
+        const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+        if (existing.length > 0) {
+            return res.render('register', { error: `Username "${username}" sudah digunakan.`, success: null });
+        }
+        const hash = createPasswordHash(password);
+        await pool.query('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)', [username, hash, 'user']);
+        return res.render('register', { error: null, success: 'Akun berhasil dibuat! Silakan login.' });
+    } catch (err) {
+        console.error('[REGISTER] Error:', err.message);
+        return res.render('register', { error: 'Registrasi gagal karena masalah server.', success: null });
+    }
+});
+
 // ============================================================
 //  DASHBOARD — Multi-section routes
 // ============================================================

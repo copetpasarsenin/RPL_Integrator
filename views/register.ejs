@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Gateway Integrator</title>
+    <title>Register - Gateway Integrator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -97,11 +97,33 @@
             margin-bottom: 16px;
         }
 
+        .success-box {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
         .login-help {
             margin-top: 18px;
-            font-size: 12px;
+            font-size: 13px;
             color: var(--muted);
             line-height: 1.6;
+            text-align: center;
+        }
+
+        .login-help a {
+            color: var(--brand);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .login-help a:hover {
+            text-decoration: underline;
         }
 
         @media (max-width: 860px) {
@@ -121,35 +143,42 @@
 <body class="no-sidebar">
     <div class="login-shell">
         <div class="login-intro">
-            <div class="login-eyebrow"><i data-lucide="shield-check"></i> Secure Gateway Access</div>
-            <div class="login-headline">Gateway Integrator</div>
-            <p class="login-copy">Masuk ke dashboard operasional untuk memantau request API, routing service, dan pendapatan gateway sesuai hak akses role.</p>
+            <div class="login-eyebrow"><i data-lucide="user-plus"></i> Create Account</div>
+            <div class="login-headline">Daftar Akun Baru</div>
+            <p class="login-copy">Buat akun untuk mengakses Client Portal, membuat token API, dan menjalankan simulasi integrasi layanan.</p>
         </div>
 
-        <form class="login-card" method="POST" action="/login">
+        <form class="login-card" method="POST" action="/register">
             <div class="login-logo">IG</div>
-            <div class="login-title">Login Gateway</div>
-            <div class="login-subtitle">Gunakan akun Admin, Operator, atau User.</div>
+            <div class="login-title">Register</div>
+            <div class="login-subtitle">Buat akun baru untuk akses gateway.</div>
 
             <% if (error) { %>
                 <div class="error-box"><%= error %></div>
             <% } %>
+            <% if (success) { %>
+                <div class="success-box"><%= success %></div>
+            <% } %>
 
             <div class="form-group">
                 <label class="form-label" for="username">Username</label>
-                <input id="username" name="username" type="text" class="form-control" autocomplete="username" required autofocus>
+                <input id="username" name="username" type="text" class="form-control" autocomplete="username" required autofocus placeholder="Masukkan username">
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="password">Password</label>
-                <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required>
+                <input id="password" name="password" type="password" class="form-control" autocomplete="new-password" required minlength="6" placeholder="Minimal 6 karakter">
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"><i data-lucide="log-in"></i> Login</button>
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Konfirmasi Password</label>
+                <input id="confirm_password" name="confirm_password" type="password" class="form-control" autocomplete="new-password" required placeholder="Ulangi password">
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"><i data-lucide="user-plus"></i> Daftar</button>
 
             <div class="login-help">
-                Akun awal: admin/admin123, operator/operator123, user/user123.<br>
-                Belum punya akun? <a href="/register" style="color: var(--brand); font-weight: 700; text-decoration: none;">Daftar di sini</a>
+                Sudah punya akun? <a href="/login">Login di sini</a>
             </div>
         </form>
     </div>
