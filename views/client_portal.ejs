@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Portal — Gateway Integrator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Client Portal - Gateway Integrator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
-    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="brand-logo">IG</div>
@@ -18,59 +20,65 @@
             </div>
         </div>
         <div class="sidebar-menu">
-            <div class="menu-group">Workspace: Default</div>
-            <a href="/dashboard" class="menu-item">
-                <span class="menu-icon">📊</span> Overview
-            </a>
+            <div class="menu-group">Workspace</div>
+            <% if (currentUser.role !== 'user') { %>
+                <a href="/dashboard" class="menu-item">
+                    <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span> Overview
+                </a>
+            <% } %>
             <a href="/client-portal" class="menu-item active">
-                <span class="menu-icon">⚡</span> API Simulator
+                <span class="menu-icon"><i data-lucide="zap"></i></span> API Simulator
             </a>
-            
-            <div class="menu-group">Gateway Services</div>
-            <a href="#" class="menu-item">
-                <span class="menu-icon">📦</span> Services (6)
-            </a>
-            <a href="#" class="menu-item">
-                <span class="menu-icon">🔀</span> Routes
-            </a>
-            <a href="/api/logs" class="menu-item" target="_blank">
-                <span class="menu-icon">📋</span> Request Logs
-            </a>
-            
+
+            <% if (currentUser.role !== 'user') { %>
+                <div class="menu-group">Gateway Services</div>
+                <a href="/dashboard" class="menu-item">
+                    <span class="menu-icon"><i data-lucide="server"></i></span> Services
+                </a>
+                <a href="/api/logs" class="menu-item" target="_blank">
+                    <span class="menu-icon"><i data-lucide="clipboard-list"></i></span> Request Logs
+                </a>
+            <% } %>
+
             <div class="menu-group">System</div>
             <a href="/api/status" class="menu-item" target="_blank">
-                <span class="menu-icon">📡</span> System Status
+                <span class="menu-icon"><i data-lucide="activity"></i></span> System Status
             </a>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main-wrapper">
         <div class="topbar">
             <div class="breadcrumb">
-                <a href="/">Home</a> <span style="margin:0 8px;">/</span>
-                <a href="#">Gateway System</a> <span style="margin:0 8px;">/</span>
-                <span style="color: #1f2937; font-weight: 500;">API Simulator</span>
+                <a href="/">Home</a>
+                <i data-lucide="chevron-right"></i>
+                <a href="#">Gateway System</a>
+                <i data-lucide="chevron-right"></i>
+                <span style="color: var(--ink); font-weight: 700;">API Simulator</span>
             </div>
             <div class="topbar-actions">
-                <a href="/dashboard" class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">Dashboard</a>
+                <span class="user-pill"><i data-lucide="user-round"></i><%= currentUser.username %> (<%= currentUser.role %>)</span>
+                <% if (currentUser.role !== 'user') { %>
+                    <a href="/dashboard" class="btn btn-outline"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                <% } %>
+                <form method="POST" action="/logout" class="logout-form">
+                    <button class="btn btn-outline"><i data-lucide="log-out"></i> Logout</button>
+                </form>
             </div>
         </div>
 
         <div class="content">
             <div class="page-title">Client Portal & API Simulator</div>
+            <div class="page-subtitle">Generate token, test endpoint internal, dan simulasikan request ke service ekosistem UMKM.</div>
 
             <div class="stats-grid">
-                <!-- SECTION 1: Generate Token -->
                 <div class="card" style="margin-bottom: 0;">
-                    <div class="card-header" style="margin-bottom: 16px; padding-bottom: 12px;">
-                        <div class="card-title">🔑 Generate Access Token</div>
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="key-round"></i> Generate Access Token</div>
                     </div>
-                    <div style="font-size: 13px; color: var(--kong-text-muted); margin-bottom: 16px;">
-                        Token JWT diperlukan untuk otentikasi Bearer pada setiap request API. Berlaku 24 jam.
-                    </div>
+                    <div class="card-note">Token JWT digunakan sebagai Bearer token pada request API. Masa berlaku 24 jam.</div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">User ID / NPM</label>
                             <input type="text" id="inputUserId" class="form-control" placeholder="cth: 714240061" value="714240061">
@@ -81,55 +89,51 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                        <input type="text" id="tokenOutput" class="form-control" placeholder="Klik Generate untuk membuat token..." readonly style="font-family: monospace; font-size: 12px; flex: 1; background: #f8fafc;">
-                        <button class="btn btn-primary" onclick="generateToken()">Generate</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <input type="text" id="tokenOutput" class="form-control" placeholder="Klik Generate untuk membuat token..." readonly style="font-family: Consolas, monospace; font-size: 12px; flex: 1;">
+                        <button class="btn btn-primary" onclick="generateToken()"><i data-lucide="sparkles"></i> Generate</button>
                     </div>
-                    <button class="btn btn-outline" style="width: 100%;" onclick="copyToken()">📋 Salin Token ke Clipboard</button>
+                    <button class="btn btn-outline" style="width: 100%;" onclick="copyToken()"><i data-lucide="copy"></i> Salin Token</button>
                     <div id="tokenStatus" style="margin-top: 12px;"></div>
                 </div>
 
-                <!-- SECTION 3: Quick Test Endpoints -->
                 <div class="card" style="margin-bottom: 0;">
-                    <div class="card-header" style="margin-bottom: 16px; padding-bottom: 12px;">
-                        <div class="card-title">🧪 Quick Test Internal Integrator</div>
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="flask-conical"></i> Quick Test Internal</div>
                     </div>
-                    <div style="font-size: 13px; color: var(--kong-text-muted); margin-bottom: 16px;">
-                        Test 4 endpoint internal gateway (tanpa perlu service lain berjalan)
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <button class="btn btn-outline" style="font-size: 12px;" onclick="testIntegrator('/integrator/routing_api')">📡 Routing API</button>
-                        <button class="btn btn-outline" style="font-size: 12px;" onclick="testIntegrator('/integrator/validasi_request')">🛡️ Validasi Request</button>
-                        <button class="btn btn-outline" style="font-size: 12px;" onclick="testIntegrator('/integrator/logging')">📋 Logging</button>
-                        <button class="btn btn-outline" style="font-size: 12px;" onclick="testIntegrator('/integrator/biaya_layanan_integrasi')">💰 Biaya Layanan</button>
+                    <div class="card-note">Test endpoint gateway internal tanpa perlu service downstream berjalan.</div>
+                    <div class="quick-grid">
+                        <button class="btn btn-outline" onclick="testIntegrator('/integrator/routing_api')"><i data-lucide="route"></i> Routing API</button>
+                        <button class="btn btn-outline" onclick="testIntegrator('/integrator/validasi_request')"><i data-lucide="shield-check"></i> Validasi</button>
+                        <button class="btn btn-outline" onclick="testIntegrator('/integrator/logging')"><i data-lucide="list-checks"></i> Logging</button>
+                        <button class="btn btn-outline" onclick="testIntegrator('/integrator/biaya_layanan_integrasi')"><i data-lucide="coins"></i> Biaya</button>
                     </div>
                     <div style="margin-top: 16px;">
-                        <div class="code-block" id="quickResponse" style="max-height: 150px; overflow-y: auto;">// Klik salah satu tombol di atas (perlu token)...</div>
+                        <div class="code-block" id="quickResponse" style="max-height: 170px; overflow-y: auto;">// Klik salah satu tombol di atas setelah token tersedia...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 2: API Simulator -->
-            <div class="card" style="border: 2px solid var(--kong-blue-light);">
+            <div class="card" style="border-color: #bfdbfe;">
                 <div class="card-header">
-                    <div class="card-title" style="color: var(--kong-blue);">🚀 API Simulator — Test 6 Aplikasi</div>
+                    <div class="card-title" style="color: var(--brand);"><i data-lucide="send"></i> API Simulator - Test 6 Aplikasi</div>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">1. Pilih Aplikasi Tujuan</label>
                     <select id="testEndpoint" class="form-control" onchange="updateFeePreview()">
-                        <option value="/integrator/smartbank/pembayaran_transaksi" data-svc="smartbank" data-ep="pembayaran_transaksi">1. SmartBank — Pembayaran Transaksi</option>
-                        <option value="/integrator/smartbank/manajemen_saldo" data-svc="smartbank" data-ep="manajemen_saldo" data-fee="false">1. SmartBank — Manajemen Saldo</option>
-                        <option value="/integrator/marketplace/checkout" data-svc="marketplace" data-ep="checkout">2. Marketplace — Checkout</option>
-                        <option value="/integrator/marketplace/browse_produk" data-svc="marketplace" data-ep="browse_produk" data-fee="false">2. Marketplace — Browse Produk</option>
-                        <option value="/integrator/pos/input_transaksi" data-svc="pos" data-ep="input_transaksi">3. POS — Input Transaksi</option>
-                        <option value="/integrator/supplierhub/order_bahan" data-svc="supplierhub" data-ep="order_bahan">4. SupplierHub — Order Bahan</option>
-                        <option value="/integrator/logistikita/request_pengiriman" data-svc="logistikita" data-ep="request_pengiriman">5. LogistiKita — Request Pengiriman</option>
-                        <option value="/integrator/umkm_insight/ambil_data_transaksi" data-svc="umkm_insight" data-ep="ambil_data_transaksi" data-fee="false">6. UMKM Insight — Ambil Data</option>
+                        <option value="/integrator/smartbank/pembayaran_transaksi" data-svc="smartbank" data-ep="pembayaran_transaksi">1. SmartBank - Pembayaran Transaksi</option>
+                        <option value="/integrator/smartbank/manajemen_saldo" data-svc="smartbank" data-ep="manajemen_saldo" data-fee="false">1. SmartBank - Manajemen Saldo</option>
+                        <option value="/integrator/marketplace/checkout" data-svc="marketplace" data-ep="checkout">2. Marketplace - Checkout</option>
+                        <option value="/integrator/marketplace/browse_produk" data-svc="marketplace" data-ep="browse_produk" data-fee="false">2. Marketplace - Browse Produk</option>
+                        <option value="/integrator/pos/input_transaksi" data-svc="pos" data-ep="input_transaksi">3. POS - Input Transaksi</option>
+                        <option value="/integrator/supplierhub/order_bahan" data-svc="supplierhub" data-ep="order_bahan">4. SupplierHub - Order Bahan</option>
+                        <option value="/integrator/logistikita/request_pengiriman" data-svc="logistikita" data-ep="request_pengiriman">5. LogistiKita - Request Pengiriman</option>
+                        <option value="/integrator/umkm_insight/ambil_data_transaksi" data-svc="umkm_insight" data-ep="ambil_data_transaksi" data-fee="false">6. UMKM Insight - Ambil Data</option>
                     </select>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+                <div class="form-grid-wide">
                     <div class="form-group">
                         <label class="form-label">2. Token Bearer</label>
                         <input type="text" id="testToken" class="form-control" placeholder="Paste token di sini...">
@@ -141,42 +145,38 @@
                 </div>
 
                 <div class="fee-preview-box">
-                    <span style="font-weight: 600; color: #b45309;">💰 Fee Gateway (0.5%)</span>
-                    <span id="feePreview" style="font-size: 16px; font-weight: 700; color: #b45309;">Rp 250</span>
+                    <span style="display: inline-flex; align-items: center; gap: 8px;"><i data-lucide="badge-dollar-sign"></i> Fee Gateway (0.5%)</span>
+                    <span id="feePreview" style="font-size: 18px;">Rp 250</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px;">
-                    <button onclick="jalankanDemo()" class="btn" style="background: var(--status-success); color: white;">🎬 Demo (Simulasi Sukses)</button>
-                    <button onclick="jalankanLive()" class="btn" style="background: var(--kong-dark); color: white;">⚡ Live Request</button>
+                <div class="action-grid">
+                    <button onclick="jalankanDemo()" class="btn btn-success"><i data-lucide="play-circle"></i> Demo Simulasi Sukses</button>
+                    <button onclick="jalankanLive()" class="btn btn-dark"><i data-lucide="radio-tower"></i> Live Request</button>
                 </div>
-                
+
                 <div style="margin-top: 20px;">
-                    <label class="form-label">Server Response:</label>
-                    <div class="code-block" id="jsonResponse" style="min-height: 100px;">// Pilih mode Demo atau Live, lalu klik tombol di atas...</div>
+                    <label class="form-label">Server Response</label>
+                    <div class="code-block" id="jsonResponse" style="min-height: 130px;">// Pilih mode Demo atau Live, lalu jalankan request...</div>
                 </div>
             </div>
 
-            <!-- SECTION 4: Guide -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">📖 Panduan Integrasi</div>
+                    <div class="card-title"><i data-lucide="book-open"></i> Panduan Integrasi</div>
                 </div>
-                <div class="code-block" style="background: var(--kong-dark-bg); border-color: var(--kong-dark-bg);">
-<span style="color: #f59e0b;">Base URL:</span> <span style="color: #38bdf8;">http://localhost:3000/integrator/{service}/{endpoint}</span>
+                <div class="code-block">
+<span style="color: #fbbf24;">Base URL:</span> <span style="color: #67e8f9;">http://localhost:3000/integrator/{service}/{endpoint}</span>
 
-<span style="color: #f59e0b;">Header Wajib:</span>
-  <span style="color: #f59e0b;">Authorization:</span> <span style="color: #38bdf8;">Bearer [TOKEN_JWT]</span>
-  <span style="color: #f59e0b;">Content-Type:</span>  <span style="color: #38bdf8;">application/json</span>
+<span style="color: #fbbf24;">Header Wajib:</span>
+  <span style="color: #fbbf24;">Authorization:</span> <span style="color: #67e8f9;">Bearer [TOKEN_JWT]</span>
+  <span style="color: #fbbf24;">Content-Type:</span>  <span style="color: #67e8f9;">application/json</span>
 
-<span style="color: #f59e0b;">Body (POST):</span>
+<span style="color: #fbbf24;">Body (POST):</span>
 {
-  <span style="color: #f59e0b;">"user_id":</span>  <span style="color: #38bdf8;">"714240061"</span>,
-  <span style="color: #f59e0b;">"amount":</span>   <span style="color: #38bdf8;">50000</span>,
-  <span style="color: #f59e0b;">"parameter":</span> <span style="color: #38bdf8;">"deskripsi transaksi"</span>
+  <span style="color: #fbbf24;">"user_id":</span>  <span style="color: #67e8f9;">"714240061"</span>,
+  <span style="color: #fbbf24;">"amount":</span>   <span style="color: #67e8f9;">50000</span>,
+  <span style="color: #fbbf24;">"parameter":</span> <span style="color: #67e8f9;">"deskripsi transaksi"</span>
 }
-
-<span style="color: #f59e0b;">Fee Gateway:</span> <span style="color: #38bdf8;">0.5% dari amount transaksi</span>
-<span style="color: #f59e0b;">Service:</span>     <span style="color: #38bdf8;">smartbank, marketplace, pos, supplierhub, logistikita, umkm_insight</span>
                 </div>
             </div>
         </div>
@@ -197,23 +197,23 @@
                 const data = await res.json();
                 document.getElementById('tokenOutput').value = data.token;
                 document.getElementById('testToken').value = data.token;
-                statusEl.innerHTML = '<div style="color: var(--status-success); font-size: 12px; font-weight: 500;">✓ Token berhasil dibuat untuk ' + name + ' (' + userId + ')</div>';
+                statusEl.innerHTML = '<div class="badge badge-success">Token berhasil dibuat untuk ' + name + ' (' + userId + ')</div>';
             } catch (err) {
-                statusEl.innerHTML = '<div style="color: var(--status-error); font-size: 12px; font-weight: 500;">✗ Gagal generate token: ' + err.message + '</div>';
+                statusEl.innerHTML = '<div class="badge badge-error">Gagal generate token: ' + err.message + '</div>';
             }
         }
 
         async function copyToken() {
             const token = document.getElementById("tokenOutput").value;
-            if (!token) return alert("Generate token dulu!");
+            if (!token) return alert("Generate token dulu.");
             try {
                 await navigator.clipboard.writeText(token);
-                alert("Token berhasil disalin!");
+                alert("Token berhasil disalin.");
             } catch (err) {
                 const el = document.getElementById("tokenOutput");
                 el.select();
                 document.execCommand("copy");
-                alert("Token berhasil disalin!");
+                alert("Token berhasil disalin.");
             }
         }
 
@@ -221,13 +221,12 @@
             const sel = document.getElementById('testEndpoint');
             const opt = sel.options[sel.selectedIndex];
             const hasFee = opt.dataset.fee !== 'false';
-            
             const amountInput = document.getElementById('testAmount');
-            
+
             if (!hasFee) {
                 amountInput.disabled = true;
                 amountInput.value = 0;
-                document.getElementById('feePreview').innerHTML = 'Rp 0 <span style="font-weight:normal; font-size:12px; color:var(--kong-text-muted);">(Non-Transaksi)</span>';
+                document.getElementById('feePreview').innerHTML = 'Rp 0 <span style="font-weight:600; font-size:12px; color:var(--muted);">(Non-transaksi)</span>';
             } else {
                 amountInput.disabled = false;
                 if (amountInput.value == 0) amountInput.value = 50000;
@@ -237,8 +236,10 @@
             }
         }
 
-        // Jalankan saat halaman siap
-        window.addEventListener('DOMContentLoaded', updateFeePreview);
+        window.addEventListener('DOMContentLoaded', () => {
+            updateFeePreview();
+            lucide.createIcons();
+        });
 
         function getSelectedService() {
             const sel = document.getElementById('testEndpoint');
@@ -253,7 +254,7 @@
             const { service, endpoint } = getSelectedService();
             const responseBox = document.getElementById('jsonResponse');
 
-            responseBox.innerText = "// 🎬 Menjalankan simulasi ke " + service + "/" + endpoint + "...";
+            responseBox.innerText = "// Menjalankan simulasi ke " + service + "/" + endpoint + "...";
             responseBox.style.color = "#fbbf24";
 
             try {
@@ -267,10 +268,10 @@
                 });
                 const data = await res.json();
                 responseBox.innerText = JSON.stringify(data, null, 2);
-                responseBox.style.color = "#4ade80";
+                responseBox.style.color = "#86efac";
             } catch (err) {
-                responseBox.innerText = "// ✗ Error: " + err.message;
-                responseBox.style.color = "#f87171";
+                responseBox.innerText = "// Error: " + err.message;
+                responseBox.style.color = "#fca5a5";
             }
         }
 
@@ -281,9 +282,9 @@
             const userId = document.getElementById('inputUserId').value || '714240061';
             const responseBox = document.getElementById('jsonResponse');
 
-            if (!token) return alert("Error: Token wajib diisi! Klik Generate dulu.");
+            if (!token) return alert("Token wajib diisi. Klik Generate dulu.");
 
-            responseBox.innerText = "// ⚡ Mengirim live request ke " + endpoint + "...";
+            responseBox.innerText = "// Mengirim live request ke " + endpoint + "...";
             responseBox.style.color = "#fbbf24";
 
             try {
@@ -297,10 +298,10 @@
                 });
                 const data = await res.json();
                 responseBox.innerText = JSON.stringify(data, null, 2);
-                responseBox.style.color = res.ok ? "#38bdf8" : "#f87171";
+                responseBox.style.color = res.ok ? "#67e8f9" : "#fca5a5";
             } catch (err) {
-                responseBox.innerText = "// ✗ Error: " + err.message + "\n// Service tujuan belum berjalan.";
-                responseBox.style.color = "#f87171";
+                responseBox.innerText = "// Error: " + err.message + "\n// Service tujuan belum berjalan.";
+                responseBox.style.color = "#fca5a5";
             }
         }
 
@@ -308,9 +309,9 @@
             const token = document.getElementById('testToken').value;
             const responseBox = document.getElementById('quickResponse');
 
-            if (!token) return alert("Generate token dulu sebelum test!");
+            if (!token) return alert("Generate token dulu sebelum test.");
 
-            responseBox.innerText = "// ⏳ Testing " + path + "...";
+            responseBox.innerText = "// Testing " + path + "...";
             responseBox.style.color = "#fbbf24";
 
             try {
@@ -319,12 +320,13 @@
                 });
                 const data = await res.json();
                 responseBox.innerText = JSON.stringify(data, null, 2);
-                responseBox.style.color = "#38bdf8";
+                responseBox.style.color = "#67e8f9";
             } catch (err) {
                 responseBox.innerText = "// Error: " + err.message;
-                responseBox.style.color = "#f87171";
+                responseBox.style.color = "#fca5a5";
             }
         }
     </script>
 </body>
+
 </html>

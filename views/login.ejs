@@ -5,79 +5,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Gateway Integrator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .login-shell {
+            width: min(100%, 980px);
             min-height: 100vh;
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 420px;
             align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: #f8fafc;
+            gap: 42px;
+            padding: 36px;
+        }
+
+        .login-intro {
+            color: #ffffff;
+        }
+
+        .login-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #93c5fd;
+            background: rgba(37, 99, 235, 0.12);
+            border: 1px solid rgba(147, 197, 253, 0.22);
+            border-radius: 999px;
+            padding: 7px 11px;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .login-headline {
+            font-size: 44px;
+            font-weight: 850;
+            line-height: 1.05;
+            margin-bottom: 16px;
+        }
+
+        .login-copy {
+            color: #b6c7da;
+            font-size: 16px;
+            max-width: 480px;
         }
 
         .login-card {
             width: 100%;
-            max-width: 420px;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 28px;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28);
         }
 
         .login-logo {
             width: 44px;
             height: 44px;
-            border-radius: 8px;
-            background: var(--kong-blue);
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--brand), var(--cyan));
             color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
+            font-weight: 850;
             margin-bottom: 18px;
         }
 
         .login-title {
             font-size: 24px;
-            font-weight: 700;
-            color: #111827;
+            font-weight: 850;
+            color: var(--ink);
             margin-bottom: 6px;
         }
 
         .login-subtitle {
             font-size: 14px;
-            color: var(--kong-text-muted);
+            color: var(--muted);
             margin-bottom: 24px;
         }
 
         .error-box {
-            background: #fee2e2;
-            color: #991b1b;
+            background: var(--danger-bg);
+            color: var(--danger);
             border: 1px solid #fecaca;
             padding: 10px 12px;
-            border-radius: 6px;
+            border-radius: var(--radius);
             font-size: 13px;
+            font-weight: 700;
             margin-bottom: 16px;
         }
 
         .login-help {
             margin-top: 18px;
             font-size: 12px;
-            color: var(--kong-text-muted);
+            color: var(--muted);
             line-height: 1.6;
+        }
+
+        @media (max-width: 860px) {
+            .login-shell {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                padding: 24px;
+            }
+
+            .login-headline {
+                font-size: 34px;
+            }
         }
     </style>
 </head>
 
 <body class="no-sidebar">
     <div class="login-shell">
+        <div class="login-intro">
+            <div class="login-eyebrow"><i data-lucide="shield-check"></i> Secure Gateway Access</div>
+            <div class="login-headline">Gateway Integrator</div>
+            <p class="login-copy">Masuk ke dashboard operasional untuk memantau request API, routing service, dan pendapatan gateway sesuai hak akses role.</p>
+        </div>
+
         <form class="login-card" method="POST" action="/login">
             <div class="login-logo">IG</div>
             <div class="login-title">Login Gateway</div>
-            <div class="login-subtitle">Masuk sebagai Admin, Operator, atau User.</div>
+            <div class="login-subtitle">Gunakan akun Admin, Operator, atau User.</div>
 
             <% if (error) { %>
                 <div class="error-box"><%= error %></div>
@@ -93,13 +144,17 @@
                 <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; margin-top: 8px;">Login</button>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"><i data-lucide="log-in"></i> Login</button>
 
             <div class="login-help">
                 Akun awal: admin/admin123, operator/operator123, user/user123.
             </div>
         </form>
     </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+    </script>
 </body>
 
 </html>
