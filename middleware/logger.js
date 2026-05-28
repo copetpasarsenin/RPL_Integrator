@@ -23,19 +23,16 @@ const logger = async (req, res, next) => {
         user_id: null,
         service_tujuan: null,
         status: "PENDING",
-        response_status: null,
-        fee_terpotong: 0,
-        fee_status: null
+        response_status: null
     };
 
     try {
         // Simpan ke MySQL dan dapatkan ID yang di-generate
         const [result] = await pool.query(
-            `INSERT INTO request_logs (waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status, fee_terpotong, fee_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO request_logs (waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [logEntry.waktu, logEntry.timestamp, logEntry.ip, logEntry.metode, logEntry.url_tujuan,
-             logEntry.user_id, logEntry.service_tujuan, logEntry.status, logEntry.response_status,
-             logEntry.fee_terpotong, logEntry.fee_status]
+             logEntry.user_id, logEntry.service_tujuan, logEntry.status, logEntry.response_status]
         );
 
         // Simpan ID di request agar bisa diupdate oleh auth & gateway

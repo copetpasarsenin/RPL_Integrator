@@ -1,151 +1,191 @@
-/**
- * =============================================================
- * API GATEWAY / INTEGRATOR — Server Utama
- * =============================================================
- * Kelompok 7 — Tugas Besar RPL 2
- * Dosen: M. Yusril Helmi Setyawan, S.Kom., M.Kom.
- * D4 Teknik Informatika — ULBI
- * 
- * Peran: Middleware/Orchestrator yang menjadi pintu masuk 
- *        semua request antar aplikasi dalam ekosistem UMKM.
- * 
- * Fitur Utama (Doc2):
- * 1. Routing API        — Routing request antar 6 service
- * 2. Validasi Request   — Validasi token JWT
- * 3. Logging            — Mencatat seluruh request ke MySQL
- * 4. Biaya Layanan      — Fee 0.5% per transaksi (Doc6)
- * 
- * Database: MySQL (via Laragon)
- * =============================================================
- */
-
 require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
-const jwt = require('jsonwebtoken'); 
+const jwt = require('jsonwebtoken');
 const { pool, initDatabase } = require('./config/database');
 const loggerMiddleware = require('./middleware/logger');
-const validateRequest = require('./middleware/auth');
+const {
+    validateApiToken,
+    verifyPassword,
+    issueSessionToken,
+    setSessionCookie,
+    clearSessionCookie,
+    requireAuth,
+    requireRole
+} = require('./middleware/auth');
 const gatewayRoutes = require('./routes/gateway');
 
 const app = express();
 
-// Konfigurasi View Engine EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.json());
-// Folder public untuk file statis (PDF, Gambar, CSS)
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 
-// --- 1. ROUTE HALAMAN UTAMA (LANDING PAGE) ---
 app.get('/', (req, res) => {
     res.render('index');
 });
 
-// --- 2. ROUTE ANTARMUKA PENGGUNA LAINNYA ---
+app.get('/login', (req, res) => {
+    res.render('login', { error: null });
+});
 
-// Dashboard Admin — menampilkan log dan revenue sesuai Doc6
-app.get('/dashboard', async (req, res) => {
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const [rows] = await pool.query(
+            'SELECT id, username, password_hash, role FROM users WHERE username = ? LIMIT 1',
+            [username]
+        );
+        const user = rows[0];
+
+        if (!user || !verifyPassword(password, user.password_hash)) {
+            return res.status(401).render('login', { error: 'Username atau password salah.' });
+        }
+
+        const token = issueSessionToken(user);
+        setSessionCookie(res, token);
+
+        return res.redirect(user.role === 'user' ? '/client-portal' : '/dashboard');
+    } catch (err) {
+        console.error('[LOGIN] Error:', err.message);
+        return res.status(500).render('login', { error: 'Login gagal karena masalah server.' });
+    }
+});
+
+app.post('/logout', (req, res) => {
+    clearSessionCookie(res);
+    res.redirect('/login');
+});
+
+app.get('/dashboard', requireAuth, requireRole(['admin', 'operator']), async (req, res) => {
+    const canViewRevenue = req.sessionUser.role === 'admin';
+
     try {
         const [logs] = await pool.query('SELECT * FROM request_logs ORDER BY id DESC LIMIT 100');
-        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(fee_terpotong), 0) AS total FROM request_logs');
+        const [requestCount] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
+        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(nominal_fee), 0) AS total FROM revenue_logs');
         const [successResult] = await pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'SUCCESS'");
         const [errorResult] = await pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'ERROR'");
+        const [services] = await pool.query('SELECT * FROM api_services ORDER BY nama_service ASC');
+        const [requestChartRows] = await pool.query(`
+            SELECT COALESCE(service_tujuan, 'unknown') AS label, COUNT(*) AS total
+            FROM request_logs
+            GROUP BY COALESCE(service_tujuan, 'unknown')
+            ORDER BY total DESC
+        `);
+        const [revenueChartRows] = await pool.query(`
+            SELECT DATE_FORMAT(waktu, '%Y-%m-%d') AS label, SUM(nominal_fee) AS total
+            FROM revenue_logs
+            GROUP BY DATE(waktu), DATE_FORMAT(waktu, '%Y-%m-%d')
+            ORDER BY DATE(waktu) ASC
+            LIMIT 14
+        `);
 
-        const totalRevenue = parseFloat(revenueResult[0].total);
-        const totalSuccess = successResult[0].total;
-        const totalError = errorResult[0].total;
-
-        res.render('dashboard', { 
-            logs: logs.reverse(),
-            totalRevenue: totalRevenue,
-            totalSuccess: totalSuccess,
-            totalError: totalError
+        res.render('dashboard', {
+            logs,
+            services,
+            totalRevenue: parseFloat(revenueResult[0].total),
+            totalRequests: requestCount[0].total,
+            totalSuccess: successResult[0].total,
+            totalError: errorResult[0].total,
+            requestChart: {
+                labels: requestChartRows.map(row => row.label),
+                data: requestChartRows.map(row => Number(row.total))
+            },
+            revenueChart: {
+                labels: revenueChartRows.map(row => row.label),
+                data: revenueChartRows.map(row => Number(row.total))
+            },
+            canViewRevenue
         });
     } catch (err) {
         console.error('[DASHBOARD] Error:', err.message);
         res.render('dashboard', {
             logs: [],
+            services: [],
             totalRevenue: 0,
+            totalRequests: 0,
             totalSuccess: 0,
-            totalError: 0
+            totalError: 0,
+            requestChart: { labels: [], data: [] },
+            revenueChart: { labels: [], data: [] },
+            canViewRevenue
         });
     }
 });
 
-// Client Portal (Halaman ambil token & simulator)
-app.get('/client-portal', (req, res) => {
+app.get('/client-portal', requireAuth, requireRole(['admin', 'operator', 'user']), (req, res) => {
     res.render('client_portal');
 });
 
-// Rute Download Dokumentasi
 app.get('/download-docs', (req, res) => {
     const file = path.join(__dirname, 'public', 'Panduan_Integrasi_API_Update.pdf');
     res.download(file, (err) => {
         if (err) {
-            console.error("File dokumentasi tidak ditemukan!");
-            res.status(404).send("File dokumentasi sedang disiapkan.");
+            console.error('File dokumentasi tidak ditemukan!');
+            res.status(404).send('File dokumentasi sedang disiapkan.');
         }
     });
 });
 
-// --- 3. API ENDPOINT GENERATE TOKEN ---
-// Token bisa di-generate dengan custom user_id dan name
-app.post('/generate-test-token', (req, res) => {
-    const payload = { 
-        user_id: req.body.user_id || "714240061", 
-        name: req.body.name || "Test User",
-        npm: req.body.npm || req.body.user_id || "714240061",
-        role: req.body.role || "client",
+app.post('/generate-test-token', requireAuth, requireRole(['admin', 'operator', 'user']), (req, res) => {
+    const payload = {
+        user_id: req.body.user_id || String(req.sessionUser.id),
+        name: req.body.name || req.sessionUser.username,
+        npm: req.body.npm || req.body.user_id || String(req.sessionUser.id),
+        role: req.sessionUser.role,
         generated_at: new Date().toISOString()
     };
-    
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ 
+    res.json({
         status: 'success',
         message: 'Token berhasil dibuat (berlaku 24 jam)',
-        token: token,
-        payload: payload
+        token,
+        payload
     });
 });
 
-// Backward compatibility: GET juga bisa
-app.get('/generate-test-token', (req, res) => {
-    const payload = { 
-        user_id: req.query.user_id || "714240061", 
-        name: req.query.name || "Test User",
-        npm: req.query.npm || req.query.user_id || "714240061",
-        role: req.query.role || "client",
+app.get('/generate-test-token', requireAuth, requireRole(['admin', 'operator', 'user']), (req, res) => {
+    const payload = {
+        user_id: req.query.user_id || String(req.sessionUser.id),
+        name: req.query.name || req.sessionUser.username,
+        npm: req.query.npm || req.query.user_id || String(req.sessionUser.id),
+        role: req.sessionUser.role,
         generated_at: new Date().toISOString()
     };
-    
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ 
+    res.json({
         status: 'success',
         message: 'Token berhasil dibuat (berlaku 24 jam)',
-        token: token,
-        payload: payload
+        token,
+        payload
     });
 });
 
-// --- 4. API ENDPOINT STATUS/HEALTH ---
 app.get('/api/status', async (req, res) => {
     try {
         const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
-        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(fee_terpotong), 0) AS total FROM request_logs');
+        const [revenueResult] = await pool.query('SELECT COALESCE(SUM(nominal_fee), 0) AS total FROM revenue_logs');
+        const [services] = await pool.query('SELECT nama_service, url_tujuan, status_aktif FROM api_services ORDER BY nama_service ASC');
 
         res.json({
             status: 'online',
             application: 'API Gateway / Integrator',
             kelompok: 7,
-            version: '2.0.0',
+            version: '3.0.0',
             database: 'MySQL (Laragon)',
             uptime: process.uptime(),
             total_requests: countResult[0].total,
             total_revenue: parseFloat(revenueResult[0].total),
-            fee_gateway: '0.5%',
-            services: ['smartbank', 'marketplace', 'pos', 'supplierhub', 'logistikita', 'umkm_insight'],
+            fee_gateway: `${process.env.GATEWAY_FEE_PERCENT || 0.5}%`,
+            services,
             timestamp: new Date().toISOString()
         });
     } catch (err) {
@@ -153,10 +193,9 @@ app.get('/api/status', async (req, res) => {
     }
 });
 
-// --- 5. API ENDPOINT LOGS (publik, tanpa auth) ---
-app.get('/api/logs', async (req, res) => {
+app.get('/api/logs', requireAuth, requireRole(['admin', 'operator']), async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 50;
+        const limit = parseInt(req.query.limit, 10) || 50;
         const [rows] = await pool.query('SELECT * FROM request_logs ORDER BY id DESC LIMIT ?', [limit]);
         const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM request_logs');
 
@@ -170,54 +209,66 @@ app.get('/api/logs', async (req, res) => {
     }
 });
 
-// --- 6. DEMO / SIMULASI MODE (untuk presentasi) ---
-// Endpoint ini mensimulasikan response sukses lengkap dengan fee,
-// tanpa perlu service lain berjalan.
-app.post('/api/demo/simulate', async (req, res) => {
-    const token = (req.headers['authorization'] || '').split(' ')[1];
-    let user = { user_id: 'demo_user', name: 'Demo User' };
-    
+app.get('/api/services', requireAuth, requireRole(['admin', 'operator']), async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM api_services ORDER BY nama_service ASC');
+        res.json({ status: 'success', data: rows });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal membaca service', detail: err.message });
+    }
+});
+
+app.post('/api/demo/simulate', requireAuth, requireRole(['admin', 'operator', 'user']), async (req, res) => {
+    const token = (req.headers.authorization || '').split(' ')[1];
+    let user = { user_id: String(req.sessionUser.id), name: req.sessionUser.username };
+
     try {
         if (token) user = jwt.verify(token, process.env.JWT_SECRET);
-    } catch(e) { /* gunakan default */ }
+    } catch (e) {
+        user = { user_id: String(req.sessionUser.id), name: req.sessionUser.username };
+    }
 
     const service = req.body.service || 'smartbank';
     const endpoint = req.body.endpoint || 'pembayaran_transaksi';
-    const amount = (req.body.amount !== undefined && !isNaN(parseFloat(req.body.amount))) ? parseFloat(req.body.amount) : 50000;
+    const amount = req.body.amount !== undefined && !Number.isNaN(parseFloat(req.body.amount)) ? parseFloat(req.body.amount) : 50000;
     const feePercent = parseFloat(process.env.GATEWAY_FEE_PERCENT) || 0.5;
     const gatewayFee = Math.round(amount * (feePercent / 100));
-    const feeStatus = amount > 0 ? 'terpotong' : 'tidak_ada_amount';
+    const feeStatus = amount > 0 ? 'tercatat' : 'tidak_ada_amount';
 
-    // Simulasi data response dari service tujuan
     const serviceResponses = {
-        smartbank: { transaction_id: 'TXN-' + Date.now(), saldo_sebelum: 500000, saldo_sesudah: 500000 - amount, status_pembayaran: 'berhasil' },
-        marketplace: { order_id: 'ORD-' + Date.now(), items: [{nama: 'Produk UMKM', qty: 1, harga: amount}], status_order: 'diproses' },
-        pos: { invoice_id: 'INV-' + Date.now(), kasir: 'Kasir-01', total: amount, metode: 'digital' },
-        supplierhub: { po_id: 'PO-' + Date.now(), bahan: 'Bahan Baku A', qty_kg: 10, total: amount },
-        logistikita: { shipping_id: 'SHP-' + Date.now(), asal: 'Bandung', tujuan: 'Jakarta', ongkir: amount, estimasi: '2-3 hari' },
-        umkm_insight: { report_id: 'RPT-' + Date.now(), total_transaksi: 150, omzet_bulan: 7500000, profit_margin: '23%' }
+        smartbank: { transaction_id: `TXN-${Date.now()}`, saldo_sebelum: 500000, saldo_sesudah: 500000 - amount, status_pembayaran: 'berhasil' },
+        marketplace: { order_id: `ORD-${Date.now()}`, items: [{ nama: 'Produk UMKM', qty: 1, harga: amount }], status_order: 'diproses' },
+        pos: { invoice_id: `INV-${Date.now()}`, kasir: 'Kasir-01', total: amount, metode: 'digital' },
+        supplierhub: { po_id: `PO-${Date.now()}`, bahan: 'Bahan Baku A', qty_kg: 10, total: amount },
+        logistikita: { shipping_id: `SHP-${Date.now()}`, asal: 'Bandung', tujuan: 'Jakarta', ongkir: amount, estimasi: '2-3 hari' },
+        umkm_insight: { report_id: `RPT-${Date.now()}`, total_transaksi: 150, omzet_bulan: 7500000, profit_margin: '23%' }
     };
 
     try {
-        // Catat ke MySQL (seperti request asli)
         const [result] = await pool.query(
-            `INSERT INTO request_logs (waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status, fee_terpotong, fee_status, mode)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO request_logs (waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status, mode)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                new Date().toLocaleString("id-ID"),
+                new Date().toLocaleString('id-ID'),
                 new Date(),
                 req.ip || '::1',
                 'POST',
                 `/integrator/${service}/${endpoint}`,
-                user.user_id || user.npm || 'demo',
+                user.user_id || user.npm || user.username || 'demo',
                 service,
                 'SUCCESS',
                 200,
-                gatewayFee,
-                feeStatus,
                 'DEMO'
             ]
         );
+
+        if (amount > 0 && gatewayFee > 0) {
+            await pool.query(
+                `INSERT INTO revenue_logs (request_id, nominal_fee, waktu)
+                 VALUES (?, ?, ?)`,
+                [result.insertId, gatewayFee, new Date()]
+            );
+        }
 
         res.json({
             status: 'success',
@@ -225,7 +276,7 @@ app.post('/api/demo/simulate', async (req, res) => {
             message: `Simulasi request ke ${service}/${endpoint} berhasil`,
             integrator_info: {
                 service_tujuan: service,
-                endpoint: endpoint,
+                endpoint,
                 fee_percent: `${feePercent}%`,
                 transaction_amount: amount,
                 fee_terpotong: gatewayFee,
@@ -239,30 +290,23 @@ app.post('/api/demo/simulate', async (req, res) => {
     }
 });
 
-// --- 7. MIDDLEWARE & ORCHESTRATOR ---
-// Semua request ke /integrator/* melewati: Logger → Auth → Gateway
-app.use('/integrator', loggerMiddleware, validateRequest, gatewayRoutes);
+app.use('/integrator', loggerMiddleware, validateApiToken, gatewayRoutes);
 
-// Menjalankan Server (dengan inisialisasi database)
 const PORT = process.env.PORT || 3000;
 
 async function startServer() {
-    // Inisialisasi database terlebih dahulu
     await initDatabase();
 
     app.listen(PORT, () => {
-        console.log(`=================================================`);
-        console.log(`   API GATEWAY / INTEGRATOR — Kelompok 7         `);
-        console.log(`   Tugas Besar RPL 2 — ULBI                     `);
-        console.log(`=================================================`);
-        console.log(`   💾 Database    : MySQL (Laragon)              `);
-        console.log(`   🌐 Landing Page : http://localhost:${PORT}        `);
-        console.log(`   📊 Dashboard    : http://localhost:${PORT}/dashboard`);
-        console.log(`   🔑 Client Portal: http://localhost:${PORT}/client-portal`);
-        console.log(`   📡 API Status   : http://localhost:${PORT}/api/status`);
-        console.log(`=================================================`);
-        console.log(`   Fee Gateway: ${process.env.GATEWAY_FEE_PERCENT || 0.5}% per transaksi`);
-        console.log(`=================================================`);
+        console.log('=================================================');
+        console.log('   API GATEWAY / INTEGRATOR - Kelompok 7        ');
+        console.log('=================================================');
+        console.log(`   Landing Page : http://localhost:${PORT}`);
+        console.log(`   Login        : http://localhost:${PORT}/login`);
+        console.log(`   Dashboard    : http://localhost:${PORT}/dashboard`);
+        console.log(`   Client Portal: http://localhost:${PORT}/client-portal`);
+        console.log(`   API Status   : http://localhost:${PORT}/api/status`);
+        console.log('=================================================');
     });
 }
 
