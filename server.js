@@ -149,13 +149,15 @@ const dashboardAuth = [requireAuth, requireRole(['admin', 'operator'])];
 const adminOnly = [requireAuth, requireRole(['admin'])];
 
 // Helper: base data passed to every dashboard render
-async function dashboardBase(req) {
+async function dashboardBase(req, res) {
     const [services] = await pool.query('SELECT * FROM api_services ORDER BY nama_service ASC');
     return {
         currentUser: req.sessionUser,
         canViewRevenue: req.sessionUser.role === 'admin',
         isAdmin: req.sessionUser.role === 'admin',
-        serviceCount: services.length
+        serviceCount: services.length,
+        allSessions: res.locals.allSessions || {},
+        activeRole: res.locals.activeRole || req.sessionUser.role
     };
 }
 
@@ -164,7 +166,7 @@ app.get('/dashboard', ...dashboardAuth, async (req, res) => {
     try {
         const [base, [reqCount], [successCount], [errorCount], [revenueSum],
                [services], [recentLogs], [consumers], [chartRows]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query('SELECT COUNT(*) AS total FROM request_logs'),
             pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'SUCCESS'"),
             pool.query("SELECT COUNT(*) AS total FROM request_logs WHERE status = 'ERROR'"),
@@ -198,7 +200,7 @@ app.get('/dashboard', ...dashboardAuth, async (req, res) => {
         });
     } catch (err) {
         console.error('[DASHBOARD] Error:', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', {
             ...base, section: 'overview',
             totalRequests: 0, totalSuccess: 0, totalError: 0, successRate: '0.0',
@@ -212,7 +214,7 @@ app.get('/dashboard', ...dashboardAuth, async (req, res) => {
 app.get('/dashboard/services', ...dashboardAuth, async (req, res) => {
     try {
         const [base, [services], [serviceStats]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query('SELECT * FROM api_services ORDER BY nama_service ASC'),
             pool.query(`
                 SELECT s.id, s.nama_service, COUNT(r.id) AS total_requests,
@@ -227,7 +229,7 @@ app.get('/dashboard/services', ...dashboardAuth, async (req, res) => {
         res.render('dashboard', { ...base, section: 'services', services, statsMap });
     } catch (err) {
         console.error('[SERVICES]', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', { ...base, section: 'services', services: [], statsMap: {} });
     }
 });
@@ -235,7 +237,7 @@ app.get('/dashboard/services', ...dashboardAuth, async (req, res) => {
 // 3. Routes
 app.get('/dashboard/routes', ...dashboardAuth, async (req, res) => {
     const [base, [services]] = await Promise.all([
-        dashboardBase(req),
+        dashboardBase(req, res),
         pool.query('SELECT * FROM api_services ORDER BY nama_service ASC')
     ]);
     res.render('dashboard', { ...base, section: 'routes', services });
@@ -245,7 +247,7 @@ app.get('/dashboard/routes', ...dashboardAuth, async (req, res) => {
 app.get('/dashboard/consumers', ...dashboardAuth, async (req, res) => {
     try {
         const [base, [consumers]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query(`
                 SELECT user_id, COUNT(*) AS total_requests,
                        MAX(timestamp) AS last_seen,
@@ -259,14 +261,14 @@ app.get('/dashboard/consumers', ...dashboardAuth, async (req, res) => {
         res.render('dashboard', { ...base, section: 'consumers', consumers });
     } catch (err) {
         console.error('[CONSUMERS]', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', { ...base, section: 'consumers', consumers: [] });
     }
 });
 
 // 5. Plugins
 app.get('/dashboard/plugins', ...dashboardAuth, async (req, res) => {
-    const base = await dashboardBase(req);
+    const base = await dashboardBase(req, res);
     const plugins = [
         { name: 'JWT Authentication', icon: 'shield-check', desc: 'Validasi token Bearer JWT pada setiap request API. Token berlaku 24 jam.', status: true, config: { algorithm: 'HS256', expiry: '24h', header: 'Authorization' } },
         { name: 'Rate Limiting', icon: 'gauge', desc: 'Batasi jumlah request per menit untuk mencegah abuse.', status: true, config: { login: '10 req/min', api: '60 req/min', window: '60 detik' } },
@@ -280,7 +282,7 @@ app.get('/dashboard/plugins', ...dashboardAuth, async (req, res) => {
 app.get('/dashboard/analytics', ...dashboardAuth, async (req, res) => {
     try {
         const [base, [serviceChart], [timelineChart], [errorRate], [topConsumers]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query(`
                 SELECT s.nama_service AS label, COUNT(r.id) AS total
                 FROM api_services s
@@ -318,7 +320,7 @@ app.get('/dashboard/analytics', ...dashboardAuth, async (req, res) => {
         });
     } catch (err) {
         console.error('[ANALYTICS]', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', {
             ...base, section: 'analytics',
             serviceChart: { labels: [], data: [] }, timelineChart: { labels: [], data: [] },
@@ -344,7 +346,7 @@ app.get('/dashboard/logs', ...dashboardAuth, async (req, res) => {
         if (filterSearch) { where += ' AND (user_id LIKE ? OR url_tujuan LIKE ?)'; params.push(`%${filterSearch}%`, `%${filterSearch}%`); }
 
         const [base, [countResult], [logs], [services]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query(`SELECT COUNT(*) AS total FROM request_logs WHERE ${where}`, params),
             pool.query(`SELECT * FROM request_logs WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`, [...params, perPage, offset]),
             pool.query('SELECT DISTINCT nama_service FROM api_services ORDER BY nama_service ASC')
@@ -359,7 +361,7 @@ app.get('/dashboard/logs', ...dashboardAuth, async (req, res) => {
         });
     } catch (err) {
         console.error('[LOGS]', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', {
             ...base, section: 'logs', logs: [],
             totalLogs: 0, page: 1, perPage: 20, totalPages: 0,
@@ -372,13 +374,13 @@ app.get('/dashboard/logs', ...dashboardAuth, async (req, res) => {
 app.get('/dashboard/users', ...adminOnly, async (req, res) => {
     try {
         const [base, [users]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query('SELECT id, username, role, created_at FROM users ORDER BY id ASC')
         ]);
         res.render('dashboard', { ...base, section: 'users', users });
     } catch (err) {
         console.error('[USERS]', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', { ...base, section: 'users', users: [] });
     }
 });
@@ -387,7 +389,7 @@ app.get('/dashboard/users', ...adminOnly, async (req, res) => {
 app.get('/dashboard/revenue', ...adminOnly, async (req, res) => {
     try {
         const [base, [revenueTotal], [revenueChart], [revenueByService]] = await Promise.all([
-            dashboardBase(req),
+            dashboardBase(req, res),
             pool.query('SELECT COALESCE(SUM(nominal_fee), 0) AS total FROM revenue_logs'),
             pool.query(`
                 SELECT DATE_FORMAT(waktu, '%Y-%m-%d') AS label, SUM(nominal_fee) AS total
@@ -409,7 +411,7 @@ app.get('/dashboard/revenue', ...adminOnly, async (req, res) => {
         });
     } catch (err) {
         console.error('[REVENUE]', err.message);
-        const base = await dashboardBase(req);
+        const base = await dashboardBase(req, res);
         res.render('dashboard', {
             ...base, section: 'revenue',
             totalRevenue: 0, revenueChart: { labels: [], data: [] }, revenueByService: []

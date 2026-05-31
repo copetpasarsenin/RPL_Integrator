@@ -53,11 +53,11 @@
                 </span>
             </div>
             <div class="topbar-actions">
-                <% const sessions = allSessions || {}; const sessionCount = Object.keys(sessions).length; %>
+                <% const sessions = typeof allSessions !== 'undefined' ? allSessions : {}; const sessionCount = Object.keys(sessions).length; const _activeRole = typeof activeRole !== 'undefined' ? activeRole : (currentUser ? currentUser.role : ''); %>
                 <% if (sessionCount > 1) { %>
                     <div class="session-switcher">
                         <% for (const [role, info] of Object.entries(sessions)) { %>
-                            <a href="/switch-session/<%= role %>" class="session-tab <%= role === activeRole ? 'active' : '' %>" title="Switch ke <%= info.username %> (<%= role %>)">
+                            <a href="/switch-session/<%= role %>" class="session-tab <%= role === _activeRole ? 'active' : '' %>" title="Switch ke <%= info.username %> (<%= role %>)">
                                 <span class="session-dot session-dot-<%= role %>"></span>
                                 <%= info.username %> <span class="session-role-label">(<%= role %>)</span>
                             </a>
@@ -123,7 +123,7 @@
         <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Service Name</th><th>Target URL</th><th>Status</th><th>Requests</th><th>Last Activity</th><% if (isAdmin) { %><th>Actions</th><% } %></tr></thead><tbody>
             <% services.forEach(s => { const st = statsMap[s.id] || {}; %>
             <tr><td>#<%= s.id %></td><td><strong><%= s.nama_service %></strong></td><td><code><%= s.url_tujuan %></code></td><td><span class="badge badge-<%= s.status_aktif ? 'success' : 'error' %>"><%= s.status_aktif ? 'Active' : 'Inactive' %></span></td><td><%= st.total_requests || 0 %></td><td style="font-size:12px;color:var(--muted)"><%= st.last_activity ? new Date(st.last_activity).toLocaleString('id-ID') : '-' %></td>
-            <% if (isAdmin) { %><td><button class="btn-icon" onclick="editService(<%= s.id %>, '<%= s.nama_service %>', '<%= s.url_tujuan %>', <%= s.status_aktif %>)" title="Edit"><i data-lucide="pencil"></i></button><button class="btn-icon btn-icon-danger" onclick="deleteService(<%= s.id %>, '<%= s.nama_service %>')" title="Delete"><i data-lucide="trash-2"></i></button></td><% } %>
+            <% if (isAdmin) { %><td><button class="btn-icon" data-svc-id="<%= s.id %>" data-svc-name="<%- s.nama_service.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" data-svc-url="<%- s.url_tujuan.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" data-svc-status="<%= s.status_aktif %>" onclick="editService(this)" title="Edit"><i data-lucide="pencil"></i></button><button class="btn-icon btn-icon-danger" data-svc-id="<%= s.id %>" data-svc-name="<%- s.nama_service.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" onclick="deleteService(this)" title="Delete"><i data-lucide="trash-2"></i></button></td><% } %>
             </tr><% }) %>
         </tbody></table></div>
     </div>
@@ -252,7 +252,7 @@
     <div class="card"><div class="table-wrapper"><table><thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead><tbody>
         <% users.forEach(u => { %>
         <tr><td>#<%= u.id %></td><td><strong><%= u.username %></strong></td><td><span class="badge badge-<%= u.role === 'admin' ? 'error' : u.role === 'operator' ? 'info' : 'success' %>"><%= u.role %></span></td><td style="font-size:12px;color:var(--muted)"><%= u.created_at ? new Date(u.created_at).toLocaleString('id-ID') : '-' %></td>
-        <td><button class="btn-icon" onclick="editUser(<%= u.id %>, '<%= u.username %>', '<%= u.role %>')" title="Edit"><i data-lucide="pencil"></i></button><% if (u.id !== currentUser.id) { %><button class="btn-icon btn-icon-danger" onclick="deleteUser(<%= u.id %>, '<%= u.username %>')" title="Delete"><i data-lucide="trash-2"></i></button><% } %></td></tr>
+        <td><button class="btn-icon" data-user-id="<%= u.id %>" data-user-name="<%- u.username.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" data-user-role="<%= u.role %>" onclick="editUser(this)" title="Edit"><i data-lucide="pencil"></i></button><% if (u.id !== currentUser.id) { %><button class="btn-icon btn-icon-danger" data-user-id="<%= u.id %>" data-user-name="<%- u.username.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" onclick="deleteUser(this)" title="Delete"><i data-lucide="trash-2"></i></button><% } %></td></tr>
         <% }) %>
     </tbody></table></div></div>
 
@@ -301,7 +301,11 @@
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // ── Services CRUD ──
-    function editService(id, name, url, status) {
+    function editService(el) {
+        const id = el.dataset.svcId;
+        const name = el.dataset.svcName;
+        const url = el.dataset.svcUrl;
+        const status = el.dataset.svcStatus;
         document.getElementById('serviceModalTitle').textContent = 'Edit Service';
         document.getElementById('svcId').value = id;
         document.getElementById('svcName').value = name;
@@ -322,7 +326,9 @@
             if (res.ok) { location.reload(); } else { alert(data.message); }
         } catch (err) { alert('Error: ' + err.message); }
     }
-    function deleteService(id, name) {
+    function deleteService(el) {
+        const id = el.dataset.svcId;
+        const name = el.dataset.svcName;
         if (!confirm(`Yakin hapus service "${name}"? Ini tidak bisa dibatalkan.`)) return;
         fetch(`/api/services/${id}`, { method: 'DELETE' }).then(r => r.json()).then(d => { if (d.status === 'success') location.reload(); else alert(d.message); }).catch(e => alert(e.message));
     }
@@ -337,7 +343,10 @@
     });
 
     // ── Users CRUD ──
-    function editUser(id, name, role) {
+    function editUser(el) {
+        const id = el.dataset.userId;
+        const name = el.dataset.userName;
+        const role = el.dataset.userRole;
         document.getElementById('userModalTitle').textContent = 'Edit User';
         document.getElementById('userId').value = id;
         document.getElementById('userName').value = name;
@@ -364,7 +373,9 @@
             if (res.ok) { location.reload(); } else { alert(data.message); }
         } catch (err) { alert('Error: ' + err.message); }
     }
-    function deleteUser(id, name) {
+    function deleteUser(el) {
+        const id = el.dataset.userId;
+        const name = el.dataset.userName;
         if (!confirm(`Yakin hapus user "${name}"? Ini tidak bisa dibatalkan.`)) return;
         fetch(`/api/users/${id}`, { method: 'DELETE' }).then(r => r.json()).then(d => { if (d.status === 'success') location.reload(); else alert(d.message); }).catch(e => alert(e.message));
     }
