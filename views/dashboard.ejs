@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,36 +11,50 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="brand-logo">IG</div>
-            <div><div class="brand-title">Gateway Integrator</div><div class="brand-subtitle">API Gateway Integrator</div></div>
+            <div>
+                <div class="brand-title">Gateway Integrator</div>
+                <div class="brand-subtitle">API Gateway Integrator</div>
+            </div>
         </div>
         <div class="sidebar-menu">
             <div class="menu-group">Connectivity</div>
-            <a href="/dashboard" class="menu-item <%= section === 'overview' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="layout-dashboard"></i></span> Gateway Overview</a>
-            <a href="/dashboard/services" class="menu-item <%= section === 'services' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="server"></i></span> Services (<%= serviceCount %>)</a>
-            <a href="/dashboard/routes" class="menu-item <%= section === 'routes' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="route"></i></span> Routes</a>
-            <a href="/dashboard/consumers" class="menu-item <%= section === 'consumers' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="users"></i></span> Consumers</a>
+            <a href="/dashboard" class="menu-item <%= section === 'overview' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="layout-dashboard"></i></span> Gateway Overview</a>
+            <a href="/dashboard/services" class="menu-item <%= section === 'services' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="server"></i></span> Services (<%= serviceCount %>)</a>
+            <a href="/dashboard/routes" class="menu-item <%= section === 'routes' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="route"></i></span> Routes</a>
+            <a href="/dashboard/consumers" class="menu-item <%= section === 'consumers' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="users"></i></span> Consumers</a>
 
             <div class="menu-group">Plugins</div>
-            <a href="/dashboard/plugins" class="menu-item <%= section === 'plugins' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="plug"></i></span> Plugins (4)</a>
+            <a href="/dashboard/plugins" class="menu-item <%= section === 'plugins' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="plug"></i></span> Plugins (4)</a>
 
             <div class="menu-group">Monitoring</div>
-            <a href="/dashboard/analytics" class="menu-item <%= section === 'analytics' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="bar-chart-3"></i></span> Analytics</a>
-            <a href="/dashboard/logs" class="menu-item <%= section === 'logs' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="clipboard-list"></i></span> Request Logs</a>
+            <a href="/dashboard/analytics" class="menu-item <%= section === 'analytics' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="bar-chart-3"></i></span> Analytics</a>
+            <a href="/dashboard/logs" class="menu-item <%= section === 'logs' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="clipboard-list"></i></span> Request Logs</a>
             <% if (canViewRevenue) { %>
-                <a href="/dashboard/revenue" class="menu-item <%= section === 'revenue' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="coins"></i></span> Revenue</a>
-            <% } %>
+                <a href="/dashboard/revenue" class="menu-item <%= section === 'revenue' ? 'active' : '' %>"><span
+                        class="menu-icon"><i data-lucide="coins"></i></span> Revenue</a>
+                <% } %>
 
-            <% if (isAdmin) { %>
-                <div class="menu-group">Admin</div>
-                <a href="/dashboard/users" class="menu-item <%= section === 'users' ? 'active' : '' %>"><span class="menu-icon"><i data-lucide="user-cog"></i></span> User Management</a>
-            <% } %>
+                    <% if (isAdmin) { %>
+                        <div class="menu-group">Admin</div>
+                        <a href="/dashboard/users" class="menu-item <%= section === 'users' ? 'active' : '' %>"><span
+                                class="menu-icon"><i data-lucide="user-cog"></i></span> User Management</a>
+                        <% } %>
 
-            <div class="menu-group">Tools</div>
-            <a href="/client-portal" class="menu-item"><span class="menu-icon"><i data-lucide="zap"></i></span> API Simulator</a>
+                            <div class="menu-group">Tools</div>
+                            <a href="/client-portal" class="menu-item"><span class="menu-icon"><i
+                                        data-lucide="zap"></i></span> API Simulator</a>
         </div>
     </div>
 
@@ -49,349 +64,831 @@
                 <a href="/">Home</a><i data-lucide="chevron-right"></i>
                 <a href="/dashboard">Gateway</a><i data-lucide="chevron-right"></i>
                 <span style="color: var(--ink); font-weight: 700;" id="breadcrumb-current">
-                    <%= section === 'overview' ? 'Overview' : section === 'services' ? 'Services' : section === 'routes' ? 'Routes' : section === 'consumers' ? 'Consumers' : section === 'plugins' ? 'Plugins' : section === 'analytics' ? 'Analytics' : section === 'logs' ? 'Request Logs' : section === 'users' ? 'Users' : section === 'revenue' ? 'Revenue' : 'Dashboard' %>
+                    <%= section==='overview' ? 'Overview' : section==='services' ? 'Services' : section==='routes'
+                        ? 'Routes' : section==='consumers' ? 'Consumers' : section==='plugins' ? 'Plugins' :
+                        section==='analytics' ? 'Analytics' : section==='logs' ? 'Request Logs' : section==='users'
+                        ? 'Users' : section==='revenue' ? 'Revenue' : 'Dashboard' %>
                 </span>
             </div>
             <div class="topbar-actions">
-                <% const sessions = typeof allSessions !== 'undefined' ? allSessions : {}; const sessionCount = Object.keys(sessions).length; const _activeRole = typeof activeRole !== 'undefined' ? activeRole : (currentUser ? currentUser.role : ''); %>
-                <% if (sessionCount > 1) { %>
-                    <div class="session-switcher">
-                        <% for (const [role, info] of Object.entries(sessions)) { %>
-                            <a href="/switch-session/<%= role %>" class="session-tab <%= role === _activeRole ? 'active' : '' %>" title="Switch ke <%= info.username %> (<%= role %>)">
-                                <span class="session-dot session-dot-<%= role %>"></span>
-                                <%= info.username %> <span class="session-role-label">(<%= role %>)</span>
-                            </a>
-                        <% } %>
-                    </div>
-                <% } else { %>
-                    <span class="user-pill"><i data-lucide="user-round"></i><%= currentUser.username %> (<%= currentUser.role %>)</span>
-                <% } %>
-                <form class="logout-form" method="POST" action="/logout">
-                    <input type="hidden" name="role" value="<%= currentUser.role %>">
-                    <button class="btn btn-outline" title="Logout <%= currentUser.role %>"><i data-lucide="log-out"></i> Logout</button>
-                </form>
-                <% if (sessionCount > 1) { %>
-                    <form class="logout-form" method="POST" action="/logout-all"><button class="btn btn-outline" style="color:var(--danger)" title="Logout semua session"><i data-lucide="x-circle"></i></button></form>
-                <% } %>
+                <% const sessions=allSessions || {}; const sessionCount=Object.keys(sessions).length; %>
+                    <% if (sessionCount> 1) { %>
+                        <div class="session-switcher">
+                            <% for (const [role, info] of Object.entries(sessions)) { %>
+                                <a href="/switch-session/<%= role %>"
+                                    class="session-tab <%= role === activeRole ? 'active' : '' %>"
+                                    title="Switch ke <%= info.username %> (<%= role %>)">
+                                    <span class="session-dot session-dot-<%= role %>"></span>
+                                    <%= info.username %> <span class="session-role-label">(<%= role %>)</span>
+                                </a>
+                                <% } %>
+                        </div>
+                        <% } else { %>
+                            <span class="user-pill"><i data-lucide="user-round"></i>
+                                <%= currentUser.username %> (<%= currentUser.role %>)
+                            </span>
+                            <% } %>
+                                <form class="logout-form" method="POST" action="/logout">
+                                    <input type="hidden" name="role" value="<%= currentUser.role %>">
+                                    <button class="btn btn-outline" title="Logout <%= currentUser.role %>"><i
+                                            data-lucide="log-out"></i> Logout</button>
+                                </form>
+                                <% if (sessionCount> 1) { %>
+                                    <form class="logout-form" method="POST" action="/logout-all"><button
+                                            class="btn btn-outline" style="color:var(--danger)"
+                                            title="Logout semua session"><i data-lucide="x-circle"></i></button></form>
+                                    <% } %>
             </div>
         </div>
 
         <div class="content">
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- OVERVIEW -->
-<% if (section === 'overview') { %>
-    <div class="page-title">Gateway Overview</div>
-    <div class="page-subtitle">Ringkasan status gateway, traffic, dan aktivitas terkini.</div>
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- OVERVIEW -->
+            <% if (section==='overview' ) { %>
+                <div class="page-title">Gateway Overview</div>
+                <div class="page-subtitle">Ringkasan status gateway, traffic, dan aktivitas terkini.</div>
 
-    <div class="status-bar"><span class="status-dot online"></span> Gateway <strong>ONLINE</strong> — Uptime: <%= Math.floor(uptime / 3600) %>h <%= Math.floor((uptime % 3600) / 60) %>m</div>
+                <div class="status-bar"><span class="status-dot online"></span> Gateway <strong>ONLINE</strong> —
+                    Uptime: <%= Math.floor(uptime / 3600) %>h <%= Math.floor((uptime % 3600) / 60) %>m</div>
 
-    <div class="stats-grid">
-        <div class="stat-box stat-blue"><div><div class="stat-title">Active Services</div><div class="stat-value"><%= serviceCount %></div><div class="stat-desc">Service terdaftar di gateway</div></div><div class="stat-icon"><i data-lucide="server"></i></div></div>
-        <div class="stat-box stat-green"><div><div class="stat-title">Total Requests</div><div class="stat-value"><%= totalRequests %></div><div class="stat-desc">Success rate: <%= successRate %>%</div></div><div class="stat-icon"><i data-lucide="bar-chart-3"></i></div></div>
-        <div class="stat-box stat-amber"><div><div class="stat-title">Consumers</div><div class="stat-value"><%= totalConsumers %></div><div class="stat-desc">Unique API consumers</div></div><div class="stat-icon"><i data-lucide="users"></i></div></div>
-        <% if (canViewRevenue) { %><div class="stat-box stat-red"><div><div class="stat-title">Revenue</div><div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %></div><div class="stat-desc">Total fee gateway</div></div><div class="stat-icon"><i data-lucide="coins"></i></div></div><% } %>
-    </div>
+                <div class="stats-grid">
+                    <div class="stat-box stat-blue">
+                        <div>
+                            <div class="stat-title">Active Services</div>
+                            <div class="stat-value">
+                                <%= serviceCount %>
+                            </div>
+                            <div class="stat-desc">Service terdaftar di gateway</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="server"></i></div>
+                    </div>
+                    <div class="stat-box stat-green">
+                        <div>
+                            <div class="stat-title">Total Requests</div>
+                            <div class="stat-value">
+                                <%= totalRequests %>
+                            </div>
+                            <div class="stat-desc">Success rate: <%= successRate %>%</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="bar-chart-3"></i></div>
+                    </div>
+                    <div class="stat-box stat-amber">
+                        <div>
+                            <div class="stat-title">Consumers</div>
+                            <div class="stat-value">
+                                <%= totalConsumers %>
+                            </div>
+                            <div class="stat-desc">Unique API consumers</div>
+                        </div>
+                        <div class="stat-icon"><i data-lucide="users"></i></div>
+                    </div>
+                    <% if (canViewRevenue) { %>
+                        <div class="stat-box stat-red">
+                            <div>
+                                <div class="stat-title">Revenue</div>
+                                <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %>
+                                </div>
+                                <div class="stat-desc">Total fee gateway</div>
+                            </div>
+                            <div class="stat-icon"><i data-lucide="coins"></i></div>
+                        </div>
+                        <% } %>
+                </div>
 
-    <div class="chart-grid">
-        <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="trending-up"></i> Traffic 7 Hari Terakhir</div></div><div class="chart-box"><canvas id="overviewChart"></canvas></div></div>
-        <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="activity"></i> Recent Activity</div></div>
-            <div class="table-wrapper"><table><thead><tr><th>#</th><th>Waktu</th><th>Service</th><th>User</th><th>Status</th></tr></thead><tbody>
-                <% recentLogs.forEach(log => { %>
-                <tr><td style="color:var(--muted)">#<%= log.id %></td><td style="font-size:12px;color:var(--muted)"><%= log.waktu %></td><td><%= log.service_tujuan || '-' %></td><td><%= log.user_id || '-' %></td><td><span class="badge badge-<%= log.status === 'SUCCESS' ? 'success' : log.status === 'ERROR' ? 'error' : 'info' %>"><%= log.status %></span></td></tr>
-                <% }) %>
-                <% if (recentLogs.length === 0) { %><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Belum ada aktivitas</td></tr><% } %>
-            </tbody></table></div>
-        </div>
-    </div>
-    <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        new Chart(document.getElementById('overviewChart'), {
-            type: 'line', data: { labels: <%- JSON.stringify(chartLabels) %>, datasets: [{ label: 'Requests', data: <%- JSON.stringify(chartData) %>, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.35, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-        });
-    });
-    </script>
+                <div class="chart-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i data-lucide="trending-up"></i> Traffic 7 Hari Terakhir</div>
+                        </div>
+                        <div class="chart-box"><canvas id="overviewChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i data-lucide="activity"></i> Recent Activity</div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Waktu</th>
+                                        <th>Service</th>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% recentLogs.forEach(log=> { %>
+                                        <tr>
+                                            <td style="color:var(--muted)">#<%= log.id %>
+                                            </td>
+                                            <td style="font-size:12px;color:var(--muted)">
+                                                <%= log.waktu %>
+                                            </td>
+                                            <td>
+                                                <%= log.service_tujuan || '-' %>
+                                            </td>
+                                            <td>
+                                                <%= log.user_id || '-' %>
+                                            </td>
+                                            <td><span
+                                                    class="badge badge-<%= log.status === 'SUCCESS' ? 'success' : log.status === 'ERROR' ? 'error' : 'info' %>">
+                                                    <%= log.status %>
+                                                </span></td>
+                                        </tr>
+                                        <% }) %>
+                                            <% if (recentLogs.length===0) { %>
+                                                <tr>
+                                                    <td colspan="5"
+                                                        style="text-align:center;padding:24px;color:var(--muted)">Belum
+                                                        ada aktivitas</td>
+                                                </tr>
+                                                <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <script id="overviewChartData" type="application/json">{"labels":<%- JSON.stringify(chartLabels) %>,"data":<%- JSON.stringify(chartData) %>}</script>
+                <script>
+                    window.addEventListener('DOMContentLoaded', function () {
+                        var d = JSON.parse(document.getElementById('overviewChartData').textContent);
+                        new Chart(document.getElementById('overviewChart'), {
+                            type: 'line', data: { labels: d.labels, datasets: [{ label: 'Requests', data: d.data, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.35, fill: true }] },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                        });
+                    });
+                </script>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- SERVICES -->
-<% } else if (section === 'services') { %>
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div><div class="page-title">Services</div><div class="page-subtitle">Kelola API service yang terdaftar di gateway.</div></div>
-        <% if (isAdmin) { %><button class="btn btn-success" onclick="openModal('serviceModal')"><i data-lucide="plus"></i> New Service</button><% } %>
-    </div>
-    <div class="card">
-        <div class="table-wrapper"><table><thead><tr><th>ID</th><th>Service Name</th><th>Target URL</th><th>Status</th><th>Requests</th><th>Last Activity</th><% if (isAdmin) { %><th>Actions</th><% } %></tr></thead><tbody>
-            <% services.forEach(s => { const st = statsMap[s.id] || {}; %>
-            <tr><td>#<%= s.id %></td><td><strong><%= s.nama_service %></strong></td><td><code><%= s.url_tujuan %></code></td><td><span class="badge badge-<%= s.status_aktif ? 'success' : 'error' %>"><%= s.status_aktif ? 'Active' : 'Inactive' %></span></td><td><%= st.total_requests || 0 %></td><td style="font-size:12px;color:var(--muted)"><%= st.last_activity ? new Date(st.last_activity).toLocaleString('id-ID') : '-' %></td>
-            <% if (isAdmin) { %><td><button class="btn-icon" data-svc-id="<%= s.id %>" data-svc-name="<%- s.nama_service.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" data-svc-url="<%- s.url_tujuan.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" data-svc-status="<%= s.status_aktif %>" onclick="editService(this)" title="Edit"><i data-lucide="pencil"></i></button><button class="btn-icon btn-icon-danger" data-svc-id="<%= s.id %>" data-svc-name="<%- s.nama_service.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" onclick="deleteService(this)" title="Delete"><i data-lucide="trash-2"></i></button></td><% } %>
-            </tr><% }) %>
-        </tbody></table></div>
-    </div>
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- SERVICES -->
+                <% } else if (section==='services' ) { %>
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                        <div>
+                            <div class="page-title">Services</div>
+                            <div class="page-subtitle">Kelola API service yang terdaftar di gateway.</div>
+                        </div>
+                        <% if (isAdmin) { %><button class="btn btn-success" onclick="openModal('serviceModal')"><i
+                                    data-lucide="plus"></i> New Service</button>
+                            <% } %>
+                    </div>
+                    <div class="card">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Service Name</th>
+                                        <th>Target URL</th>
+                                        <th>Status</th>
+                                        <th>Requests</th>
+                                        <th>Last Activity</th>
+                                        <% if (isAdmin) { %>
+                                            <th>Actions</th>
+                                            <% } %>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% services.forEach(s=> { const st = statsMap[s.id] || {}; %>
+                                        <tr>
+                                            <td>#<%= s.id %>
+                                            </td>
+                                            <td><strong>
+                                                    <%= s.nama_service %>
+                                                </strong></td>
+                                            <td><code><%= s.url_tujuan %></code></td>
+                                            <td><span class="badge badge-<%= s.status_aktif ? 'success' : 'error' %>">
+                                                    <%= s.status_aktif ? 'Active' : 'Inactive' %>
+                                                </span></td>
+                                            <td>
+                                                <%= st.total_requests || 0 %>
+                                            </td>
+                                            <td style="font-size:12px;color:var(--muted)">
+                                                <%= st.last_activity ? new
+                                                    Date(st.last_activity).toLocaleString('id-ID') : '-' %>
+                                            </td>
+                                            <% if (isAdmin) { %>
+                                                <td><button class="btn-icon"
+                                                        data-svc-id="<%= s.id %>"
+                                                        data-svc-name="<%= s.nama_service %>"
+                                                        data-svc-url="<%= s.url_tujuan %>"
+                                                        data-svc-status="<%= s.status_aktif %>"
+                                                        onclick="editService(this)"
+                                                        title="Edit"><i data-lucide="pencil"></i></button><button
+                                                        class="btn-icon btn-icon-danger"
+                                                        data-svc-id="<%= s.id %>"
+                                                        data-svc-name="<%= s.nama_service %>"
+                                                        onclick="deleteService(this)"
+                                                        title="Delete"><i data-lucide="trash-2"></i></button></td>
+                                                <% } %>
+                                        </tr>
+                                        <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    <!-- Modal Create/Edit Service -->
-    <div class="modal-overlay" id="serviceModal">
-        <div class="modal-dialog">
-            <div class="modal-header"><span class="modal-title" id="serviceModalTitle">New Service</span><button class="modal-close" onclick="closeModal('serviceModal')">&times;</button></div>
-            <form id="serviceForm" onsubmit="submitService(event)">
-                <input type="hidden" id="svcId">
-                <div class="form-group"><label class="form-label">Service Name</label><input type="text" id="svcName" class="form-control" placeholder="cth: smartbank" required></div>
-                <div class="form-group"><label class="form-label">Target URL</label><input type="url" id="svcUrl" class="form-control" placeholder="http://localhost:3001" required></div>
-                <div class="form-group"><label class="form-label">Status</label><select id="svcStatus" class="form-control"><option value="1">Active</option><option value="0">Inactive</option></select></div>
-                <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('serviceModal')">Batal</button><button type="submit" class="btn btn-primary" id="svcSubmitBtn">Simpan</button></div>
-            </form>
-        </div>
-    </div>
+                    <!-- Modal Create/Edit Service -->
+                    <div class="modal-overlay" id="serviceModal">
+                        <div class="modal-dialog">
+                            <div class="modal-header"><span class="modal-title" id="serviceModalTitle">New
+                                    Service</span><button class="modal-close"
+                                    onclick="closeModal('serviceModal')">&times;</button></div>
+                            <form id="serviceForm" onsubmit="submitService(event)">
+                                <input type="hidden" id="svcId">
+                                <div class="form-group"><label class="form-label">Service Name</label><input type="text"
+                                        id="svcName" class="form-control" placeholder="cth: smartbank" required></div>
+                                <div class="form-group"><label class="form-label">Target URL</label><input type="url"
+                                        id="svcUrl" class="form-control" placeholder="http://localhost:3001" required>
+                                </div>
+                                <div class="form-group"><label class="form-label">Status</label><select id="svcStatus"
+                                        class="form-control">
+                                        <option value="1">Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select></div>
+                                <div class="modal-footer"><button type="button" class="btn btn-outline"
+                                        onclick="closeModal('serviceModal')">Batal</button><button type="submit"
+                                        class="btn btn-primary" id="svcSubmitBtn">Simpan</button></div>
+                            </form>
+                        </div>
+                    </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- ROUTES -->
-<% } else if (section === 'routes') { %>
-    <div class="page-title">Routes</div>
-    <div class="page-subtitle">Peta routing otomatis berdasarkan service yang terdaftar.</div>
-    <div class="card"><div class="table-wrapper"><table><thead><tr><th>Gateway Pattern</th><th>Target Rule</th><th>Service</th><th>Auth</th></tr></thead><tbody>
-        <% services.forEach(s => { %>
-        <tr><td><code>/integrator/<%= s.nama_service %>/{path}</code></td><td><code><%= s.url_tujuan %>/{path}</code></td><td><span class="badge badge-info"><%= s.nama_service %></span></td><td><span class="badge badge-success">JWT Bearer</span></td></tr>
-        <% }) %>
-    </tbody></table></div></div>
+                    <!-- ═══════════════════════════════════════════════════════ -->
+                    <!-- ROUTES -->
+                    <% } else if (section==='routes' ) { %>
+                        <div class="page-title">Routes</div>
+                        <div class="page-subtitle">Peta routing otomatis berdasarkan service yang terdaftar.</div>
+                        <div class="card">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Gateway Pattern</th>
+                                            <th>Target Rule</th>
+                                            <th>Service</th>
+                                            <th>Auth</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% services.forEach(s=> { %>
+                                            <tr>
+                                                <td><code>/integrator/<%= s.nama_service %>/{path}</code></td>
+                                                <td><code><%= s.url_tujuan %>/{path}</code></td>
+                                                <td><span class="badge badge-info">
+                                                        <%= s.nama_service %>
+                                                    </span></td>
+                                                <td><span class="badge badge-success">JWT Bearer</span></td>
+                                            </tr>
+                                            <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- CONSUMERS -->
-<% } else if (section === 'consumers') { %>
-    <div class="page-title">Consumers</div>
-    <div class="page-subtitle">Daftar consumer yang menggunakan API gateway. Data otomatis dari traffic log.</div>
-    <div class="card"><div class="table-wrapper"><table><thead><tr><th>User ID</th><th>Total Requests</th><th>First Seen</th><th>Last Seen</th></tr></thead><tbody>
-        <% consumers.forEach(c => { %>
-        <tr><td><strong><%= c.user_id %></strong></td><td><%= c.total_requests %></td><td style="font-size:12px;color:var(--muted)"><%= c.first_seen ? new Date(c.first_seen).toLocaleString('id-ID') : '-' %></td><td style="font-size:12px;color:var(--muted)"><%= c.last_seen ? new Date(c.last_seen).toLocaleString('id-ID') : '-' %></td></tr>
-        <% }) %>
-        <% if (consumers.length === 0) { %><tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted)">Belum ada consumer. Jalankan simulasi API untuk membuat data.</td></tr><% } %>
-    </tbody></table></div></div>
+                        <!-- ═══════════════════════════════════════════════════════ -->
+                        <!-- CONSUMERS -->
+                        <% } else if (section==='consumers' ) { %>
+                            <div class="page-title">Consumers</div>
+                            <div class="page-subtitle">Daftar consumer yang menggunakan API gateway. Data otomatis dari
+                                traffic log.</div>
+                            <div class="card">
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>User ID</th>
+                                                <th>Total Requests</th>
+                                                <th>First Seen</th>
+                                                <th>Last Seen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% consumers.forEach(c=> { %>
+                                                <tr>
+                                                    <td><strong>
+                                                            <%= c.user_id %>
+                                                        </strong></td>
+                                                    <td>
+                                                        <%= c.total_requests %>
+                                                    </td>
+                                                    <td style="font-size:12px;color:var(--muted)">
+                                                        <%= c.first_seen ? new
+                                                            Date(c.first_seen).toLocaleString('id-ID') : '-' %>
+                                                    </td>
+                                                    <td style="font-size:12px;color:var(--muted)">
+                                                        <%= c.last_seen ? new Date(c.last_seen).toLocaleString('id-ID')
+                                                            : '-' %>
+                                                    </td>
+                                                </tr>
+                                                <% }) %>
+                                                    <% if (consumers.length===0) { %>
+                                                        <tr>
+                                                            <td colspan="4"
+                                                                style="text-align:center;padding:32px;color:var(--muted)">
+                                                                Belum ada consumer. Jalankan simulasi API untuk membuat
+                                                                data.</td>
+                                                        </tr>
+                                                        <% } %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- PLUGINS -->
-<% } else if (section === 'plugins') { %>
-    <div class="page-title">Plugins</div>
-    <div class="page-subtitle">Plugin middleware yang aktif di gateway.</div>
-    <div class="plugin-grid">
-        <% plugins.forEach(p => { %>
-        <div class="plugin-card">
-            <div class="plugin-header"><div class="plugin-icon"><i data-lucide="<%= p.icon %>"></i></div><span class="badge badge-success">Enabled</span></div>
-            <div class="plugin-name"><%= p.name %></div>
-            <div class="plugin-desc"><%= p.desc %></div>
-            <div class="plugin-config"><% Object.entries(p.config).forEach(([k,v]) => { %><div class="config-row"><span class="config-key"><%= k %></span><span class="config-val"><%= v %></span></div><% }) %></div>
-        </div>
-        <% }) %>
-    </div>
+                            <!-- ═══════════════════════════════════════════════════════ -->
+                            <!-- PLUGINS -->
+                            <% } else if (section==='plugins' ) { %>
+                                <div class="page-title">Plugins</div>
+                                <div class="page-subtitle">Plugin middleware yang aktif di gateway.</div>
+                                <div class="plugin-grid">
+                                    <% plugins.forEach(p=> { %>
+                                        <div class="plugin-card">
+                                            <div class="plugin-header">
+                                                <div class="plugin-icon"><i data-lucide="<%= p.icon %>"></i></div><span
+                                                    class="badge badge-success">Enabled</span>
+                                            </div>
+                                            <div class="plugin-name">
+                                                <%= p.name %>
+                                            </div>
+                                            <div class="plugin-desc">
+                                                <%= p.desc %>
+                                            </div>
+                                            <div class="plugin-config">
+                                                <% Object.entries(p.config).forEach(([k,v])=> { %><div
+                                                        class="config-row"><span class="config-key">
+                                                            <%= k %>
+                                                        </span><span class="config-val">
+                                                            <%= v %>
+                                                        </span></div>
+                                                    <% }) %>
+                                            </div>
+                                        </div>
+                                        <% }) %>
+                                </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- ANALYTICS -->
-<% } else if (section === 'analytics') { %>
-    <div class="page-title">Analytics</div>
-    <div class="page-subtitle">Analisis performa dan traffic gateway.</div>
-    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="stat-box stat-blue"><div><div class="stat-title">Total Requests</div><div class="stat-value"><%= totalRequests %></div></div><div class="stat-icon"><i data-lucide="activity"></i></div></div>
-        <div class="stat-box stat-red"><div><div class="stat-title">Error Rate</div><div class="stat-value"><%= errorRatePercent %>%</div></div><div class="stat-icon"><i data-lucide="alert-triangle"></i></div></div>
-        <div class="stat-box stat-green"><div><div class="stat-title">Top Consumer</div><div class="stat-value" style="font-size:18px"><%= topConsumers.length > 0 ? topConsumers[0].user_id : '-' %></div></div><div class="stat-icon"><i data-lucide="crown"></i></div></div>
-    </div>
-    <div class="chart-grid">
-        <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="bar-chart-3"></i> Requests per Service</div></div><div class="chart-box"><canvas id="svcChart"></canvas></div></div>
-        <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="trending-up"></i> Traffic Timeline (14 hari)</div></div><div class="chart-box"><canvas id="tlChart"></canvas></div></div>
-    </div>
-    <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="crown"></i> Top Consumers</div></div>
-        <div class="table-wrapper"><table><thead><tr><th>User ID</th><th>Total Requests</th></tr></thead><tbody>
-            <% topConsumers.forEach(c => { %><tr><td><strong><%= c.user_id %></strong></td><td><%= c.total %></td></tr><% }) %>
-            <% if (topConsumers.length === 0) { %><tr><td colspan="2" style="text-align:center;padding:24px;color:var(--muted)">Belum ada data</td></tr><% } %>
-        </tbody></table></div>
-    </div>
-    <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: <%- JSON.stringify(serviceChart.labels) %>, datasets: [{ label: 'Requests', data: <%- JSON.stringify(serviceChart.data) %>, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-        new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: <%- JSON.stringify(timelineChart.labels) %>, datasets: [{ label: 'Requests', data: <%- JSON.stringify(timelineChart.data) %>, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-    });
-    </script>
+                                <!-- ═══════════════════════════════════════════════════════ -->
+                                <!-- ANALYTICS -->
+                                <% } else if (section==='analytics' ) { %>
+                                    <div class="page-title">Analytics</div>
+                                    <div class="page-subtitle">Analisis performa dan traffic gateway.</div>
+                                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                        <div class="stat-box stat-blue">
+                                            <div>
+                                                <div class="stat-title">Total Requests</div>
+                                                <div class="stat-value">
+                                                    <%= totalRequests %>
+                                                </div>
+                                            </div>
+                                            <div class="stat-icon"><i data-lucide="activity"></i></div>
+                                        </div>
+                                        <div class="stat-box stat-red">
+                                            <div>
+                                                <div class="stat-title">Error Rate</div>
+                                                <div class="stat-value">
+                                                    <%= errorRatePercent %>%
+                                                </div>
+                                            </div>
+                                            <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
+                                        </div>
+                                        <div class="stat-box stat-green">
+                                            <div>
+                                                <div class="stat-title">Top Consumer</div>
+                                                <div class="stat-value" style="font-size:18px">
+                                                    <%= topConsumers.length> 0 ? topConsumers[0].user_id : '-' %>
+                                                </div>
+                                            </div>
+                                            <div class="stat-icon"><i data-lucide="crown"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-grid">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <div class="card-title"><i data-lucide="bar-chart-3"></i> Requests per
+                                                    Service</div>
+                                            </div>
+                                            <div class="chart-box"><canvas id="svcChart"></canvas></div>
+                                        </div>
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <div class="card-title"><i data-lucide="trending-up"></i> Traffic
+                                                    Timeline (14 hari)</div>
+                                            </div>
+                                            <div class="chart-box"><canvas id="tlChart"></canvas></div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <div class="card-title"><i data-lucide="crown"></i> Top Consumers</div>
+                                        </div>
+                                        <div class="table-wrapper">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>User ID</th>
+                                                        <th>Total Requests</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% topConsumers.forEach(c=> { %><tr>
+                                                            <td><strong>
+                                                                    <%= c.user_id %>
+                                                                </strong></td>
+                                                            <td>
+                                                                <%= c.total %>
+                                                            </td>
+                                                        </tr>
+                                                        <% }) %>
+                                                            <% if (topConsumers.length===0) { %>
+                                                                <tr>
+                                                                    <td colspan="2"
+                                                                        style="text-align:center;padding:24px;color:var(--muted)">
+                                                                        Belum ada data</td>
+                                                                </tr>
+                                                                <% } %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <script id="analyticsChartData" type="application/json">{"svcLabels":<%- JSON.stringify(serviceChart.labels) %>,"svcData":<%- JSON.stringify(serviceChart.data) %>,"tlLabels":<%- JSON.stringify(timelineChart.labels) %>,"tlData":<%- JSON.stringify(timelineChart.data) %>}</script>
+                                    <script>
+                                        window.addEventListener('DOMContentLoaded', function () {
+                                            var d = JSON.parse(document.getElementById('analyticsChartData').textContent);
+                                            new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: d.svcLabels, datasets: [{ label: 'Requests', data: d.svcData, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                                            new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: d.tlLabels, datasets: [{ label: 'Requests', data: d.tlData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                                        });
+                                    </script>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- REQUEST LOGS -->
-<% } else if (section === 'logs') { %>
-    <div class="page-title">Request Logs</div>
-    <div class="page-subtitle">Seluruh log traffic gateway. Data bersifat read-only (audit trail).</div>
+                                    <!-- ═══════════════════════════════════════════════════════ -->
+                                    <!-- REQUEST LOGS -->
+                                    <% } else if (section==='logs' ) { %>
+                                        <div class="page-title">Request Logs</div>
+                                        <div class="page-subtitle">Seluruh log traffic gateway. Data bersifat read-only
+                                            (audit trail).</div>
 
-    <div class="card" style="margin-bottom: 16px;">
-        <form class="filter-bar" method="GET" action="/dashboard/logs">
-            <select name="service" class="form-control" style="width:auto"><option value="">All Services</option><% serviceNames.forEach(s => { %><option value="<%= s %>" <%= filterService === s ? 'selected' : '' %>><%= s %></option><% }) %></select>
-            <select name="status" class="form-control" style="width:auto"><option value="">All Status</option><option value="SUCCESS" <%= filterStatus === 'SUCCESS' ? 'selected' : '' %>>Success</option><option value="ERROR" <%= filterStatus === 'ERROR' ? 'selected' : '' %>>Error</option><option value="PENDING" <%= filterStatus === 'PENDING' ? 'selected' : '' %>>Pending</option></select>
-            <input type="text" name="search" class="form-control" placeholder="Search user_id or URL..." value="<%= filterSearch %>" style="flex:1">
-            <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> Filter</button>
-            <% if (filterService || filterStatus || filterSearch) { %><a href="/dashboard/logs" class="btn btn-outline">Reset</a><% } %>
-        </form>
-    </div>
+                                        <div class="card" style="margin-bottom: 16px;">
+                                            <form class="filter-bar" method="GET" action="/dashboard/logs">
+                                                <select name="service" class="form-control" style="width:auto">
+                                                    <option value="">All Services</option>
+                                                    <% serviceNames.forEach(s=> { %><option value="<%= s %>"
+                                                            <%=filterService===s ? 'selected' : '' %>><%= s %>
+                                                        </option>
+                                                        <% }) %>
+                                                </select>
+                                                <select name="status" class="form-control" style="width:auto">
+                                                    <option value="">All Status</option>
+                                                    <option value="SUCCESS" <%=filterStatus==='SUCCESS' ? 'selected'
+                                                        : '' %>>Success</option>
+                                                    <option value="ERROR" <%=filterStatus==='ERROR' ? 'selected' : '' %>
+                                                        >Error</option>
+                                                    <option value="PENDING" <%=filterStatus==='PENDING' ? 'selected'
+                                                        : '' %>>Pending</option>
+                                                </select>
+                                                <input type="text" name="search" class="form-control"
+                                                    placeholder="Search user_id or URL..." value="<%= filterSearch %>"
+                                                    style="flex:1">
+                                                <button class="btn btn-primary" type="submit"><i
+                                                        data-lucide="search"></i> Filter</button>
+                                                <% if (filterService || filterStatus || filterSearch) { %><a
+                                                        href="/dashboard/logs" class="btn btn-outline">Reset</a>
+                                                    <% } %>
+                                            </form>
+                                        </div>
 
-    <div class="card">
-        <div class="card-header"><div class="card-title"><i data-lucide="clipboard-list"></i> Logs (<%= totalLogs %> total)</div></div>
-        <div class="table-wrapper"><table><thead><tr><th>#</th><th>Waktu</th><th>IP</th><th>Method</th><th>Service</th><th>URL</th><th>User</th><th>Status</th></tr></thead><tbody>
-            <% logs.forEach(log => { %>
-            <tr><td style="color:var(--muted)">#<%= log.id %></td><td style="font-size:12px;color:var(--muted)"><%= log.waktu %></td><td style="font-size:12px"><%= log.ip || '-' %></td><td><span class="badge badge-info"><%= log.metode %></span></td><td><%= log.service_tujuan || '-' %></td><td style="font-family:monospace;font-size:12px"><%= log.url_tujuan %></td><td><%= log.user_id || '-' %></td>
-            <td><span class="badge badge-<%= log.status === 'SUCCESS' ? 'success' : log.status === 'ERROR' ? 'error' : log.status === 'FORWARDED' ? 'info' : 'warning' %>"><%= log.status %></span></td></tr>
-            <% }) %>
-            <% if (logs.length === 0) { %><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">Tidak ada log yang sesuai filter.</td></tr><% } %>
-        </tbody></table></div>
-        <% if (totalPages > 1) { %>
-        <div class="pagination">
-            <% if (page > 1) { %><a href="/dashboard/logs?page=<%= page - 1 %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">&laquo; Prev</a><% } %>
-            <% for (let i = 1; i <= totalPages; i++) { %><a href="/dashboard/logs?page=<%= i %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>" class="btn btn-sm <%= i === page ? 'btn-primary' : 'btn-outline' %>"><%= i %></a><% } %>
-            <% if (page < totalPages) { %><a href="/dashboard/logs?page=<%= page + 1 %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Next &raquo;</a><% } %>
-        </div>
-        <% } %>
-    </div>
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <div class="card-title"><i data-lucide="clipboard-list"></i> Logs (<%=
+                                                        totalLogs %> total)</div>
+                                            </div>
+                                            <div class="table-wrapper">
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Waktu</th>
+                                                            <th>IP</th>
+                                                            <th>Method</th>
+                                                            <th>Service</th>
+                                                            <th>URL</th>
+                                                            <th>User</th>
+                                                            <th>Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% logs.forEach(log=> { %>
+                                                            <tr>
+                                                                <td style="color:var(--muted)">#<%= log.id %>
+                                                                </td>
+                                                                <td style="font-size:12px;color:var(--muted)">
+                                                                    <%= log.waktu %>
+                                                                </td>
+                                                                <td style="font-size:12px">
+                                                                    <%= log.ip || '-' %>
+                                                                </td>
+                                                                <td><span class="badge badge-info">
+                                                                        <%= log.metode %>
+                                                                    </span></td>
+                                                                <td>
+                                                                    <%= log.service_tujuan || '-' %>
+                                                                </td>
+                                                                <td style="font-family:monospace;font-size:12px">
+                                                                    <%= log.url_tujuan %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= log.user_id || '-' %>
+                                                                </td>
+                                                                <td><span
+                                                                        class="badge badge-<%= log.status === 'SUCCESS' ? 'success' : log.status === 'ERROR' ? 'error' : log.status === 'FORWARDED' ? 'info' : 'warning' %>">
+                                                                        <%= log.status %>
+                                                                    </span></td>
+                                                            </tr>
+                                                            <% }) %>
+                                                                <% if (logs.length===0) { %>
+                                                                    <tr>
+                                                                        <td colspan="8"
+                                                                            style="text-align:center;padding:32px;color:var(--muted)">
+                                                                            Tidak ada log yang sesuai filter.</td>
+                                                                    </tr>
+                                                                    <% } %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <% if (totalPages> 1) { %>
+                                                <div class="pagination">
+                                                    <% if (page> 1) { %><a
+                                                            href="/dashboard/logs?page=<%= page - 1 %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>"
+                                                            class="btn btn-outline btn-sm">&laquo; Prev</a>
+                                                        <% } %>
+                                                            <% for (let i=1; i <=totalPages; i++) { %><a
+                                                                    href="/dashboard/logs?page=<%= i %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>"
+                                                                    class="btn btn-sm <%= i === page ? 'btn-primary' : 'btn-outline' %>">
+                                                                    <%= i %>
+                                                                </a>
+                                                                <% } %>
+                                                                    <% if (page < totalPages) { %><a
+                                                                            href="/dashboard/logs?page=<%= page + 1 %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>"
+                                                                            class="btn btn-outline btn-sm">Next
+                                                                            &raquo;</a>
+                                                                        <% } %>
+                                                </div>
+                                                <% } %>
+                                        </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- USER MANAGEMENT (admin only) -->
-<% } else if (section === 'users') { %>
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div><div class="page-title">User Management</div><div class="page-subtitle">Kelola akun admin, operator, dan user.</div></div>
-        <button class="btn btn-success" onclick="openModal('userModal')"><i data-lucide="plus"></i> New User</button>
-    </div>
-    <div class="card"><div class="table-wrapper"><table><thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead><tbody>
-        <% users.forEach(u => { %>
-        <tr><td>#<%= u.id %></td><td><strong><%= u.username %></strong></td><td><span class="badge badge-<%= u.role === 'admin' ? 'error' : u.role === 'operator' ? 'info' : 'success' %>"><%= u.role %></span></td><td style="font-size:12px;color:var(--muted)"><%= u.created_at ? new Date(u.created_at).toLocaleString('id-ID') : '-' %></td>
-        <td><button class="btn-icon" data-user-id="<%= u.id %>" data-user-name="<%- u.username.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" data-user-role="<%= u.role %>" onclick="editUser(this)" title="Edit"><i data-lucide="pencil"></i></button><% if (u.id !== currentUser.id) { %><button class="btn-icon btn-icon-danger" data-user-id="<%= u.id %>" data-user-name="<%- u.username.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;') %>" onclick="deleteUser(this)" title="Delete"><i data-lucide="trash-2"></i></button><% } %></td></tr>
-        <% }) %>
-    </tbody></table></div></div>
+                                        <!-- ═══════════════════════════════════════════════════════ -->
+                                        <!-- USER MANAGEMENT (admin only) -->
+                                        <% } else if (section==='users' ) { %>
+                                            <div
+                                                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                                                <div>
+                                                    <div class="page-title">User Management</div>
+                                                    <div class="page-subtitle">Kelola akun admin, operator, dan user.
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-success" onclick="openModal('userModal')"><i
+                                                        data-lucide="plus"></i> New User</button>
+                                            </div>
+                                            <div class="card">
+                                                <div class="table-wrapper">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>ID</th>
+                                                                <th>Username</th>
+                                                                <th>Role</th>
+                                                                <th>Created</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <% users.forEach(u=> { %>
+                                                                <tr>
+                                                                    <td>#<%= u.id %>
+                                                                    </td>
+                                                                    <td><strong>
+                                                                            <%= u.username %>
+                                                                        </strong></td>
+                                                                    <td><span
+                                                                            class="badge badge-<%= u.role === 'admin' ? 'error' : u.role === 'operator' ? 'info' : 'success' %>">
+                                                                            <%= u.role %>
+                                                                        </span></td>
+                                                                    <td style="font-size:12px;color:var(--muted)">
+                                                                        <%= u.created_at ? new
+                                                                            Date(u.created_at).toLocaleString('id-ID')
+                                                                            : '-' %>
+                                                                    </td>
+                                                                    <td><button class="btn-icon"
+                                                                            data-user-id="<%= u.id %>"
+                                                                            data-user-name="<%= u.username %>"
+                                                                            data-user-role="<%= u.role %>"
+                                                                            onclick="editUser(this)"
+                                                                            title="Edit"><i
+                                                                                data-lucide="pencil"></i></button>
+                                                                        <% if (u.id !==currentUser.id) { %><button
+                                                                                class="btn-icon btn-icon-danger"
+                                                                                data-user-id="<%= u.id %>"
+                                                                                data-user-name="<%= u.username %>"
+                                                                                onclick="deleteUser(this)"
+                                                                                title="Delete"><i
+                                                                                    data-lucide="trash-2"></i></button>
+                                                                            <% } %>
+                                                                    </td>
+                                                                </tr>
+                                                                <% }) %>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
 
-    <!-- Modal Create/Edit User -->
-    <div class="modal-overlay" id="userModal">
-        <div class="modal-dialog">
-            <div class="modal-header"><span class="modal-title" id="userModalTitle">New User</span><button class="modal-close" onclick="closeModal('userModal')">&times;</button></div>
-            <form id="userForm" onsubmit="submitUser(event)">
-                <input type="hidden" id="userId">
-                <div class="form-group"><label class="form-label">Username</label><input type="text" id="userName" class="form-control" required></div>
-                <div class="form-group"><label class="form-label" id="pwdLabel">Password</label><input type="password" id="userPwd" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-control"><option value="admin">Admin</option><option value="operator">Operator</option><option value="user">User</option></select></div>
-                <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('userModal')">Batal</button><button type="submit" class="btn btn-primary">Simpan</button></div>
-            </form>
-        </div>
-    </div>
+                                            <!-- Modal Create/Edit User -->
+                                            <div class="modal-overlay" id="userModal">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-header"><span class="modal-title"
+                                                            id="userModalTitle">New User</span><button
+                                                            class="modal-close"
+                                                            onclick="closeModal('userModal')">&times;</button></div>
+                                                    <form id="userForm" onsubmit="submitUser(event)">
+                                                        <input type="hidden" id="userId">
+                                                        <div class="form-group"><label
+                                                                class="form-label">Username</label><input type="text"
+                                                                id="userName" class="form-control" required></div>
+                                                        <div class="form-group"><label class="form-label"
+                                                                id="pwdLabel">Password</label><input type="password"
+                                                                id="userPwd" class="form-control"></div>
+                                                        <div class="form-group"><label
+                                                                class="form-label">Role</label><select id="userRole"
+                                                                class="form-control">
+                                                                <option value="admin">Admin</option>
+                                                                <option value="operator">Operator</option>
+                                                                <option value="user">User</option>
+                                                            </select></div>
+                                                        <div class="modal-footer"><button type="button"
+                                                                class="btn btn-outline"
+                                                                onclick="closeModal('userModal')">Batal</button><button
+                                                                type="submit" class="btn btn-primary">Simpan</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- REVENUE (admin only) -->
-<% } else if (section === 'revenue') { %>
-    <div class="page-title">Revenue</div>
-    <div class="page-subtitle">Pendapatan gateway dari fee layanan integrasi. Data bersifat read-only (audit trail).</div>
-    <div class="stats-grid" style="grid-template-columns: 1fr;">
-        <div class="stat-box stat-amber"><div><div class="stat-title">Total Pendapatan Gateway</div><div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %></div><div class="stat-desc">Fee 0.5% dari setiap transaksi</div></div><div class="stat-icon"><i data-lucide="coins"></i></div></div>
-    </div>
-    <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="line-chart"></i> Pendapatan per Hari</div></div><div class="chart-box"><canvas id="revChart"></canvas></div></div>
-    <% if (revenueByService.length > 0) { %>
-    <div class="card"><div class="card-header"><div class="card-title"><i data-lucide="pie-chart"></i> Breakdown per Service</div></div>
-        <div class="table-wrapper"><table><thead><tr><th>Service</th><th>Total Fee</th><th>Transaksi</th></tr></thead><tbody>
-            <% revenueByService.forEach(r => { %><tr><td><strong><%= r.service %></strong></td><td>Rp <%= parseFloat(r.total_fee).toLocaleString('id-ID') %></td><td><%= r.transactions %></td></tr><% }) %>
-        </tbody></table></div>
-    </div>
-    <% } %>
-    <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        new Chart(document.getElementById('revChart'), { type: 'line', data: { labels: <%- JSON.stringify(revenueChart.labels) %>, datasets: [{ label: 'Pendapatan', data: <%- JSON.stringify(revenueChart.data) %>, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
-    });
-    </script>
-<% } %>
+                                            <!-- ═══════════════════════════════════════════════════════ -->
+                                            <!-- REVENUE (admin only) -->
+                                            <% } else if (section==='revenue' ) { %>
+                                                <div class="page-title">Revenue</div>
+                                                <div class="page-subtitle">Pendapatan gateway dari fee layanan
+                                                    integrasi. Data bersifat read-only (audit trail).</div>
+                                                <div class="stats-grid" style="grid-template-columns: 1fr;">
+                                                    <div class="stat-box stat-amber">
+                                                        <div>
+                                                            <div class="stat-title">Total Pendapatan Gateway</div>
+                                                            <div class="stat-value">Rp <%=
+                                                                    totalRevenue.toLocaleString('id-ID') %>
+                                                            </div>
+                                                            <div class="stat-desc">Fee 0.5% dari setiap transaksi</div>
+                                                        </div>
+                                                        <div class="stat-icon"><i data-lucide="coins"></i></div>
+                                                    </div>
+                                                </div>
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <div class="card-title"><i data-lucide="line-chart"></i>
+                                                            Pendapatan per Hari</div>
+                                                    </div>
+                                                    <div class="chart-box"><canvas id="revChart"></canvas></div>
+                                                </div>
+                                                <% if (revenueByService.length> 0) { %>
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <div class="card-title"><i data-lucide="pie-chart"></i>
+                                                                Breakdown per Service</div>
+                                                        </div>
+                                                        <div class="table-wrapper">
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Service</th>
+                                                                        <th>Total Fee</th>
+                                                                        <th>Transaksi</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <% revenueByService.forEach(r=> { %><tr>
+                                                                            <td><strong>
+                                                                                    <%= r.service %>
+                                                                                </strong></td>
+                                                                            <td>Rp <%=
+                                                                                    parseFloat(r.total_fee).toLocaleString('id-ID')
+                                                                                    %>
+                                                                            </td>
+                                                                            <td>
+                                                                                <%= r.transactions %>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <% }) %>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                    <% } %>
+                                                        <script id="revenueChartData" type="application/json">{"labels":<%- JSON.stringify(revenueChart.labels) %>,"data":<%- JSON.stringify(revenueChart.data) %>}</script>
+                                                        <script>
+                                                            window.addEventListener('DOMContentLoaded', function () {
+                                                                var d = JSON.parse(document.getElementById('revenueChartData').textContent);
+                                                                new Chart(document.getElementById('revChart'), { type: 'line', data: { labels: d.labels, datasets: [{ label: 'Pendapatan', data: d.data, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+                                                            });
+                                                        </script>
+                                                        <% } %>
         </div>
     </div>
 
     <!-- ═══ GLOBAL SCRIPTS ═══ -->
     <script>
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // ── Services CRUD ──
-    function editService(el) {
-        const id = el.dataset.svcId;
-        const name = el.dataset.svcName;
-        const url = el.dataset.svcUrl;
-        const status = el.dataset.svcStatus;
-        document.getElementById('serviceModalTitle').textContent = 'Edit Service';
-        document.getElementById('svcId').value = id;
-        document.getElementById('svcName').value = name;
-        document.getElementById('svcUrl').value = url;
-        document.getElementById('svcStatus').value = status;
-        document.getElementById('svcName').readOnly = true;
-        openModal('serviceModal');
-    }
-    async function submitService(e) {
-        e.preventDefault();
-        const id = document.getElementById('svcId').value;
-        const body = { nama_service: document.getElementById('svcName').value, url_tujuan: document.getElementById('svcUrl').value, status_aktif: parseInt(document.getElementById('svcStatus').value) };
-        const url = id ? `/api/services/${id}` : '/api/services';
-        const method = id ? 'PUT' : 'POST';
-        try {
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            const data = await res.json();
-            if (res.ok) { location.reload(); } else { alert(data.message); }
-        } catch (err) { alert('Error: ' + err.message); }
-    }
-    function deleteService(el) {
-        const id = el.dataset.svcId;
-        const name = el.dataset.svcName;
-        if (!confirm(`Yakin hapus service "${name}"? Ini tidak bisa dibatalkan.`)) return;
-        fetch(`/api/services/${id}`, { method: 'DELETE' }).then(r => r.json()).then(d => { if (d.status === 'success') location.reload(); else alert(d.message); }).catch(e => alert(e.message));
-    }
-    // Reset service modal on open for "New"
-    document.querySelector('[onclick="openModal(\'serviceModal\')"]')?.addEventListener('click', () => {
-        document.getElementById('serviceModalTitle').textContent = 'New Service';
-        document.getElementById('svcId').value = '';
-        document.getElementById('svcName').value = '';
-        document.getElementById('svcUrl').value = '';
-        document.getElementById('svcStatus').value = '1';
-        document.getElementById('svcName').readOnly = false;
-    });
+        // ── Services CRUD ──
+        function editService(el) {
+            document.getElementById('serviceModalTitle').textContent = 'Edit Service';
+            document.getElementById('svcId').value = el.dataset.svcId;
+            document.getElementById('svcName').value = el.dataset.svcName;
+            document.getElementById('svcUrl').value = el.dataset.svcUrl;
+            document.getElementById('svcStatus').value = el.dataset.svcStatus;
+            document.getElementById('svcName').readOnly = true;
+            openModal('serviceModal');
+        }
+        async function submitService(e) {
+            e.preventDefault();
+            const id = document.getElementById('svcId').value;
+            const body = { nama_service: document.getElementById('svcName').value, url_tujuan: document.getElementById('svcUrl').value, status_aktif: parseInt(document.getElementById('svcStatus').value) };
+            const url = id ? `/api/services/${id}` : '/api/services';
+            const method = id ? 'PUT' : 'POST';
+            try {
+                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (res.ok) { location.reload(); } else { alert(data.message); }
+            } catch (err) { alert('Error: ' + err.message); }
+        }
+        function deleteService(el) {
+            var id = el.dataset.svcId;
+            var name = el.dataset.svcName;
+            if (!confirm('Yakin hapus service "' + name + '"? Ini tidak bisa dibatalkan.')) return;
+            fetch('/api/services/' + id, { method: 'DELETE' }).then(function (r) { return r.json(); }).then(function (d) { if (d.status === 'success') location.reload(); else alert(d.message); }).catch(function (e) { alert(e.message); });
+        }
+        // Reset service modal on open for "New"
+        document.querySelector('[onclick="openModal(\'serviceModal\')"]')?.addEventListener('click', () => {
+            document.getElementById('serviceModalTitle').textContent = 'New Service';
+            document.getElementById('svcId').value = '';
+            document.getElementById('svcName').value = '';
+            document.getElementById('svcUrl').value = '';
+            document.getElementById('svcStatus').value = '1';
+            document.getElementById('svcName').readOnly = false;
+        });
 
-    // ── Users CRUD ──
-    function editUser(el) {
-        const id = el.dataset.userId;
-        const name = el.dataset.userName;
-        const role = el.dataset.userRole;
-        document.getElementById('userModalTitle').textContent = 'Edit User';
-        document.getElementById('userId').value = id;
-        document.getElementById('userName').value = name;
-        document.getElementById('userName').readOnly = true;
-        document.getElementById('userPwd').value = '';
-        document.getElementById('userPwd').placeholder = 'Kosongkan jika tidak ingin reset';
-        document.getElementById('userPwd').required = false;
-        document.getElementById('pwdLabel').textContent = 'Password Baru (opsional)';
-        document.getElementById('userRole').value = role;
-        openModal('userModal');
-    }
-    async function submitUser(e) {
-        e.preventDefault();
-        const id = document.getElementById('userId').value;
-        const body = { username: document.getElementById('userName').value, role: document.getElementById('userRole').value };
-        const pwd = document.getElementById('userPwd').value;
-        if (pwd) body.password = pwd;
-        if (!id && !pwd) return alert('Password wajib diisi untuk user baru');
-        const url = id ? `/api/users/${id}` : '/api/users';
-        const method = id ? 'PUT' : 'POST';
-        try {
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            const data = await res.json();
-            if (res.ok) { location.reload(); } else { alert(data.message); }
-        } catch (err) { alert('Error: ' + err.message); }
-    }
-    function deleteUser(el) {
-        const id = el.dataset.userId;
-        const name = el.dataset.userName;
-        if (!confirm(`Yakin hapus user "${name}"? Ini tidak bisa dibatalkan.`)) return;
-        fetch(`/api/users/${id}`, { method: 'DELETE' }).then(r => r.json()).then(d => { if (d.status === 'success') location.reload(); else alert(d.message); }).catch(e => alert(e.message));
-    }
-    document.querySelector('[onclick="openModal(\'userModal\')"]')?.addEventListener('click', () => {
-        document.getElementById('userModalTitle').textContent = 'New User';
-        document.getElementById('userId').value = '';
-        document.getElementById('userName').value = '';
-        document.getElementById('userName').readOnly = false;
-        document.getElementById('userPwd').value = '';
-        document.getElementById('userPwd').placeholder = 'Masukkan password';
-        document.getElementById('userPwd').required = true;
-        document.getElementById('pwdLabel').textContent = 'Password';
-        document.getElementById('userRole').value = 'operator';
-    });
+        // ── Users CRUD ──
+        function editUser(el) {
+            document.getElementById('userModalTitle').textContent = 'Edit User';
+            document.getElementById('userId').value = el.dataset.userId;
+            document.getElementById('userName').value = el.dataset.userName;
+            document.getElementById('userName').readOnly = true;
+            document.getElementById('userPwd').value = '';
+            document.getElementById('userPwd').placeholder = 'Kosongkan jika tidak ingin reset';
+            document.getElementById('userPwd').required = false;
+            document.getElementById('pwdLabel').textContent = 'Password Baru (opsional)';
+            document.getElementById('userRole').value = el.dataset.userRole;
+            openModal('userModal');
+        }
+        async function submitUser(e) {
+            e.preventDefault();
+            const id = document.getElementById('userId').value;
+            const body = { username: document.getElementById('userName').value, role: document.getElementById('userRole').value };
+            const pwd = document.getElementById('userPwd').value;
+            if (pwd) body.password = pwd;
+            if (!id && !pwd) return alert('Password wajib diisi untuk user baru');
+            const url = id ? `/api/users/${id}` : '/api/users';
+            const method = id ? 'PUT' : 'POST';
+            try {
+                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (res.ok) { location.reload(); } else { alert(data.message); }
+            } catch (err) { alert('Error: ' + err.message); }
+        }
+        function deleteUser(el) {
+            var id = el.dataset.userId;
+            var name = el.dataset.userName;
+            if (!confirm('Yakin hapus user "' + name + '"? Ini tidak bisa dibatalkan.')) return;
+            fetch('/api/users/' + id, { method: 'DELETE' }).then(function (r) { return r.json(); }).then(function (d) { if (d.status === 'success') location.reload(); else alert(d.message); }).catch(function (e) { alert(e.message); });
+        }
+        document.querySelector('[onclick="openModal(\'userModal\')"]')?.addEventListener('click', () => {
+            document.getElementById('userModalTitle').textContent = 'New User';
+            document.getElementById('userId').value = '';
+            document.getElementById('userName').value = '';
+            document.getElementById('userName').readOnly = false;
+            document.getElementById('userPwd').value = '';
+            document.getElementById('userPwd').placeholder = 'Masukkan password';
+            document.getElementById('userPwd').required = true;
+            document.getElementById('pwdLabel').textContent = 'Password';
+            document.getElementById('userRole').value = 'operator';
+        });
 
-    window.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+        window.addEventListener('DOMContentLoaded', () => lucide.createIcons());
     </script>
 </body>
+
 </html>

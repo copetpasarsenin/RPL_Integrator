@@ -39,6 +39,29 @@ Website ini dibuat untuk:
 | Styling | CSS custom theme (Kong Konnect style) |
 | Security | Helmet, express-rate-limit |
 
+### 3.1 Konfigurasi Environment (`.env`)
+
+Aplikasi menggunakan file `.env` di root project untuk menyimpan konfigurasi sensitif dan parameter runtime. Berikut penjelasan setiap variabel:
+
+| Variabel | Nilai Default | Keterangan |
+|---|---|---|
+| `PORT` | `3000` | Port server Express |
+| `JWT_SECRET` | `integrator_kelompok7_secret_key_2026` | Secret key untuk signing JWT session dan API token |
+| `SMARTBANK_URL` | `http://localhost:3001` | Base URL service SmartBank |
+| `MARKETPLACE_URL` | `http://localhost:3002` | Base URL service Marketplace |
+| `POS_URL` | `http://localhost:3003` | Base URL service POS |
+| `SUPPLIERHUB_URL` | `http://localhost:3004` | Base URL service SupplierHub |
+| `LOGISTIKITA_URL` | `http://192.168.18.94:3005` | Base URL service LogistiKita (IP jaringan lokal) |
+| `UMKM_INSIGHT_URL` | `http://localhost:3006` | Base URL service UMKM Insight |
+| `GATEWAY_FEE_PERCENT` | `0.5` | Persentase fee gateway dari setiap transaksi (0.5%) |
+| `DB_HOST` | `localhost` | Host database MySQL (Laragon) |
+| `DB_PORT` | `3306` | Port database MySQL |
+| `DB_USER` | `root` | Username database MySQL |
+| `DB_PASSWORD` | *(kosong)* | Password database MySQL (default Laragon tanpa password) |
+| `DB_NAME` | `rpl_integrator` | Nama database yang digunakan |
+
+**Catatan:** Pada konfigurasi lokal Laragon, MySQL menggunakan user `root` tanpa password. Untuk deployment production, pastikan menggunakan password yang aman dan `JWT_SECRET` yang lebih panjang.
+
 ## 4. Role Pengguna
 
 Website memiliki tiga role utama:
@@ -124,6 +147,10 @@ Fitur:
 ### 5.4 Dashboard (Multi-Section)
 
 Dashboard menggunakan arsitektur multi-section dengan sidebar navigasi ala Kong Konnect. Setiap section memiliki route sendiri dan menampilkan data spesifik.
+
+**Catatan Teknis — Penanganan Data Session:**
+
+Dashboard mendukung fitur multi-session (login beberapa role sekaligus). Data session (`allSessions` dan `activeRole`) diteruskan ke template melalui helper `dashboardBase(req, res)` di `server.js`, yang secara eksplisit membaca `res.locals.allSessions` dan `res.locals.activeRole` dari middleware `requireAuth`. Di sisi template `dashboard.ejs`, digunakan *safe check* (`typeof allSessions !== 'undefined'`) untuk menghindari `ReferenceError` jika variabel belum terdefinisi, serta alias `_activeRole` dengan fallback ke `currentUser.role`. Pendekatan ini memastikan data session selalu tersedia tanpa bergantung pada *implicit merging* `res.locals` oleh Express.
 
 #### 5.4.1 Gateway Overview
 
@@ -423,7 +450,7 @@ Contoh data service:
 | marketplace | http://localhost:3002 | 1 |
 | pos | http://localhost:3003 | 1 |
 | supplierhub | http://localhost:3004 | 1 |
-| logistikita | http://localhost:3005 | 1 |
+| logistikita | http://192.168.18.94:3005 | 1 |
 | umkm_insight | http://localhost:3006 | 1 |
 
 Contoh route:
@@ -604,15 +631,18 @@ Buat file `.env` di root project:
 PORT=3000
 JWT_SECRET=integrator_kelompok7_secret_key_2026
 
+# URL Service Ekosistem UMKM
 SMARTBANK_URL=http://localhost:3001
 MARKETPLACE_URL=http://localhost:3002
 POS_URL=http://localhost:3003
 SUPPLIERHUB_URL=http://localhost:3004
-LOGISTIKITA_URL=http://localhost:3005
+LOGISTIKITA_URL=http://192.168.18.94:3005
 UMKM_INSIGHT_URL=http://localhost:3006
 
+# Fee Gateway (Doc6: 0.5% dari setiap transaksi)
 GATEWAY_FEE_PERCENT=0.5
 
+# Konfigurasi Database MySQL (Laragon)
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
