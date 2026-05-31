@@ -1105,7 +1105,17 @@ Body: JSON data (jika POST/PUT)
 }
 ```
 
-## 19. Kelebihan Website Setelah Upgrade
+## 19. Enterprise Features (Update)
+
+Sistem telah diperbarui dengan 5 fitur enterprise baru untuk meningkatkan operasional dan keandalan gateway:
+
+1. **Export Report (CSV)**: Admin dan operator dapat mengunduh data Request Logs dan Revenue Logs dalam format CSV. Fitur ini sangat berguna untuk analisis data lebih lanjut menggunakan aplikasi spreadsheet (seperti Microsoft Excel atau Google Sheets) maupun kebutuhan pelaporan eksternal.
+2. **Automated Health Check**: Sistem kini melakukan *ping* otomatis ke setiap API service yang terdaftar setiap menit. Status *Online* atau *Down* dari setiap service ditampilkan langsung pada tabel di halaman Services, sehingga admin dapat dengan cepat memantau stabilitas layanan di ekosistem UMKM.
+3. **Paginasi & Search Lanjutan**: Untuk menangani data yang besar, tabel **Consumers**, **Services**, dan **Users** telah dilengkapi dengan fitur *Search* (pencarian) dan *Pagination*. Ini mencegah antarmuka melambat ketika jumlah pengguna atau service bertambah banyak.
+4. **Dark Mode Toggle**: Dashboard kini mendukung mode gelap (Dark Mode) untuk kenyamanan visual. Pengguna dapat mengubah tema melalui tombol toggle bergambar bulan/matahari di topbar. Preferensi mode gelap ini disimpan otomatis di *localStorage* browser.
+5. **Circuit Breaker**: Gateway kini memiliki mekanisme proteksi *Circuit Breaker*. Jika Automated Health Check mendeteksi bahwa sebuah service sedang *Down* (offline atau error), gateway akan secara proaktif menolak request ke service tersebut dan langsung mengembalikan respons `503 Service Unavailable`, tanpa harus membuang waktu dan resource untuk meneruskan request ke server yang mati.
+
+## 20. Kelebihan Website Setelah Upgrade
 
 Website ini sudah memiliki beberapa aspek kompleks yang dapat ditunjukkan saat presentasi:
 
@@ -1118,14 +1128,15 @@ Website ini sudah memiliki beberapa aspek kompleks yang dapat ditunjukkan saat p
 - Memiliki dynamic routing service berbasis database.
 - Memiliki pemisahan traffic logs dan revenue logs (audit trail).
 - Memiliki dashboard statistik dan analytics berbasis Chart.js dengan multiple chart types.
-- Memiliki filter dan pagination pada halaman Request Logs.
+- Memiliki filter dan pagination pada halaman Request Logs, Consumers, Services, dan Users.
 - Memiliki halaman Plugins yang menampilkan middleware aktif.
 - Memiliki halaman Consumers yang otomatis diisi dari traffic log.
 - Memiliki client portal untuk generate token dan simulasi API.
 - Memiliki middleware auth, role guard, rate limiter, helmet, logger, dan gateway routing.
 - Memiliki UI premium dengan animasi micro-interaction: entrance stagger, hover lift, glow pulse, dan smooth transitions.
 - Memiliki responsive design untuk mobile dan desktop.
+- **Dilengkapi fitur Enterprise**: Export CSV, Automated Health Check, Dark Mode, dan Circuit Breaker.
 
-## 20. Kesimpulan
+## 21. Kesimpulan
 
 Gateway Integrator bukan hanya halaman dashboard biasa, tetapi sistem API gateway lengkap yang memiliki registrasi publik, autentikasi multi-role, dashboard multi-section ala Kong Konnect, CRUD service dan user management, dynamic service routing, logging, revenue tracking, audit trail, dan visualisasi data. Dengan arsitektur keamanan berlapis (scrypt, JWT session type, rate limiting, Helmet) dan pemisahan tabel `request_logs` dan `revenue_logs`, sistem ini siap digunakan sebagai middleware sentral dalam ekosistem UMKM dan dapat di-deploy baik secara lokal maupun di platform hosting online.

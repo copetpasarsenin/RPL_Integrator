@@ -1097,3 +1097,47 @@ code {
 .session-tab.active .session-dot {
     animation: pulse-dot 2s infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* DARK MODE                                                   */
+/* ═══════════════════════════════════════════════════════════ */
+body.dark-mode {
+    --ink: #f8fafc;
+    --ink-2: #cbd5e1;
+    --muted: #94a3b8;
+    --muted-2: #64748b;
+    --line: #334155;
+    --line-soft: #1e293b;
+    --surface: #0f172a;
+    --page: #020617;
+    --brand-soft: #1e3a8a;
+    --info-bg: #1e3a8a;
+    --success-bg: #064e3b;
+    --danger-bg: #7f1d1d;
+    --warning-bg: #78350f;
+}
+
+body.dark-mode .topbar {
+    background: rgba(15, 23, 42, 0.92);
+}
+
+body.dark-mode .btn-outline {
+    background: #0f172a;
+}
+
+body.dark-mode .form-control {
+    background: #0f172a;
+    color: var(--ink);
+}
+
+body.dark-mode tbody tr:hover td {
+    background: #1e293b;
+}
+
+body.dark-mode .session-switcher {
+    background: #1e293b;
+}
+
+body.dark-mode .session-tab.active {
+    background: #0f172a;
+}

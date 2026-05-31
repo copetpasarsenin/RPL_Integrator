@@ -91,6 +91,20 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
         });
     }
 
+    // CIRCUIT BREAKER: Fast fail if health check marks it as Down
+    if (global.serviceHealth && global.serviceHealth[serviceName] === 'Down') {
+        await updateRequestLog(req.logId, {
+            service_tujuan: serviceName,
+            status: 'ERROR',
+            response_status: 503
+        });
+        return res.status(503).json({
+            status: 'error',
+            message: `Service "${serviceName}" sedang mengalami gangguan (Offline). Circuit Breaker aktif, request ditolak.`,
+            error_detail: 'Service Unavailable - Health Check Failed'
+        });
+    }
+
     const transactionAmount = parseFloat(req.body?.amount) || 0;
     const gatewayFee = Math.round(transactionAmount * (GATEWAY_FEE_PERCENT / 100));
     let feeStatus = 'tidak_ada_amount';

@@ -22,6 +22,10 @@ const {
 const gatewayRoutes = require('./routes/gateway');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const axios = require('axios');
+
+global.serviceHealth = {}; // Store health status (Online/Offline)
+let healthCheckInterval = null;
 
 const app = express();
 
@@ -155,7 +159,8 @@ async function dashboardBase(req) {
         currentUser: req.sessionUser,
         canViewRevenue: req.sessionUser.role === 'admin',
         isAdmin: req.sessionUser.role === 'admin',
-        serviceCount: services.length
+        serviceCount: services.length,
+        serviceHealth: global.serviceHealth || {}
     };
 }
 
@@ -211,24 +216,33 @@ app.get('/dashboard', ...dashboardAuth, async (req, res) => {
 // 2. Services
 app.get('/dashboard/services', ...dashboardAuth, async (req, res) => {
     try {
+        const filterSearch = req.query.search || '';
+        let where = '1=1';
+        const params = [];
+        if (filterSearch) {
+            where += ' AND nama_service LIKE ?';
+            params.push(`%${filterSearch}%`);
+        }
+
         const [base, [services], [serviceStats]] = await Promise.all([
             dashboardBase(req),
-            pool.query('SELECT * FROM api_services ORDER BY nama_service ASC'),
+            pool.query(`SELECT * FROM api_services WHERE ${where} ORDER BY nama_service ASC`, params),
             pool.query(`
                 SELECT s.id, s.nama_service, COUNT(r.id) AS total_requests,
                        MAX(r.timestamp) AS last_activity
                 FROM api_services s
                 LEFT JOIN request_logs r ON r.service_tujuan = s.nama_service
+                WHERE ${where.replace('nama_service', 's.nama_service')}
                 GROUP BY s.id, s.nama_service
-            `)
+            `, params)
         ]);
         const statsMap = {};
         serviceStats.forEach(s => { statsMap[s.id] = s; });
-        res.render('dashboard', { ...base, section: 'services', services, statsMap });
+        res.render('dashboard', { ...base, section: 'services', services, statsMap, filterSearch });
     } catch (err) {
         console.error('[SERVICES]', err.message);
         const base = await dashboardBase(req);
-        res.render('dashboard', { ...base, section: 'services', services: [], statsMap: {} });
+        res.render('dashboard', { ...base, section: 'services', services: [], statsMap: {}, filterSearch: '' });
     }
 });
 
@@ -244,23 +258,43 @@ app.get('/dashboard/routes', ...dashboardAuth, async (req, res) => {
 // 4. Consumers
 app.get('/dashboard/consumers', ...dashboardAuth, async (req, res) => {
     try {
-        const [base, [consumers]] = await Promise.all([
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const perPage = 10;
+        const offset = (page - 1) * perPage;
+        const filterSearch = req.query.search || '';
+
+        let where = "user_id IS NOT NULL AND user_id != ''";
+        const params = [];
+        if (filterSearch) {
+            where += " AND user_id LIKE ?";
+            params.push(`%${filterSearch}%`);
+        }
+
+        const [base, [countResult], [consumers]] = await Promise.all([
             dashboardBase(req),
+            pool.query(`SELECT COUNT(DISTINCT user_id) AS total FROM request_logs WHERE ${where}`, params),
             pool.query(`
                 SELECT user_id, COUNT(*) AS total_requests,
                        MAX(timestamp) AS last_seen,
                        MIN(timestamp) AS first_seen
                 FROM request_logs
-                WHERE user_id IS NOT NULL AND user_id != ''
+                WHERE ${where}
                 GROUP BY user_id
                 ORDER BY total_requests DESC
-            `)
+                LIMIT ? OFFSET ?
+            `, [...params, perPage, offset])
         ]);
-        res.render('dashboard', { ...base, section: 'consumers', consumers });
+        
+        const totalConsumers = countResult[0].total || 0;
+        res.render('dashboard', { 
+            ...base, section: 'consumers', consumers,
+            page, perPage, totalPages: Math.ceil(totalConsumers / perPage),
+            filterSearch
+        });
     } catch (err) {
         console.error('[CONSUMERS]', err.message);
         const base = await dashboardBase(req);
-        res.render('dashboard', { ...base, section: 'consumers', consumers: [] });
+        res.render('dashboard', { ...base, section: 'consumers', consumers: [], page: 1, totalPages: 0, filterSearch: '' });
     }
 });
 
@@ -368,18 +402,58 @@ app.get('/dashboard/logs', ...dashboardAuth, async (req, res) => {
     }
 });
 
+// 7b. Export Request Logs
+app.get('/dashboard/logs/export', ...dashboardAuth, async (req, res) => {
+    try {
+        const [logs] = await pool.query('SELECT id, waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status, mode FROM request_logs ORDER BY id DESC');
+        let csv = 'ID,Waktu,IP,Method,URL,User,Service,Status,HTTP_Code,Mode\n';
+        logs.forEach(l => {
+            const row = [
+                l.id, `"${l.waktu || ''}"`, `"${l.ip || ''}"`, `"${l.metode || ''}"`, `"${l.url_tujuan || ''}"`,
+                `"${l.user_id || ''}"`, `"${l.service_tujuan || ''}"`, `"${l.status || ''}"`, l.response_status || '', `"${l.mode || ''}"`
+            ];
+            csv += row.join(',') + '\n';
+        });
+        res.header('Content-Type', 'text/csv');
+        res.attachment('request_logs.csv');
+        return res.send(csv);
+    } catch (err) {
+        console.error('[EXPORT LOGS]', err.message);
+        res.status(500).send('Gagal export logs');
+    }
+});
+
 // 8. Users (admin only)
 app.get('/dashboard/users', ...adminOnly, async (req, res) => {
     try {
-        const [base, [users]] = await Promise.all([
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const perPage = 10;
+        const offset = (page - 1) * perPage;
+        const filterSearch = req.query.search || '';
+
+        let where = '1=1';
+        const params = [];
+        if (filterSearch) {
+            where += ' AND username LIKE ?';
+            params.push(`%${filterSearch}%`);
+        }
+
+        const [base, [countResult], [users]] = await Promise.all([
             dashboardBase(req),
-            pool.query('SELECT id, username, role, created_at FROM users ORDER BY id ASC')
+            pool.query(`SELECT COUNT(*) AS total FROM users WHERE ${where}`, params),
+            pool.query(`SELECT id, username, role, created_at FROM users WHERE ${where} ORDER BY id ASC LIMIT ? OFFSET ?`, [...params, perPage, offset])
         ]);
-        res.render('dashboard', { ...base, section: 'users', users });
+        
+        const totalUsers = countResult[0].total || 0;
+        res.render('dashboard', { 
+            ...base, section: 'users', users,
+            page, perPage, totalPages: Math.ceil(totalUsers / perPage),
+            filterSearch
+        });
     } catch (err) {
         console.error('[USERS]', err.message);
         const base = await dashboardBase(req);
-        res.render('dashboard', { ...base, section: 'users', users: [] });
+        res.render('dashboard', { ...base, section: 'users', users: [], page: 1, totalPages: 0, filterSearch: '' });
     }
 });
 
@@ -414,6 +488,28 @@ app.get('/dashboard/revenue', ...adminOnly, async (req, res) => {
             ...base, section: 'revenue',
             totalRevenue: 0, revenueChart: { labels: [], data: [] }, revenueByService: []
         });
+    }
+});
+
+// 9b. Export Revenue
+app.get('/dashboard/revenue/export', ...adminOnly, async (req, res) => {
+    try {
+        const [revenues] = await pool.query(`
+            SELECT rv.id, rv.request_id, rv.nominal_fee, rv.waktu, r.service_tujuan 
+            FROM revenue_logs rv
+            LEFT JOIN request_logs r ON rv.request_id = r.id
+            ORDER BY rv.id DESC
+        `);
+        let csv = 'ID,Request_ID,Service,Nominal_Fee,Waktu\n';
+        revenues.forEach(r => {
+            csv += `${r.id},${r.request_id},"${r.service_tujuan || ''}",${r.nominal_fee},"${r.waktu || ''}"\n`;
+        });
+        res.header('Content-Type', 'text/csv');
+        res.attachment('revenue_logs.csv');
+        return res.send(csv);
+    } catch (err) {
+        console.error('[EXPORT REVENUE]', err.message);
+        res.status(500).send('Gagal export revenue');
     }
 });
 
@@ -664,6 +760,28 @@ app.use('/integrator', apiLimiter, loggerMiddleware, validateApiToken, gatewayRo
 
 const PORT = process.env.PORT || 3000;
 
+async function runHealthCheck() {
+    try {
+        const [services] = await pool.query('SELECT nama_service, url_tujuan, status_aktif FROM api_services WHERE status_aktif = 1');
+        for (const s of services) {
+            try {
+                // Ping basic service endpoint to check connectivity
+                await axios.get(s.url_tujuan, { timeout: 3000 });
+                global.serviceHealth[s.nama_service] = 'Online';
+            } catch (err) {
+                // If it timeouts or connection refused, it's offline. 404/etc means it's online but endpoint is wrong, still online.
+                if (err.code === 'ECONNREFUSED' || err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+                    global.serviceHealth[s.nama_service] = 'Down';
+                } else {
+                    global.serviceHealth[s.nama_service] = 'Online'; // Responded with some HTTP code
+                }
+            }
+        }
+    } catch (e) {
+        console.error('[HEALTH CHECK]', e.message);
+    }
+}
+
 async function startServer() {
     await initDatabase();
     app.listen(PORT, () => {
@@ -676,6 +794,10 @@ async function startServer() {
         console.log(`   Client Portal: http://localhost:${PORT}/client-portal`);
         console.log(`   API Status   : http://localhost:${PORT}/api/status`);
         console.log('=================================================');
+        
+        // Start health check every 1 minute
+        runHealthCheck();
+        healthCheckInterval = setInterval(runHealthCheck, 60000);
     });
 }
 
