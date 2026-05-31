@@ -947,6 +947,76 @@ app.post('/api/demo/simulate', requireAuth, requireRole(['admin', 'operator', 'u
     }
 });
 
+app.post('/api/demo/seed-data', ...adminOnly, async (req, res) => {
+    const services = ['smartbank', 'marketplace', 'pos', 'supplierhub', 'logistikita', 'umkm_insight'];
+    const statuses = ['SUCCESS', 'SUCCESS', 'SUCCESS', 'ERROR'];
+    const methods = ['GET', 'POST', 'POST', 'PUT'];
+    const users = ['714240061', 'operator-demo', 'client-umkm-01', 'client-umkm-02'];
+    const now = Date.now();
+    let logsInserted = 0;
+    let revenueInserted = 0;
+
+    try {
+        for (let day = 0; day < 10; day++) {
+            for (const [index, service] of services.entries()) {
+                const totalRows = 2 + ((day + index) % 4);
+                for (let i = 0; i < totalRows; i++) {
+                    const timestamp = new Date(now - day * 24 * 60 * 60 * 1000 - i * 36 * 60 * 1000 - index * 7 * 60 * 1000);
+                    const status = statuses[(day + i + index) % statuses.length];
+                    const method = methods[(i + index) % methods.length];
+                    const userId = users[(day + i + index) % users.length];
+                    const amount = 25000 + (day + 1) * 7500 + index * 5000 + i * 3500;
+                    const fee = Math.round(amount * ((parseFloat(process.env.GATEWAY_FEE_PERCENT) || 0.5) / 100));
+                    const endpoint = service === 'smartbank' ? 'pembayaran_transaksi' : service === 'umkm_insight' ? 'report' : 'sync';
+
+                    const [result] = await pool.query(
+                        `INSERT INTO request_logs (waktu, timestamp, ip, metode, url_tujuan, user_id, service_tujuan, status, response_status, mode)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [
+                            timestamp.toLocaleString('id-ID'),
+                            timestamp,
+                            `192.168.1.${20 + index}`,
+                            method,
+                            `/integrator/${service}/${endpoint}`,
+                            userId,
+                            service,
+                            status,
+                            status === 'SUCCESS' ? 200 : 502,
+                            'DEMO_SEED'
+                        ]
+                    );
+                    logsInserted++;
+
+                    if (status === 'SUCCESS' && amount > 0 && fee > 0) {
+                        await pool.query(
+                            'INSERT INTO revenue_logs (request_id, nominal_fee, waktu) VALUES (?, ?, ?)',
+                            [result.insertId, fee, timestamp]
+                        );
+                        revenueInserted++;
+                    }
+                }
+            }
+        }
+
+        await pool.query(`
+            INSERT INTO system_alerts (severity, source, title, message, is_resolved, resolved_at)
+            VALUES
+                ('warning', 'demo:latency', 'Latency Spike Marketplace', 'Demo alert: request marketplace sempat melambat pada jam sibuk.', 0, NULL),
+                ('info', 'demo:recovery', 'SmartBank Recovered', 'Demo alert resolved: SmartBank kembali normal setelah health check berikutnya.', 1, NOW())
+        `);
+        await logAudit(req.sessionUser.id, req.sessionUser.username, 'SEED_DEMO_DATA', 'request_logs', `Logs: ${logsInserted}; Revenue rows: ${revenueInserted}`, req.ip);
+
+        res.json({
+            status: 'success',
+            message: 'Demo data berhasil dibuat',
+            logs_inserted: logsInserted,
+            revenue_inserted: revenueInserted
+        });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Gagal seed demo data', detail: err.message });
+    }
+});
+
 // ============================================================
 //  FITUR BARU: API KEY MANAGEMENT
 // ============================================================
@@ -1186,6 +1256,32 @@ app.get('/dashboard/alerts', ...dashboardAuth, async (req, res) => {
     }
 });
 
+app.get('/dashboard/architecture', ...dashboardAuth, async (req, res) => {
+    const [base, [services]] = await Promise.all([
+        dashboardBase(req),
+        pool.query('SELECT * FROM api_services ORDER BY id ASC')
+    ]);
+    const modules = [
+        { name: 'Authentication', icon: 'shield-check', desc: 'Login dashboard, JWT session, role admin/operator/user, dan API key.' },
+        { name: 'Gateway Proxy', icon: 'route', desc: 'Dynamic routing dari tabel api_services ke service tujuan.' },
+        { name: 'Observability', icon: 'activity', desc: 'Request logs, analytics, health history, alerts, dan audit trail.' },
+        { name: 'Revenue Ledger', icon: 'coins', desc: 'Pencatatan fee terpisah di revenue_logs agar metadata request tetap bersih.' },
+        { name: 'Security Layer', icon: 'lock', desc: 'Helmet, rate limit, CSRF, API key daily quota, dan role-based access control.' },
+        { name: 'Deployment', icon: 'box', desc: 'Dockerfile dan docker-compose untuk gateway + MySQL.' }
+    ];
+    const flows = [
+        'Client mengirim request ke /integrator/:service/:path dengan Bearer JWT atau API Key.',
+        'Logger membuat request_logs dengan status awal PENDING.',
+        'Auth middleware memvalidasi JWT/API Key dan menempelkan identitas user.',
+        'Rate limiter mengecek batas per user dan kuota harian API Key.',
+        'Gateway membaca api_services untuk menentukan target URL aktif.',
+        'Jika amount > 0, gateway menghitung fee dan mencoba debit SmartBank.',
+        'Request diteruskan ke service tujuan, lalu response dan status dicatat.',
+        'Dashboard membaca request_logs, revenue_logs, audit_logs, service_health_logs, dan system_alerts.'
+    ];
+    res.render('dashboard', { ...base, section: 'architecture', services, modules, flows });
+});
+
 app.post('/api/alerts/:id/resolve', ...dashboardAuth, async (req, res) => {
     try {
         const [result] = await pool.query(
@@ -1212,7 +1308,9 @@ app.get('/dashboard/docs', ...dashboardAuth, async (req, res) => {
         { method: 'GET', path: '/integrator/validasi_request', auth: 'Bearer JWT/API Key', desc: 'Validasi token gateway.' },
         { method: 'ANY', path: '/integrator/:service/:path', auth: 'Bearer JWT/API Key', desc: 'Proxy request ke service tujuan dinamis.' },
         { method: 'GET', path: '/dashboard/logs/export', auth: 'Admin/Operator', desc: 'Export request log sesuai filter.' },
-        { method: 'GET', path: '/dashboard/revenue/export', auth: 'Admin', desc: 'Export revenue log sesuai filter.' }
+        { method: 'GET', path: '/dashboard/revenue/export', auth: 'Admin', desc: 'Export revenue log sesuai filter.' },
+        { method: 'POST', path: '/api/demo/seed-data', auth: 'Admin', desc: 'Membuat data demo untuk grafik, revenue, logs, dan alerts.' },
+        { method: 'POST', path: '/api/alerts/:id/resolve', auth: 'Admin/Operator', desc: 'Menandai system alert sebagai resolved.' }
     ];
     res.render('dashboard', { ...base, section: 'docs', docs, services });
 });

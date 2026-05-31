@@ -37,7 +37,9 @@ test('dashboard exposes monitoring, export, docs, alerts, and API key quota feat
         '/dashboard/analytics/export',
         '/dashboard/audit/export',
         '/dashboard/docs',
+        '/dashboard/architecture',
         '/dashboard/alerts',
+        '/api/demo/seed-data',
         '/api/alerts/:id/resolve',
         'daily_limit',
         'health_path'

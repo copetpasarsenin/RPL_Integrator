@@ -61,9 +61,11 @@
                         <a href="/dashboard/health-history" class="menu-item <%= section === 'health_history' ? 'active' : '' %>"><span
                                 class="menu-icon"><i data-lucide="heartbeat"></i></span> Health History</a>
 
-                            <div class="menu-group">Tools</div>
+            <div class="menu-group">Tools</div>
                             <a href="/client-portal" class="menu-item"><span class="menu-icon"><i
                                         data-lucide="zap"></i></span> API Simulator</a>
+                            <a href="/dashboard/architecture" class="menu-item <%= section === 'architecture' ? 'active' : '' %>"><span
+                                    class="menu-icon"><i data-lucide="network"></i></span> Architecture</a>
                             <a href="/dashboard/docs" class="menu-item <%= section === 'docs' ? 'active' : '' %>"><span
                                     class="menu-icon"><i data-lucide="book-open"></i></span> API Docs</a>
         </div>
@@ -78,7 +80,7 @@
                     <%= section==='overview' ? 'Overview' : section==='services' ? 'Services' : section==='routes'
                         ? 'Routes' : section==='consumers' ? 'Consumers' : section==='plugins' ? 'Plugins' :
                         section==='analytics' ? 'Analytics' : section==='logs' ? 'Request Logs' : section==='users'
-                        ? 'Users' : section==='revenue' ? 'Revenue' : section==='alerts' ? 'Alerts' : section==='docs' ? 'API Docs' : 'Dashboard' %>
+                        ? 'Users' : section==='revenue' ? 'Revenue' : section==='alerts' ? 'Alerts' : section==='architecture' ? 'Architecture' : section==='docs' ? 'API Docs' : 'Dashboard' %>
                 </span>
             </div>
             <div class="topbar-actions">
@@ -125,8 +127,13 @@
                 <div class="page-title">Gateway Overview</div>
                 <div class="page-subtitle">Ringkasan status gateway, traffic, dan aktivitas terkini.</div>
 
-                <div class="status-bar"><span class="status-dot online"></span> Gateway <strong>ONLINE</strong> —
-                    Uptime: <%= Math.floor(uptime / 3600) %>h <%= Math.floor((uptime % 3600) / 60) %>m</div>
+                <div class="status-bar" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+                    <span><span class="status-dot online"></span> Gateway <strong>ONLINE</strong> —
+                    Uptime: <%= Math.floor(uptime / 3600) %>h <%= Math.floor((uptime % 3600) / 60) %>m</span>
+                    <% if (isAdmin) { %>
+                        <button class="btn btn-outline btn-sm" onclick="seedDemoData()"><i data-lucide="database"></i> Seed Demo Data</button>
+                    <% } %>
+                </div>
 
                 <% if (alerts && alerts.length > 0) { %>
                     <div class="card" style="margin-bottom:16px;border-color:#fbbf24;background:#fffbeb">
@@ -1135,6 +1142,48 @@
                                                                     </div>
                                                                 <% } %>
                                                             </div>
+                                                        <% } else if (section==='architecture') { %>
+                                                            <div class="page-title">System Architecture</div>
+                                                            <div class="page-subtitle">Peta modul, alur request, dan service ekosistem yang digunakan gateway.</div>
+                                                            <div class="plugin-grid" style="margin-bottom:16px">
+                                                                <% modules.forEach(m => { %>
+                                                                    <div class="plugin-card">
+                                                                        <div class="plugin-header"><div class="plugin-icon"><i data-lucide="<%= m.icon %>"></i></div><span class="badge badge-success">Active</span></div>
+                                                                        <div class="plugin-name"><%= m.name %></div>
+                                                                        <div class="plugin-desc"><%= m.desc %></div>
+                                                                    </div>
+                                                                <% }) %>
+                                                            </div>
+                                                            <div class="card" style="margin-bottom:16px">
+                                                                <div class="card-header"><div class="card-title"><i data-lucide="workflow"></i> Request Flow</div></div>
+                                                                <div style="display:grid;gap:10px">
+                                                                    <% flows.forEach((f, i) => { %>
+                                                                        <div style="display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface)">
+                                                                            <span class="badge badge-info"><%= i + 1 %></span>
+                                                                            <div><%= f %></div>
+                                                                        </div>
+                                                                    <% }) %>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card">
+                                                                <div class="card-header"><div class="card-title"><i data-lucide="network"></i> Service Topology</div></div>
+                                                                <div class="table-wrapper">
+                                                                    <table>
+                                                                        <thead><tr><th>Service</th><th>Gateway Route</th><th>Target URL</th><th>Health</th><th>Status</th></tr></thead>
+                                                                        <tbody>
+                                                                            <% services.forEach(s => { %>
+                                                                                <tr>
+                                                                                    <td><strong><%= s.nama_service %></strong></td>
+                                                                                    <td><code>/integrator/<%= s.nama_service %>/{path}</code></td>
+                                                                                    <td><code><%= s.url_tujuan %></code></td>
+                                                                                    <td><code><%= s.health_path || '/' %></code></td>
+                                                                                    <td><span class="badge badge-<%= s.status_aktif ? 'success' : 'warning' %>"><%= s.status_aktif ? 'Active' : 'Inactive' %></span></td>
+                                                                                </tr>
+                                                                            <% }) %>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
                                                         <% } else if (section==='docs') { %>
                                                             <div class="page-title">API Documentation</div>
                                                             <div class="page-subtitle">Referensi endpoint gateway, format autentikasi, dan route service dinamis.</div>
@@ -1331,6 +1380,22 @@
                 else alert('Error: ' + d.message);
             } catch (e) {
                 alert('Gagal resolve alert: ' + e.message);
+            }
+        }
+
+        async function seedDemoData() {
+            if (!confirm('Buat data demo untuk grafik, logs, revenue, dan alerts? Data akan ditambahkan ke database.')) return;
+            try {
+                const r = await csrfFetch('/api/demo/seed-data', { method: 'POST' });
+                const d = await r.json();
+                if (d.status === 'success') {
+                    alert(d.message + '\\nLogs: ' + d.logs_inserted + '\\nRevenue rows: ' + d.revenue_inserted);
+                    location.reload();
+                } else {
+                    alert('Error: ' + d.message);
+                }
+            } catch (e) {
+                alert('Gagal seed demo data: ' + e.message);
             }
         }
 
