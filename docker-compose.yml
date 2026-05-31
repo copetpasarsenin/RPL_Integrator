@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: rpl-integrator-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rpl_integrator
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gateway:
+    build: .
+    container_name: rpl-integrator-gateway
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      JWT_SECRET: change_this_secret_for_production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: rpl_integrator
+      GATEWAY_FEE_PERCENT: 0.5
+      SMARTBANK_URL: http://host.docker.internal:3001
+      MARKETPLACE_URL: http://host.docker.internal:3002
+      POS_URL: http://host.docker.internal:3003
+      SUPPLIERHUB_URL: http://host.docker.internal:3004
+      LOGISTIKITA_URL: http://host.docker.internal:3005
+      UMKM_INSIGHT_URL: http://host.docker.internal:3006
+      USER_RATE_WINDOW_MS: 60000
+      USER_RATE_MAX: 30
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:

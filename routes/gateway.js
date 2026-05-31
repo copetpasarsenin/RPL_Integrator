@@ -13,7 +13,7 @@ function joinUrl(baseUrl, path = '') {
 
 async function getActiveServices() {
     const [rows] = await pool.query(
-        `SELECT id, nama_service, url_tujuan, status_aktif
+        `SELECT id, nama_service, url_tujuan, health_path, status_aktif
          FROM api_services
          WHERE status_aktif = 1
          ORDER BY nama_service ASC`
@@ -24,7 +24,7 @@ async function getActiveServices() {
 
 async function getActiveServiceByName(serviceName) {
     const [rows] = await pool.query(
-        `SELECT id, nama_service, url_tujuan, status_aktif
+        `SELECT id, nama_service, url_tujuan, health_path, status_aktif
          FROM api_services
          WHERE nama_service = ? AND status_aktif = 1
          LIMIT 1`,
@@ -136,7 +136,9 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
             response_status: response.status
         });
 
-        if (transactionAmount > 0 && gatewayFee > 0) {
+        const recordedFee = feeStatus === 'terpotong' ? gatewayFee : 0;
+
+        if (recordedFee > 0) {
             await recordRevenue(req.logId, gatewayFee);
         }
 
@@ -146,7 +148,8 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
                 service_tujuan: serviceName,
                 fee_percent: `${GATEWAY_FEE_PERCENT}%`,
                 transaction_amount: transactionAmount,
-                fee_terpotong: gatewayFee,
+                calculated_fee: gatewayFee,
+                fee_terpotong: recordedFee,
                 fee_status: feeStatus,
                 forwarded_to: targetUrl
             },
@@ -165,7 +168,8 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
             integrator_info: {
                 service_tujuan: serviceName,
                 fee_percent: `${GATEWAY_FEE_PERCENT}%`,
-                fee_terpotong: gatewayFee,
+                calculated_fee: gatewayFee,
+                fee_terpotong: feeStatus === 'terpotong' ? gatewayFee : 0,
                 fee_status: feeStatus
             },
             error_detail: error.message,
@@ -187,6 +191,7 @@ router.get('/routing_api', async (req, res) => {
                 services: services.map(service => ({
                     service: service.nama_service,
                     url: service.url_tujuan,
+                    health_path: service.health_path || '/',
                     status: service.status_aktif ? 'Aktif' : 'Nonaktif'
                 }))
             }

@@ -1141,3 +1141,11 @@ body.dark-mode .session-switcher {
 body.dark-mode .session-tab.active {
     background: #0f172a;
 }
+
+body.dark-mode .login-card {
+    background: rgba(15, 23, 42, 0.98);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .modal-dialog {
+    background: var(--surface);
+}

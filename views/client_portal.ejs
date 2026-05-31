@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta name="csrf-token" content="<%= csrfToken || '' %>">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -63,6 +64,7 @@
                 <span style="color: var(--ink); font-weight: 700;">API Simulator</span>
             </div>
             <div class="topbar-actions">
+                <button class="btn btn-outline" id="darkModeToggle" title="Toggle Dark Mode" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button>
                 <% const sessions = allSessions || {}; const sessionCount = Object.keys(sessions).length; %>
                 <% if (sessionCount > 1) { %>
                     <div class="session-switcher">
@@ -80,6 +82,7 @@
                     <a href="/dashboard" class="btn btn-outline"><i data-lucide="layout-dashboard"></i> Dashboard</a>
                 <% } %>
                 <form method="POST" action="/logout" class="logout-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken || '' %>">
                     <input type="hidden" name="role" value="<%= currentUser.role %>">
                     <button class="btn btn-outline"><i data-lucide="log-out"></i> Logout</button>
                 </form>
@@ -169,6 +172,8 @@
                     <span id="feePreview" style="font-size: 18px;">Rp 250</span>
                 </div>
 
+                
+                <div id="tokenExpiryWarning" style="display:none;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid;margin-bottom:12px;font-size:13px;font-weight:500"></div>
                 <div class="action-grid">
                     <button onclick="jalankanDemo()" class="btn btn-success"><i data-lucide="play-circle"></i> Demo Simulasi Sukses</button>
                     <button onclick="jalankanLive()" class="btn btn-dark"><i data-lucide="radio-tower"></i> Live Request</button>
@@ -203,6 +208,12 @@
     </div>
 
     <script>
+        window.CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        function csrfFetch(url, options) {
+            const finalOptions = options || {};
+            finalOptions.headers = Object.assign({}, finalOptions.headers || {}, { 'X-CSRF-Token': window.CSRF_TOKEN });
+            return fetch(url, finalOptions);
+        }
         async function generateToken() {
             const btn = event.currentTarget;
             btn.disabled = true;
@@ -212,7 +223,7 @@
             const statusEl = document.getElementById('tokenStatus');
 
             try {
-                const res = await fetch('/generate-test-token', {
+                const res = await csrfFetch('/generate-test-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, name: name, npm: userId })
@@ -272,6 +283,31 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+                        const toggle = document.getElementById('darkModeToggle');
+            if (toggle) {
+                const isDark = localStorage.getItem('darkMode') === 'true';
+                if (isDark) document.body.classList.add('dark-mode');
+                
+                toggle.innerHTML = isDark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+                if (window.lucide) lucide.createIcons();
+
+                // Hapus event listener lama dengan clone node (jika ada script ganda)
+                const newToggle = toggle.cloneNode(true);
+                toggle.parentNode.replaceChild(newToggle, toggle);
+
+                newToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const dark = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('darkMode', dark);
+                    
+                    newToggle.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+                    if (window.lucide) lucide.createIcons();
+                });
+            } else {
+                if (localStorage.getItem('darkMode') === 'true') {
+                    document.body.classList.add('dark-mode');
+                }
+            }
             updateFeePreview();
             lucide.createIcons();
         });
@@ -282,6 +318,54 @@
             return { service: opt.dataset.svc, endpoint: opt.dataset.ep };
         }
 
+
+        // ── Token Expiry Warning ──
+        function checkTokenExpiry() {
+            const token = document.getElementById('testToken').value || document.getElementById('tokenOutput').value;
+            const warningEl = document.getElementById('tokenExpiryWarning');
+            if (!warningEl) return;
+            if (!token || !token.includes('.')) { warningEl.style.display = 'none'; return; }
+
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (!payload.exp) { warningEl.style.display = 'none'; return; }
+
+                const now = Math.floor(Date.now() / 1000);
+                const secsLeft = payload.exp - now;
+
+                if (secsLeft <= 0) {
+                    warningEl.style.display = 'flex';
+                    warningEl.style.background = '#fee2e2';
+                    warningEl.style.borderColor = '#ef4444';
+                    warningEl.style.color = '#991b1b';
+                    warningEl.innerHTML = '<i data-lucide="alert-circle" style="width:16px;height:16px"></i> Token sudah <strong>kadaluwarsa</strong>! Generate token baru.';
+                    lucide.createIcons();
+                } else if (secsLeft < 1800) {
+                    const mins = Math.ceil(secsLeft / 60);
+                    warningEl.style.display = 'flex';
+                    warningEl.style.background = '#fef3c7';
+                    warningEl.style.borderColor = '#f59e0b';
+                    warningEl.style.color = '#92400e';
+                    warningEl.innerHTML = '<i data-lucide="clock" style="width:16px;height:16px"></i> Token akan kadaluwarsa dalam <strong>' + mins + ' menit</strong>. Segera generate ulang!';
+                    lucide.createIcons();
+                } else {
+                    const hours = Math.floor(secsLeft / 3600);
+                    const mins = Math.floor((secsLeft % 3600) / 60);
+                    warningEl.style.display = 'flex';
+                    warningEl.style.background = '#d1fae5';
+                    warningEl.style.borderColor = '#10b981';
+                    warningEl.style.color = '#065f46';
+                    warningEl.innerHTML = '<i data-lucide="check-circle" style="width:16px;height:16px"></i> Token valid &mdash; berlaku <strong>' + hours + 'h ' + mins + 'm</strong> lagi.';
+                    lucide.createIcons();
+                }
+            } catch(e) {
+                warningEl.style.display = 'none';
+            }
+        }
+
+        // Update setiap 30 detik
+        document.getElementById('testToken').addEventListener('input', checkTokenExpiry);
+        setInterval(checkTokenExpiry, 30000);
         async function jalankanDemo() {
             const btn = event.currentTarget;
             btn.disabled = true;
@@ -296,7 +380,7 @@
             responseBox.style.color = "#fbbf24";
 
             try {
-                const res = await fetch('/api/demo/simulate', {
+                const res = await csrfFetch('/api/demo/simulate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -341,7 +425,7 @@
                     parameter: "Live request via Client Portal" 
                 };
 
-                const res = await fetch(endpoint, {
+                const res = await csrfFetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -372,7 +456,7 @@
             responseBox.style.color = "#fbbf24";
 
             try {
-                const res = await fetch(path, {
+                const res = await csrfFetch(path, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 const data = await res.json();

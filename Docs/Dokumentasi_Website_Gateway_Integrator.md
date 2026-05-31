@@ -1135,8 +1135,21 @@ Website ini sudah memiliki beberapa aspek kompleks yang dapat ditunjukkan saat p
 - Memiliki middleware auth, role guard, rate limiter, helmet, logger, dan gateway routing.
 - Memiliki UI premium dengan animasi micro-interaction: entrance stagger, hover lift, glow pulse, dan smooth transitions.
 - Memiliki responsive design untuk mobile dan desktop.
-- **Dilengkapi fitur Enterprise**: Export CSV, Automated Health Check, Dark Mode, dan Circuit Breaker.
+- **Dilengkapi fitur Enterprise**: Export CSV, Automated Health Check, Dark Mode, Circuit Breaker, API Key Management, Rate Limiting, dan Audit Log System.
 
 ## 21. Kesimpulan
 
 Gateway Integrator bukan hanya halaman dashboard biasa, tetapi sistem API gateway lengkap yang memiliki registrasi publik, autentikasi multi-role, dashboard multi-section ala Kong Konnect, CRUD service dan user management, dynamic service routing, logging, revenue tracking, audit trail, dan visualisasi data. Dengan arsitektur keamanan berlapis (scrypt, JWT session type, rate limiting, Helmet) dan pemisahan tabel `request_logs` dan `revenue_logs`, sistem ini siap digunakan sebagai middleware sentral dalam ekosistem UMKM dan dapat di-deploy baik secara lokal maupun di platform hosting online.
+
+## 22. Update Besar Tambahan (Fitur Lanjutan)
+
+Sistem Gateway Integrator juga telah diperkaya dengan tujuh (7) fitur enterprise tambahan yang menjadikannya semakin profesional dan *production-ready*:
+
+1. **Per-user Rate Limiting**: Membatasi *traffic* dari setiap user ID. Middleware ateLimitPerUser.js menerapkan *sliding window* (maksimum 30 request per menit per user). Jika melebihi batas, request otomatis ditolak dengan kode 429 Too Many Requests.
+2. **API Key Management**: Pengguna bisa membuat (generate) *API Key* dengan prefix igw_ melalui Dashboard Admin. Token ini bisa digunakan secara eksternal (di Postman atau aplikasi lain) dan disisipkan sebagai header Authorization: Bearer <API_KEY>, sehingga tidak memerlukan JWT Login.
+3. **Audit Log System**: Tersedia halaman **Audit Log** khusus di dalam dashboard Admin. Sistem ini mencatat setiap aksi kritikal yang dilakukan oleh Admin atau Operator, seperti: CREATE_SERVICE, UPDATE_SERVICE, DELETE_SERVICE, CREATE_USER, DELETE_USER, RESET_PASSWORD, hingga *Revoke API Key*. Setiap log mencatat *username*, aksi, objek sumber daya, dan alamat IP.
+4. **Service Health History**: Selain status *Online/Down* yang tampil secara *real-time*, sistem kini memiliki halaman rekam jejak (*Health History*). Data dicatat ke tabel service_health_logs setiap 1 menit. Halaman statistik akan menampilkan rasio "Uptime %" untuk masing-masing service dalam kurun waktu 24 jam terakhir. Log yang berumur lebih dari 7 hari dihapus otomatis.
+5. **Token Expiry Warning**: Pada Client Portal (API Simulator), terdapat indikator status *Token JWT* cerdas yang menghitung mundur kadaluwarsa token. Peringatan akan otomatis berubah warna (Hijau -> Kuning -> Merah) ketika token mendekati masa kadaluwarsa.
+6. **Batch Import Services (CSV)**: Pada menu *Services*, Admin dapat melakukan penginputan banyak rute API sekaligus dengan mengunggah file CSV (format 
+ama_service, url_tujuan, status_aktif), sehingga tidak perlu menambahkan *service* satu per satu.
+7. **Reset Password User**: Pada menu *User Management*, Admin memiliki kontrol penuh dan tombol cepat untuk mereset kata sandi (password) milik pengguna atau operator tanpa perlu meminta pengguna melakukan proses *forgot password*.
