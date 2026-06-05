@@ -2,14 +2,9 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { pool } = require('../config/database');
+const { joinUrl, appendQueryString, getProxyTimeoutMs } = require('../utils/gatewayUtils');
 
 const GATEWAY_FEE_PERCENT = parseFloat(process.env.GATEWAY_FEE_PERCENT) || 0.5;
-
-function joinUrl(baseUrl, path = '') {
-    const cleanBase = String(baseUrl || '').replace(/\/+$/, '');
-    const cleanPath = String(path || '').replace(/^\/+/, '');
-    return cleanPath ? `${cleanBase}/${cleanPath}` : cleanBase;
-}
 
 async function getActiveServices() {
     const [rows] = await pool.query(
@@ -117,7 +112,7 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
             status: 'FORWARDED'
         });
 
-        const targetUrl = joinUrl(targetService.url_tujuan, forwardPath);
+        const targetUrl = appendQueryString(joinUrl(targetService.url_tujuan, forwardPath), req);
         console.log(`[PROXY] Forwarding ${req.method} to: ${targetUrl}`);
         
         const response = await axios({
@@ -128,7 +123,7 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
                 'Content-Type': req.headers['content-type'] || 'application/json',
                 Authorization: req.headers.authorization || ''
             },
-            timeout: 10000
+            timeout: getProxyTimeoutMs()
         });
 
         await updateRequestLog(req.logId, {
@@ -142,7 +137,7 @@ async function proxyToService(req, res, serviceName, forwardPath = '') {
             await recordRevenue(req.logId, gatewayFee);
         }
 
-        return res.json({
+        return res.status(response.status).json({
             status: 'success',
             integrator_info: {
                 service_tujuan: serviceName,

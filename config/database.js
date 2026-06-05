@@ -67,6 +67,11 @@ async function seedApiServices() {
 }
 
 async function seedUsers() {
+    if (process.env.NODE_ENV === 'production') {
+        console.warn('   Lewati seeding user default di production. Buat akun admin secara eksplisit.');
+        return;
+    }
+
     const users = [
         ['admin', passwordHash('admin123'), 'admin'],
         ['operator', passwordHash('operator123'), 'operator'],
