@@ -4,15 +4,24 @@ services:
     container_name: rpl-integrator-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: rpl_integrator
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_DATABASE: "${DB_NAME:-rpl_integrator}"
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./config/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-uroot",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -25,15 +34,16 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      PORT: 3000
-      NODE_ENV: production
-      JWT_SECRET: change_this_secret_for_production
+      PORT: "${PORT:-3000}"
+      NODE_ENV: "${NODE_ENV:-development}"
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env with at least 32 random characters}"
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: root
-      DB_NAME: rpl_integrator
-      GATEWAY_FEE_PERCENT: 0.5
+      DB_USER: "${DB_USER:-root}"
+      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+      DB_NAME: "${DB_NAME:-rpl_integrator}"
+      GATEWAY_FEE_PERCENT: "${GATEWAY_FEE_PERCENT:-0.5}"
+      SEED_DEFAULT_USERS: "${SEED_DEFAULT_USERS:-true}"
       SMARTBANK_URL: http://host.docker.internal:3001
       MARKETPLACE_URL: http://host.docker.internal:3002
       POS_URL: http://host.docker.internal:3003

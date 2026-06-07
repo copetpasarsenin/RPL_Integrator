@@ -172,7 +172,7 @@
                     <span id="feePreview" style="font-size: 18px;">Rp 250</span>
                 </div>
 
-                
+
                 <div id="tokenExpiryWarning" style="display:none;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid;margin-bottom:12px;font-size:13px;font-weight:500"></div>
                 <div class="action-grid">
                     <button onclick="jalankanDemo()" class="btn btn-success"><i data-lucide="play-circle"></i> Demo Simulasi Sukses</button>
@@ -229,11 +229,15 @@
                     body: JSON.stringify({ user_id: userId, name: name, npm: userId })
                 });
                 const data = await res.json();
+                if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Token gagal dibuat');
                 document.getElementById('tokenOutput').value = data.token;
                 document.getElementById('testToken').value = data.token;
+                const payload = data.payload || {};
+                const actualName = payload.name || name;
+                const actualUserId = payload.user_id || userId;
                 const badge = document.createElement('div');
                 badge.className = 'badge badge-success';
-                badge.textContent = 'Token berhasil dibuat untuk ' + name + ' (' + userId + ')';
+                badge.textContent = 'Token API berhasil dibuat untuk ' + actualName + ' (' + actualUserId + ')';
                 statusEl.innerHTML = '';
                 statusEl.appendChild(badge);
             } catch (err) {
@@ -287,7 +291,7 @@
             if (toggle) {
                 const isDark = localStorage.getItem('darkMode') === 'true';
                 if (isDark) document.body.classList.add('dark-mode');
-                
+
                 toggle.innerHTML = isDark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
                 if (window.lucide) lucide.createIcons();
 
@@ -299,7 +303,7 @@
                     document.body.classList.toggle('dark-mode');
                     const dark = document.body.classList.contains('dark-mode');
                     localStorage.setItem('darkMode', dark);
-                    
+
                     newToggle.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
                     if (window.lucide) lucide.createIcons();
                 });
@@ -419,10 +423,10 @@
             try {
                 // Buat payload dinamis (LogistiKita butuh user_id berupa SmartBank ID)
                 const isLogistiKita = endpoint.includes('logistikita');
-                const payload = { 
+                const payload = {
                     user_id: isLogistiKita ? "SB-714240035" : userId, // ID valid Asha Clean
-                    amount, 
-                    parameter: "Live request via Client Portal" 
+                    amount,
+                    parameter: "Live request via Client Portal"
                 };
 
                 const res = await csrfFetch(endpoint, {

@@ -255,7 +255,7 @@
                         </div>
                     </div>
                 </div>
-                <script id="overviewChartData" type="application/json">{"labels":<%- JSON.stringify(chartLabels) %>,"data":<%- JSON.stringify(chartData) %>}</script>
+                <script id="overviewChartData" type="application/json">{"labels":<%- safeJson(chartLabels) %>,"data":<%- safeJson(chartData) %>}</script>
                 <script>
                     window.addEventListener('DOMContentLoaded', function () {
                         var d = JSON.parse(document.getElementById('overviewChartData').textContent);
@@ -280,7 +280,7 @@
                             </div>
                             <% } %>
                     </div>
-                    
+
                     <div class="card" style="margin-bottom: 16px; margin-top: 16px;">
                         <form class="filter-bar" method="GET" action="/dashboard/services">
                             <input type="text" name="search" class="form-control" placeholder="Search Service Name..." value="<%= filterSearch %>" style="flex:1">
@@ -425,7 +425,7 @@
                         <% } else if (section==='consumers' ) { %>
                             <div class="page-title">Consumers</div>
                             <div class="page-subtitle">Daftar consumer yang menggunakan API gateway. Data otomatis dari traffic log.</div>
-                            
+
                             <div class="card" style="margin-bottom: 16px;">
                                 <form class="filter-bar" method="GET" action="/dashboard/consumers">
                                     <input type="text" name="search" class="form-control" placeholder="Search User ID..." value="<%= filterSearch %>" style="flex:1">
@@ -607,7 +607,7 @@
                                             </table>
                                         </div>
                                     </div>
-                                    <script id="analyticsChartData" type="application/json">{"svcLabels":<%- JSON.stringify(serviceChart.labels) %>,"svcData":<%- JSON.stringify(serviceChart.data) %>,"tlLabels":<%- JSON.stringify(timelineChart.labels) %>,"tlData":<%- JSON.stringify(timelineChart.data) %>}</script>
+                                    <script id="analyticsChartData" type="application/json">{"svcLabels":<%- safeJson(serviceChart.labels) %>,"svcData":<%- safeJson(serviceChart.data) %>,"tlLabels":<%- safeJson(timelineChart.labels) %>,"tlData":<%- safeJson(timelineChart.data) %>}</script>
                                     <script>
                                         window.addEventListener('DOMContentLoaded', function () {
                                             var d = JSON.parse(document.getElementById('analyticsChartData').textContent);
@@ -915,7 +915,7 @@
                                                         </div>
                                                     </div>
                                                     <% } %>
-                                                        <script id="revenueChartData" type="application/json">{"labels":<%- JSON.stringify(revenueChart.labels) %>,"data":<%- JSON.stringify(revenueChart.data) %>}</script>
+                                                        <script id="revenueChartData" type="application/json">{"labels":<%- safeJson(revenueChart.labels) %>,"data":<%- safeJson(revenueChart.data) %>}</script>
                                                         <script>
                                                             window.addEventListener('DOMContentLoaded', function () {
                                                                 var d = JSON.parse(document.getElementById('revenueChartData').textContent);
@@ -1362,7 +1362,7 @@
         async function submitResetPwd() {
             const id = document.getElementById('resetPwdUserId').value;
             const pwd = document.getElementById('resetPwdInput').value;
-            if (!pwd || pwd.length < 6) return alert('Password minimal 6 karakter');
+            if (!pwd || pwd.length < <%= minPasswordLength %>) return alert('Password minimal <%= minPasswordLength %> karakter');
             try {
                 const r = await csrfFetch('/api/users/' + id + '/reset-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({new_password: pwd}) });
                 const d = await r.json();
@@ -1420,12 +1420,12 @@
         }
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            
+
             const toggle = document.getElementById('darkModeToggle');
             if (toggle) {
                 const isDark = localStorage.getItem('darkMode') === 'true';
                 if (isDark) document.body.classList.add('dark-mode');
-                
+
                 toggle.innerHTML = isDark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
                 if (window.lucide) lucide.createIcons();
 
@@ -1436,7 +1436,7 @@
                     document.body.classList.toggle('dark-mode');
                     const dark = document.body.classList.contains('dark-mode');
                     localStorage.setItem('darkMode', dark);
-                    
+
                     newToggle.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
                     if (window.lucide) lucide.createIcons();
                 });
@@ -1454,7 +1454,7 @@
             <div class="modal-header"><span class="modal-title">Reset Password</span><button class="modal-close" onclick="closeModal('resetPwdModal')">&times;</button></div>
             <input type="hidden" id="resetPwdUserId">
             <p style="color:var(--muted);margin-bottom:16px">Reset password untuk user: <strong id="resetPwdUserName"></strong></p>
-            <div class="form-group"><label class="form-label">Password Baru</label><input type="password" id="resetPwdInput" class="form-control" placeholder="Minimal 6 karakter"></div>
+            <div class="form-group"><label class="form-label">Password Baru</label><input type="password" id="resetPwdInput" class="form-control" placeholder="Minimal <%= minPasswordLength %> karakter"></div>
             <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('resetPwdModal')">Batal</button><button class="btn btn-primary" onclick="submitResetPwd()"><i data-lucide="key-round"></i> Reset</button></div>
         </div>
     </div>

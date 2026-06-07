@@ -1,0 +1,224 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RPL Integrator Gateway API",
+    "version": "3.0.0",
+    "description": "API Gateway / Integrator untuk routing request UMKM ke layanan downstream terdaftar."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerApiToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Use `ApiKey igw_...` or raw `igw_...` value."
+      },
+      "csrfToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "error" },
+          "message": { "type": "string" }
+        }
+      },
+      "GatewayProxyResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["success", "error"] },
+          "integrator_info": {
+            "type": "object",
+            "properties": {
+              "service_tujuan": { "type": "string" },
+              "fee_percent": { "type": "string" },
+              "transaction_amount": { "type": "number" },
+              "calculated_fee": { "type": "number" },
+              "fee_terpotong": { "type": "number" },
+              "fee_status": { "type": "string" },
+              "forwarded_to": { "type": "string" },
+              "downstream_status": { "type": "integer" }
+            }
+          },
+          "data": { "type": "object", "additionalProperties": true }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/status": {
+      "get": {
+        "summary": "Gateway status",
+        "responses": {
+          "200": { "description": "Gateway status and service counts" },
+          "500": { "description": "Database error" }
+        }
+      }
+    },
+    "/generate-test-token": {
+      "post": {
+        "summary": "Generate API JWT from dashboard session",
+        "security": [{ "csrfToken": [] }],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": { "type": "string", "description": "Admin/operator only override" },
+                  "name": { "type": "string", "description": "Admin/operator only override" },
+                  "npm": { "type": "string", "description": "Admin/operator only override" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "API token generated" },
+          "401": { "description": "Dashboard login required" },
+          "403": { "description": "CSRF or role failure" }
+        }
+      }
+    },
+    "/api/tokens/revoke": {
+      "post": {
+        "summary": "Revoke an API JWT before expiry",
+        "security": [{ "csrfToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": { "type": "string" },
+                  "reason": { "type": "string", "maxLength": 255 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Token revoked" },
+          "400": { "description": "Invalid token" },
+          "403": { "description": "Cannot revoke another user's token" }
+        }
+      }
+    },
+    "/api/keys": {
+      "get": {
+        "summary": "List API keys for current dashboard user",
+        "security": [{ "csrfToken": [] }],
+        "responses": {
+          "200": { "description": "API key list" }
+        }
+      },
+      "post": {
+        "summary": "Create API key with optional scopes",
+        "security": [{ "csrfToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["key_name"],
+                "properties": {
+                  "key_name": { "type": "string", "minLength": 3 },
+                  "daily_limit": { "type": "integer", "minimum": 1, "maximum": 100000 },
+                  "scopes": {
+                    "type": "string",
+                    "example": "proxy:smartbank,proxy:marketplace,validation:read"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "API key created; raw key is only returned once" },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/integrator/validasi_request": {
+      "get": {
+        "summary": "Validate API JWT or API key",
+        "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
+        "responses": {
+          "200": { "description": "Token/key valid" },
+          "401": { "description": "Missing token/key" },
+          "403": { "description": "Invalid, expired, or revoked token/key" }
+        }
+      }
+    },
+    "/integrator/routing_api": {
+      "get": {
+        "summary": "List active gateway routes",
+        "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
+        "responses": {
+          "200": { "description": "Registered active services" }
+        }
+      }
+    },
+    "/integrator/{service}/{path}": {
+      "parameters": [
+        { "name": "service", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "path", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "post": {
+        "summary": "Proxy POST request to downstream service",
+        "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "When present, repeated identical requests replay the stored response."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": { "type": "number", "minimum": 0 }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Downstream success", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GatewayProxyResponse" } } } },
+          "400": { "description": "Invalid request body" },
+          "403": { "description": "API key scope missing" },
+          "409": { "description": "Idempotency conflict or request still processing" },
+          "502": { "description": "Downstream error or unsafe service URL" },
+          "503": { "description": "Circuit breaker open" },
+          "504": { "description": "Downstream timeout" }
+        }
+      }
+    }
+  }
+}

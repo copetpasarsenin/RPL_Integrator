@@ -67,11 +67,15 @@ CREATE TABLE IF NOT EXISTS api_keys (
     api_key_hash VARCHAR(255) NOT NULL UNIQUE,
     api_key_prefix VARCHAR(20) NOT NULL,
     daily_limit INT NOT NULL DEFAULT 1000,
+    scopes VARCHAR(500) NOT NULL DEFAULT 'proxy:*',
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     last_used DATETIME NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_apikey_user (user_id),
-    INDEX idx_apikey_prefix (api_key_prefix)
+    INDEX idx_apikey_prefix (api_key_prefix),
+    CONSTRAINT fk_api_keys_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS api_key_usage (
@@ -85,6 +89,67 @@ CREATE TABLE IF NOT EXISTS api_key_usage (
     CONSTRAINT fk_usage_api_key
         FOREIGN KEY (api_key_id) REFERENCES api_keys(id)
         ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS api_rate_limits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_key VARCHAR(150) NOT NULL,
+    window_start BIGINT NOT NULL,
+    request_count INT NOT NULL DEFAULT 0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_api_rate_limit_window (user_key, window_start),
+    INDEX idx_rate_limit_updated (updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS gateway_idempotency_keys (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    key_hash CHAR(64) NOT NULL UNIQUE,
+    idempotency_key VARCHAR(255) NOT NULL,
+    request_hash CHAR(64) NOT NULL,
+    user_id VARCHAR(100),
+    method VARCHAR(10) NOT NULL,
+    route_key VARCHAR(500) NOT NULL,
+    status ENUM('PROCESSING','COMPLETED','FAILED') NOT NULL DEFAULT 'PROCESSING',
+    response_status INT NULL,
+    response_body JSON NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    INDEX idx_idempotency_expires (expires_at),
+    INDEX idx_idempotency_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS revoked_api_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token_jti VARCHAR(64) NOT NULL UNIQUE,
+    subject VARCHAR(100),
+    expires_at DATETIME NOT NULL,
+    revoked_by INT NULL,
+    reason VARCHAR(255),
+    revoked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_revoked_expires (expires_at),
+    INDEX idx_revoked_subject (subject),
+    CONSTRAINT fk_revoked_api_tokens_user
+        FOREIGN KEY (revoked_by) REFERENCES users(id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS revoked_session_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token_jti VARCHAR(64) NOT NULL UNIQUE,
+    user_id INT NULL,
+    expires_at DATETIME NOT NULL,
+    revoked_by INT NULL,
+    reason VARCHAR(255),
+    revoked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_revoked_session_expires (expires_at),
+    INDEX idx_revoked_session_user (user_id),
+    CONSTRAINT fk_revoked_session_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_revoked_session_revoker
+        FOREIGN KEY (revoked_by) REFERENCES users(id)
+        ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -136,5 +201,5 @@ ON DUPLICATE KEY UPDATE
     status_aktif = VALUES(status_aktif);
 
 -- Default password seeded by server.js initDatabase:
--- admin/admin123, operator/operator123, user/user123.
+-- admin/admin123, operator/operator123, user/user12345.
 -- Hash dibuat dengan scrypt saat aplikasi pertama kali berjalan.
