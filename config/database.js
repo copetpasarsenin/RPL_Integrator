@@ -110,11 +110,11 @@ async function seedApiServices() {
 }
 
 async function seedUsers() {
-  const users = [
-    ["admin", passwordHash("admin123"), "admin"],
-    ["operator", passwordHash("operator123"), "operator"],
-    ["user", passwordHash("user12345"), "user"],
-  ];
+    const users = [
+        ['admin', passwordHash('admin123'), 'admin'],
+        ['operator', passwordHash('operator123'), 'operator'],
+        ['user', passwordHash('user123'), 'user']
+    ];
 
   for (const user of users) {
     await pool.query(
