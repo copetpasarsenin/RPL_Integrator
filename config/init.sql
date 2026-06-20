@@ -20,6 +20,22 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_code VARCHAR(30) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    role VARCHAR(100) NOT NULL,
+    department VARCHAR(120) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    phone VARCHAR(30),
+    status VARCHAR(30) NOT NULL DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_employee_role (role),
+    INDEX idx_employee_department (department),
+    INDEX idx_employee_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS api_services (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_service VARCHAR(100) NOT NULL UNIQUE,
@@ -46,6 +62,28 @@ CREATE TABLE IF NOT EXISTS request_logs (
     INDEX idx_status (status),
     INDEX idx_service (service_tujuan),
     INDEX idx_timestamp (timestamp)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS shadow_service_usage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_log_id INT NULL,
+    source_app VARCHAR(120) NOT NULL DEFAULT 'unknown_app',
+    service_name VARCHAR(100) NOT NULL,
+    endpoint VARCHAR(500) NOT NULL,
+    consumer_id VARCHAR(120) NOT NULL DEFAULT 'anonymous',
+    request_method VARCHAR(10) NOT NULL,
+    request_status VARCHAR(20) NOT NULL,
+    response_code INT NULL,
+    used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_shadow_source_app (source_app),
+    INDEX idx_shadow_service_name (service_name),
+    INDEX idx_shadow_consumer_id (consumer_id),
+    INDEX idx_shadow_request_status (request_status),
+    INDEX idx_shadow_used_at (used_at),
+    INDEX idx_shadow_request_log_id (request_log_id),
+    CONSTRAINT fk_shadow_request_log
+        FOREIGN KEY (request_log_id) REFERENCES request_logs(id)
+        ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS revenue_logs (
@@ -200,6 +238,20 @@ ON DUPLICATE KEY UPDATE
     health_path = VALUES(health_path),
     status_aktif = VALUES(status_aktif);
 
+INSERT INTO employees (employee_code, name, role, department, email, phone, status) VALUES
+    ('EMP001', 'Admin Demo', 'Admin', 'IT Integrator', 'admin.demo@rpl-integrator.local', '081100000001', 'active'),
+    ('EMP002', 'Operator Demo', 'Operator', 'Operasional Gateway', 'operator.demo@rpl-integrator.local', '081100000002', 'active'),
+    ('EMP003', 'User Demo', 'User', 'Client UMKM', 'user.demo@rpl-integrator.local', '081100000003', 'active'),
+    ('EMP004', 'Finance Staff', 'Finance', 'Keuangan', 'finance.staff@rpl-integrator.local', '081100000004', 'active'),
+    ('EMP005', 'Integration Staff', 'Integration Staff', 'Integrasi Service', 'integration.staff@rpl-integrator.local', '081100000005', 'active')
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    role = VALUES(role),
+    department = VALUES(department),
+    email = VALUES(email),
+    phone = VALUES(phone),
+    status = VALUES(status);
+
 -- Default password seeded by server.js initDatabase:
--- admin/admin123, operator/operator123, user/user12345.
+-- admin/admin123, operator/operator123, user/user123.
 -- Hash dibuat dengan scrypt saat aplikasi pertama kali berjalan.

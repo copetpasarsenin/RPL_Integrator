@@ -23,51 +23,53 @@
             </div>
         </div>
         <div class="sidebar-menu">
-            <div class="menu-group">Connectivity</div>
+            <div class="menu-group">Konektivitas</div>
             <a href="/dashboard" class="menu-item <%= section === 'overview' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="layout-dashboard"></i></span> Gateway Overview</a>
+                    class="menu-icon"><i data-lucide="layout-dashboard"></i></span> Ringkasan Gateway</a>
             <a href="/dashboard/services" class="menu-item <%= section === 'services' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="server"></i></span> Services (<%= serviceCount %>)</a>
+                    class="menu-icon"><i data-lucide="server"></i></span> Service (<%= serviceCount %>)</a>
             <a href="/dashboard/routes" class="menu-item <%= section === 'routes' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="route"></i></span> Routes</a>
+                    class="menu-icon"><i data-lucide="route"></i></span> Rute</a>
             <a href="/dashboard/consumers" class="menu-item <%= section === 'consumers' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="users"></i></span> Consumers</a>
+                    class="menu-icon"><i data-lucide="users"></i></span> Konsumen</a>
+            <a href="/dashboard/employees" class="menu-item <%= section === 'employees' ? 'active' : '' %>"><span
+                    class="menu-icon"><i data-lucide="id-card"></i></span> Data Karyawan</a>
 
-            <div class="menu-group">Plugins</div>
+            <div class="menu-group">Plugin</div>
             <a href="/dashboard/plugins" class="menu-item <%= section === 'plugins' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="plug"></i></span> Plugins (7)</a>
+                    class="menu-icon"><i data-lucide="plug"></i></span> Plugin (7)</a>
 
-            <div class="menu-group">Monitoring</div>
+            <div class="menu-group">Pemantauan</div>
             <a href="/dashboard/analytics" class="menu-item <%= section === 'analytics' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="bar-chart-3"></i></span> Analytics</a>
+                    class="menu-icon"><i data-lucide="bar-chart-3"></i></span> Analitik</a>
             <a href="/dashboard/logs" class="menu-item <%= section === 'logs' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="clipboard-list"></i></span> Request Logs</a>
+                    class="menu-icon"><i data-lucide="clipboard-list"></i></span> Log Request</a>
             <a href="/dashboard/alerts" class="menu-item <%= section === 'alerts' ? 'active' : '' %>"><span
-                    class="menu-icon"><i data-lucide="bell-ring"></i></span> Alerts (<%= openAlertCount || 0 %>)</a>
+                    class="menu-icon"><i data-lucide="bell-ring"></i></span> Peringatan (<%= openAlertCount || 0 %>)</a>
             <% if (canViewRevenue) { %>
                 <a href="/dashboard/revenue" class="menu-item <%= section === 'revenue' ? 'active' : '' %>"><span
-                        class="menu-icon"><i data-lucide="coins"></i></span> Revenue</a>
+                        class="menu-icon"><i data-lucide="coins"></i></span> Pendapatan</a>
                 <% } %>
 
                     <% if (isAdmin) { %>
                         <div class="menu-group">Admin</div>
                         <a href="/dashboard/users" class="menu-item <%= section === 'users' ? 'active' : '' %>"><span
-                                class="menu-icon"><i data-lucide="user-cog"></i></span> User Management</a>
+                                class="menu-icon"><i data-lucide="user-cog"></i></span> Manajemen User</a>
                         <a href="/dashboard/apikeys" class="menu-item <%= section === 'apikeys' ? 'active' : '' %>"><span
-                                class="menu-icon"><i data-lucide="key-round"></i></span> API Keys</a>
+                                class="menu-icon"><i data-lucide="key-round"></i></span> Kunci API</a>
                         <a href="/dashboard/audit" class="menu-item <%= section === 'audit' ? 'active' : '' %>"><span
-                                class="menu-icon"><i data-lucide="shield-alert"></i></span> Audit Log</a>
+                                class="menu-icon"><i data-lucide="shield-alert"></i></span> Log Audit</a>
                         <% } %>
                         <a href="/dashboard/health-history" class="menu-item <%= section === 'health_history' ? 'active' : '' %>"><span
-                                class="menu-icon"><i data-lucide="heartbeat"></i></span> Health History</a>
+                                class="menu-icon"><i data-lucide="heartbeat"></i></span> Riwayat Health</a>
 
-            <div class="menu-group">Tools</div>
+            <div class="menu-group">Alat</div>
                             <a href="/client-portal" class="menu-item"><span class="menu-icon"><i
-                                        data-lucide="zap"></i></span> API Simulator</a>
+                                        data-lucide="zap"></i></span> Simulator API</a>
                             <a href="/dashboard/architecture" class="menu-item <%= section === 'architecture' ? 'active' : '' %>"><span
-                                    class="menu-icon"><i data-lucide="network"></i></span> Architecture</a>
+                                    class="menu-icon"><i data-lucide="network"></i></span> Arsitektur</a>
                             <a href="/dashboard/docs" class="menu-item <%= section === 'docs' ? 'active' : '' %>"><span
-                                    class="menu-icon"><i data-lucide="book-open"></i></span> API Docs</a>
+                                    class="menu-icon"><i data-lucide="book-open"></i></span> Dokumentasi API</a>
         </div>
     </div>
 
@@ -77,14 +79,14 @@
                 <a href="/">Home</a><i data-lucide="chevron-right"></i>
                 <a href="/dashboard">Gateway</a><i data-lucide="chevron-right"></i>
                 <span style="color: var(--ink); font-weight: 700;" id="breadcrumb-current">
-                    <%= section==='overview' ? 'Overview' : section==='services' ? 'Services' : section==='routes'
-                        ? 'Routes' : section==='consumers' ? 'Consumers' : section==='plugins' ? 'Plugins' :
-                        section==='analytics' ? 'Analytics' : section==='logs' ? 'Request Logs' : section==='users'
-                        ? 'Users' : section==='revenue' ? 'Revenue' : section==='alerts' ? 'Alerts' : section==='architecture' ? 'Architecture' : section==='docs' ? 'API Docs' : 'Dashboard' %>
+                    <%= section==='overview' ? 'Ringkasan' : section==='services' ? 'Service' : section==='routes'
+                        ? 'Rute' : section==='consumers' ? 'Konsumen' : section==='plugins' ? 'Plugin' :
+                        section==='analytics' ? 'Analitik' : section==='logs' ? 'Log Request' : section==='employees' ? 'Data Karyawan' : section==='users'
+                        ? 'User' : section==='revenue' ? 'Pendapatan' : section==='alerts' ? 'Peringatan' : section==='architecture' ? 'Arsitektur' : section==='docs' ? 'Dokumentasi API' : 'Dashboard' %>
                 </span>
             </div>
             <div class="topbar-actions">
-                <button class="btn btn-outline" id="darkModeToggle" title="Toggle Dark Mode" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                <button class="btn btn-outline" id="darkModeToggle" title="Ubah Mode Gelap" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
                     <i data-lucide="moon"></i>
                 </button>
                 <% const sessions=allSessions || {}; const sessionCount=Object.keys(sessions).length; %>
@@ -107,15 +109,15 @@
                                 <form class="logout-form" method="POST" action="/logout">
                                     <input type="hidden" name="_csrf" value="<%= csrfToken || '' %>">
                                     <input type="hidden" name="role" value="<%= currentUser.role %>">
-                                    <button class="btn btn-outline" title="Logout <%= currentUser.role %>"><i
-                                            data-lucide="log-out"></i> Logout</button>
+                                    <button class="btn btn-outline" title="Keluar <%= currentUser.role %>"><i
+                                            data-lucide="log-out"></i> Keluar</button>
                                 </form>
                                 <% if (sessionCount> 1) { %>
                                     <form class="logout-form" method="POST" action="/logout-all">
                                         <input type="hidden" name="_csrf" value="<%= csrfToken || '' %>">
                                         <button
                                             class="btn btn-outline" style="color:var(--danger)"
-                                            title="Logout semua session"><i data-lucide="x-circle"></i></button></form>
+                                            title="Keluar dari semua session"><i data-lucide="x-circle"></i></button></form>
                                     <% } %>
             </div>
         </div>
@@ -124,7 +126,7 @@
             <!-- ═══════════════════════════════════════════════════════ -->
             <!-- OVERVIEW -->
             <% if (section==='overview' ) { %>
-                <div class="page-title">Gateway Overview</div>
+                <div class="page-title">Ringkasan Gateway</div>
                 <div class="page-subtitle">Ringkasan status gateway, traffic, dan aktivitas terkini.</div>
 
                 <div class="status-bar" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
@@ -160,7 +162,7 @@
                 <div class="stats-grid">
                     <div class="stat-box stat-blue">
                         <div>
-                            <div class="stat-title">Active Services</div>
+                            <div class="stat-title">Service Aktif</div>
                             <div class="stat-value">
                                 <%= serviceCount %>
                             </div>
@@ -170,7 +172,7 @@
                     </div>
                     <div class="stat-box stat-green">
                         <div>
-                            <div class="stat-title">Total Requests</div>
+                            <div class="stat-title">Total Request</div>
                             <div class="stat-value">
                                 <%= totalRequests %>
                             </div>
@@ -180,7 +182,7 @@
                     </div>
                     <div class="stat-box stat-amber">
                         <div>
-                            <div class="stat-title">Consumers</div>
+                            <div class="stat-title">Konsumen</div>
                             <div class="stat-value">
                                 <%= totalConsumers %>
                             </div>
@@ -210,7 +212,7 @@
                     </div>
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-title"><i data-lucide="activity"></i> Recent Activity</div>
+                            <div class="card-title"><i data-lucide="activity"></i> Aktivitas Terbaru</div>
                         </div>
                         <div class="table-wrapper">
                             <table>
@@ -271,19 +273,19 @@
                 <% } else if (section==='services' ) { %>
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
                         <div>
-                            <div class="page-title">Services</div>
+                            <div class="page-title">Service</div>
                             <div class="page-subtitle">Kelola API service yang terdaftar di gateway.</div>
                         </div>
                         <% if (isAdmin) { %><div style="display:flex;gap:8px">
                                 <button class="btn btn-outline" onclick="openModal('importCsvModal')"><i data-lucide="upload"></i> Import CSV</button>
-                                <button class="btn btn-success" onclick="openModal('serviceModal')"><i data-lucide="plus"></i> New Service</button>
+                                <button class="btn btn-success" onclick="openModal('serviceModal')"><i data-lucide="plus"></i> Service Baru</button>
                             </div>
                             <% } %>
                     </div>
 
                     <div class="card" style="margin-bottom: 16px; margin-top: 16px;">
                         <form class="filter-bar" method="GET" action="/dashboard/services">
-                            <input type="text" name="search" class="form-control" placeholder="Search Service Name..." value="<%= filterSearch %>" style="flex:1">
+                            <input type="text" name="search" class="form-control" placeholder="Cari nama service..." value="<%= filterSearch %>" style="flex:1">
                             <input type="date" name="start" class="form-control" value="<%= dateStart || '' %>" style="width:auto">
                             <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
                             <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> Cari</button>
@@ -302,8 +304,8 @@
                                         <th>Health Path</th>
                                         <th>Config Status</th>
                                         <th>Health</th>
-                                        <th>Total Requests</th>
-                                        <th>Last Activity</th>
+                                        <th>Total Request</th>
+                                        <th>Aktivitas Terakhir</th>
                                         <% if (isAdmin) { %>
                                             <th>Actions</th>
                                             <% } %>
@@ -389,7 +391,7 @@
                     <!-- ═══════════════════════════════════════════════════════ -->
                     <!-- ROUTES -->
                     <% } else if (section==='routes' ) { %>
-                        <div class="page-title">Routes</div>
+                        <div class="page-title">Rute</div>
                         <div class="page-subtitle">Peta routing otomatis berdasarkan service yang terdaftar.</div>
                         <div class="card">
                             <div class="table-wrapper">
@@ -423,12 +425,12 @@
                         <!-- ═══════════════════════════════════════════════════════ -->
                         <!-- CONSUMERS -->
                         <% } else if (section==='consumers' ) { %>
-                            <div class="page-title">Consumers</div>
+                            <div class="page-title">Konsumen</div>
                             <div class="page-subtitle">Daftar consumer yang menggunakan API gateway. Data otomatis dari traffic log.</div>
 
                             <div class="card" style="margin-bottom: 16px;">
                                 <form class="filter-bar" method="GET" action="/dashboard/consumers">
-                                    <input type="text" name="search" class="form-control" placeholder="Search User ID..." value="<%= filterSearch %>" style="flex:1">
+                                    <input type="text" name="search" class="form-control" placeholder="Cari User ID..." value="<%= filterSearch %>" style="flex:1">
                                     <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> Cari</button>
                                     <% if (filterSearch) { %><a href="/dashboard/consumers" class="btn btn-outline">Reset</a><% } %>
                                 </form>
@@ -440,7 +442,7 @@
                                         <thead>
                                             <tr>
                                                 <th>User ID</th>
-                                                <th>Total Requests</th>
+                                                <th>Total Request</th>
                                                 <th>First Seen</th>
                                                 <th>Last Seen</th>
                                             </tr>
@@ -477,17 +479,58 @@
                                 </div>
                                 <% if (totalPages > 1) { %>
                                 <div class="pagination" style="padding: 16px; display: flex; gap: 8px; justify-content: center; align-items: center; border-top: 1px solid var(--border)">
-                                    <% if (page > 1) { %><a href="/dashboard/consumers?page=<%= page - 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Prev</a><% } %>
-                                    <span class="pagination-info" style="color: var(--muted); font-size: 14px;">Page <%= page %> of <%= totalPages %></span>
-                                    <% if (page < totalPages) { %><a href="/dashboard/consumers?page=<%= page + 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Next</a><% } %>
+                                    <% if (page > 1) { %><a href="/dashboard/consumers?page=<%= page - 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Sebelumnya</a><% } %>
+                                    <span class="pagination-info" style="color: var(--muted); font-size: 14px;">Halaman <%= page %> dari <%= totalPages %></span>
+                                    <% if (page < totalPages) { %><a href="/dashboard/consumers?page=<%= page + 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Berikutnya</a><% } %>
                                 </div>
                                 <% } %>
                             </div>
 
                             <!-- ═══════════════════════════════════════════════════════ -->
+                            <!-- EMPLOYEES -->
+                            <% } else if (section==='employees' ) { %>
+                                <div class="page-title">Data Karyawan</div>
+                                <div class="page-subtitle">Data karyawan demo yang disertakan di repository dan seed database untuk kebutuhan presentasi.</div>
+
+                                <div class="card">
+                                    <div class="table-wrapper">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Kode</th>
+                                                    <th>Nama</th>
+                                                    <th>Role</th>
+                                                    <th>Departemen</th>
+                                                    <th>Email</th>
+                                                    <th>Telepon</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% employees.forEach(employee => { %>
+                                                    <tr>
+                                                        <td><strong><%= employee.employee_code %></strong></td>
+                                                        <td><%= employee.name %></td>
+                                                        <td><%= employee.role %></td>
+                                                        <td><%= employee.department %></td>
+                                                        <td><%= employee.email %></td>
+                                                        <td><%= employee.phone || '-' %></td>
+                                                        <td><span class="badge badge-success"><%= employee.status %></span></td>
+                                                    </tr>
+                                                <% }) %>
+                                                <% if (employees.length===0) { %>
+                                                    <tr>
+                                                        <td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">Belum ada data karyawan. Jalankan inisialisasi database terlebih dahulu.</td>
+                                                    </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
                             <!-- PLUGINS -->
                             <% } else if (section==='plugins' ) { %>
-                                <div class="page-title">Plugins</div>
+                                <div class="page-title">Plugin</div>
                                 <div class="page-subtitle">Plugin middleware yang aktif di gateway.</div>
                                 <div class="plugin-grid">
                                     <% plugins.forEach(p=> { %>
@@ -518,7 +561,7 @@
                                 <!-- ═══════════════════════════════════════════════════════ -->
                                 <!-- ANALYTICS -->
                                 <% } else if (section==='analytics' ) { %>
-                                    <div class="page-title">Analytics</div>
+                                    <div class="page-title">Analitik</div>
                                     <div class="page-subtitle">Analisis performa dan traffic gateway.</div>
                                     <div class="card" style="margin-bottom:16px">
                                         <form class="filter-bar" method="GET" action="/dashboard/analytics">
@@ -526,42 +569,62 @@
                                             <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
                                             <button class="btn btn-primary" type="submit"><i data-lucide="filter"></i> Filter</button>
                                             <a href="/dashboard/analytics" class="btn btn-outline">Reset</a>
-                                            <a href="/dashboard/analytics/export?start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Export CSV</a>
+                                            <a href="/dashboard/analytics/export?start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Ekspor CSV</a>
                                         </form>
                                     </div>
-                                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                                         <div class="stat-box stat-blue">
                                             <div>
-                                                <div class="stat-title">Total Requests</div>
+                                                <div class="stat-title">Total Request</div>
                                                 <div class="stat-value">
                                                     <%= totalRequests %>
                                                 </div>
                                             </div>
                                             <div class="stat-icon"><i data-lucide="activity"></i></div>
                                         </div>
+                                        <div class="stat-box stat-green">
+                                            <div>
+                                                <div class="stat-title">Tingkat Sukses</div>
+                                                <div class="stat-value">
+                                                    <%= successRatePercent %>%
+                                                </div>
+                                                <div class="stat-desc"><%= totalSuccess %> request sukses</div>
+                                            </div>
+                                            <div class="stat-icon"><i data-lucide="check-circle-2"></i></div>
+                                        </div>
                                         <div class="stat-box stat-red">
                                             <div>
-                                                <div class="stat-title">Error Rate</div>
+                                                <div class="stat-title">Tingkat Error</div>
                                                 <div class="stat-value">
                                                     <%= errorRatePercent %>%
                                                 </div>
+                                                <div class="stat-desc"><%= totalErrors %> request error</div>
                                             </div>
                                             <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
                                         </div>
-                                        <div class="stat-box stat-green">
+                                        <div class="stat-box stat-amber">
                                             <div>
-                                                <div class="stat-title">Top Consumer</div>
-                                                <div class="stat-value" style="font-size:18px">
-                                                    <%= topConsumers.length> 0 ? topConsumers[0].user_id : '-' %>
+                                                <div class="stat-title">Konsumen Unik</div>
+                                                <div class="stat-value">
+                                                    <%= uniqueConsumers %>
                                                 </div>
                                             </div>
-                                            <div class="stat-icon"><i data-lucide="crown"></i></div>
+                                            <div class="stat-icon"><i data-lucide="users"></i></div>
+                                        </div>
+                                        <div class="stat-box stat-green">
+                                            <div>
+                                                <div class="stat-title">Aplikasi Sumber</div>
+                                                <div class="stat-value">
+                                                    <%= sourceApplications %>
+                                                </div>
+                                            </div>
+                                            <div class="stat-icon"><i data-lucide="app-window"></i></div>
                                         </div>
                                     </div>
                                     <div class="chart-grid">
                                         <div class="card">
                                             <div class="card-header">
-                                                <div class="card-title"><i data-lucide="bar-chart-3"></i> Requests per
+                                                <div class="card-title"><i data-lucide="bar-chart-3"></i> Request per
                                                     Service</div>
                                             </div>
                                             <div class="chart-box"><canvas id="svcChart"></canvas></div>
@@ -574,16 +637,57 @@
                                             <div class="chart-box"><canvas id="tlChart"></canvas></div>
                                         </div>
                                     </div>
+                                    <div class="card" style="margin-bottom:16px">
+                                        <div class="card-header">
+                                            <div class="card-title"><i data-lucide="bar-chart-3"></i> Penggunaan Berdasarkan Aplikasi Sumber</div>
+                                        </div>
+                                        <div class="chart-box"><canvas id="sourceAppChart"></canvas></div>
+                                    </div>
+                                    <div class="card" style="margin-bottom:16px">
+                                        <div class="card-header">
+                                            <div class="card-title"><i data-lucide="gauge"></i> Efektivitas Penggunaan Service</div>
+                                        </div>
+                                        <div class="chart-box" style="height:260px"><canvas id="effectivenessChart"></canvas></div>
+                                        <div class="table-wrapper" style="margin-top:12px">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Service</th>
+                                                        <th>Total Penggunaan</th>
+                                                        <th>Sukses</th>
+                                                        <th>Error</th>
+                                                        <th>Tingkat Sukses</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% serviceEffectiveness.forEach(item => { %>
+                                                        <tr>
+                                                            <td><strong><%= item.service_name %></strong></td>
+                                                            <td><%= item.total_usage %></td>
+                                                            <td><span class="badge badge-success"><%= item.success_count || 0 %></span></td>
+                                                            <td><span class="badge badge-error"><%= item.error_count || 0 %></span></td>
+                                                            <td><%= item.success_rate || '0.0' %>%</td>
+                                                        </tr>
+                                                    <% }) %>
+                                                    <% if (serviceEffectiveness.length===0) { %>
+                                                        <tr>
+                                                            <td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Belum ada data shadow usage. Jalankan demo seed data atau request gateway.</td>
+                                                        </tr>
+                                                    <% } %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                     <div class="card">
                                         <div class="card-header">
-                                            <div class="card-title"><i data-lucide="crown"></i> Top Consumers</div>
+                                            <div class="card-title"><i data-lucide="crown"></i> Konsumen Teratas</div>
                                         </div>
                                         <div class="table-wrapper">
                                             <table>
                                                 <thead>
                                                     <tr>
                                                         <th>User ID</th>
-                                                        <th>Total Requests</th>
+                                                        <th>Total Request</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -607,26 +711,28 @@
                                             </table>
                                         </div>
                                     </div>
-                                    <script id="analyticsChartData" type="application/json">{"svcLabels":<%- safeJson(serviceChart.labels) %>,"svcData":<%- safeJson(serviceChart.data) %>,"tlLabels":<%- safeJson(timelineChart.labels) %>,"tlData":<%- safeJson(timelineChart.data) %>}</script>
+                                    <script id="analyticsChartData" type="application/json">{"svcLabels":<%- safeJson(serviceChart.labels) %>,"svcData":<%- safeJson(serviceChart.data) %>,"tlLabels":<%- safeJson(timelineChart.labels) %>,"tlData":<%- safeJson(timelineChart.data) %>,"sourceLabels":<%- safeJson(sourceAppChart.labels) %>,"sourceData":<%- safeJson(sourceAppChart.data) %>,"effectivenessLabels":<%- safeJson(serviceEffectiveness.map(item => item.service_name)) %>,"effectivenessData":<%- safeJson(serviceEffectiveness.map(item => Number(item.success_rate || 0))) %>}</script>
                                     <script>
                                         window.addEventListener('DOMContentLoaded', function () {
                                             var d = JSON.parse(document.getElementById('analyticsChartData').textContent);
                                             new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: d.svcLabels, datasets: [{ label: 'Requests', data: d.svcData, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
                                             new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: d.tlLabels, datasets: [{ label: 'Requests', data: d.tlData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                                            new Chart(document.getElementById('sourceAppChart'), { type: 'bar', data: { labels: d.sourceLabels, datasets: [{ label: 'Total penggunaan', data: d.sourceData, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                                            new Chart(document.getElementById('effectivenessChart'), { type: 'bar', data: { labels: d.effectivenessLabels, datasets: [{ label: 'Tingkat sukses (%)', data: d.effectivenessData, backgroundColor: '#22c55e', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(value) { return value + '%'; } } } } } });
                                         });
                                     </script>
 
                                     <!-- ═══════════════════════════════════════════════════════ -->
                                     <!-- REQUEST LOGS -->
                                     <% } else if (section==='logs' ) { %>
-                                        <div class="page-title">Request Logs</div>
+                                        <div class="page-title">Log Request</div>
                                         <div class="page-subtitle">Seluruh log traffic gateway. Data bersifat read-only
                                             (audit trail).</div>
 
                                         <div class="card" style="margin-bottom: 16px;">
                                             <form class="filter-bar" method="GET" action="/dashboard/logs">
                                                 <select name="service" class="form-control" style="width:auto">
-                                                    <option value="">All Services</option>
+                                                    <option value="">Semua Service</option>
                                                     <% serviceNames.forEach(s=> { %><option value="<%= s %>"
                                                             <%=filterService===s ? 'selected' : '' %>><%= s %>
                                                         </option>
@@ -642,7 +748,7 @@
                                                         : '' %>>Pending</option>
                                                 </select>
                                                 <input type="text" name="search" class="form-control"
-                                                    placeholder="Search user_id or URL..." value="<%= filterSearch %>"
+                                                    placeholder="Cari user_id atau URL..." value="<%= filterSearch %>"
                                                     style="flex:1">
                                                 <input type="date" name="start" class="form-control" value="<%= dateStart || '' %>" style="width:auto">
                                                 <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
@@ -651,7 +757,7 @@
                                                 <% if (filterService || filterStatus || filterSearch || dateStart || dateEnd) { %><a
                                                         href="/dashboard/logs" class="btn btn-outline">Reset</a>
                                                     <% } %>
-                                                <a href="/dashboard/logs/export?service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Export CSV</a>
+                                                <a href="/dashboard/logs/export?service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Ekspor CSV</a>
                                             </form>
                                         </div>
 
@@ -740,7 +846,7 @@
                                             <div
                                                 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
                                                 <div>
-                                                    <div class="page-title">User Management</div>
+                                                    <div class="page-title">Manajemen User</div>
                                                     <div class="page-subtitle">Kelola akun admin, operator, dan user.
                                                     </div>
                                                 </div>
@@ -749,7 +855,7 @@
                                             </div>
                                             <div class="card" style="margin-bottom: 16px; margin-top: 16px;">
                                                 <form class="filter-bar" method="GET" action="/dashboard/users">
-                                                    <input type="text" name="search" class="form-control" placeholder="Search Username..." value="<%= filterSearch %>" style="flex:1">
+                                                    <input type="text" name="search" class="form-control" placeholder="Cari username..." value="<%= filterSearch %>" style="flex:1">
                                                     <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> Cari</button>
                                                     <% if (filterSearch) { %><a href="/dashboard/users" class="btn btn-outline">Reset</a><% } %>
                                                 </form>
@@ -807,9 +913,9 @@
                                                 </div>
                                                 <% if (totalPages > 1) { %>
                                                 <div class="pagination" style="padding: 16px; display: flex; gap: 8px; justify-content: center; align-items: center; border-top: 1px solid var(--border)">
-                                                    <% if (page > 1) { %><a href="/dashboard/users?page=<%= page - 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Prev</a><% } %>
+                                                    <% if (page > 1) { %><a href="/dashboard/users?page=<%= page - 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Sebelumnya</a><% } %>
                                                     <span class="pagination-info" style="color: var(--muted); font-size: 14px;">Page <%= page %> of <%= totalPages %></span>
-                                                    <% if (page < totalPages) { %><a href="/dashboard/users?page=<%= page + 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Next</a><% } %>
+                                                    <% if (page < totalPages) { %><a href="/dashboard/users?page=<%= page + 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Berikutnya</a><% } %>
                                                 </div>
                                                 <% } %>
                                             </div>
@@ -927,7 +1033,7 @@
                                                         <% } else if (section==='apikeys') { %>
                                                             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
                                                                 <div>
-                                                                    <div class="page-title">API Keys</div>
+                                                                    <div class="page-title">Kunci API</div>
                                                                     <div class="page-subtitle">Kelola API Key untuk akses gateway tanpa login. Gunakan prefix <code>igw_</code> sebagai Bearer token.</div>
                                                                 </div>
                                                                 <button class="btn btn-success" onclick="openModal('newKeyModal')"><i data-lucide="plus"></i> Generate Key Baru</button>
@@ -1001,7 +1107,7 @@
 
                                                         <!-- AUDIT LOG -->
                                                         <% } else if (section==='audit') { %>
-                                                            <div class="page-title">Audit Log</div>
+                                                            <div class="page-title">Log Audit</div>
                                                             <div class="page-subtitle">Rekaman semua aksi admin dan operator di sistem.</div>
                                                             <div class="card" style="margin-bottom:16px">
                                                                 <form class="filter-bar" method="GET" action="/dashboard/audit">
@@ -1015,7 +1121,7 @@
                                                                         <option value="RESET_PASSWORD" <%=filterAction==='RESET_PASSWORD'?'selected':''%>>Reset Password</option>
                                                                         <option value="CREATE_API_KEY" <%=filterAction==='CREATE_API_KEY'?'selected':''%>>Create API Key</option>
                                                                         <option value="REVOKE_API_KEY" <%=filterAction==='REVOKE_API_KEY'?'selected':''%>>Revoke API Key</option>
-                                                                        <option value="IMPORT_SERVICES" <%=filterAction==='IMPORT_SERVICES'?'selected':''%>>Import Services</option>
+                                                                        <option value="IMPORT_SERVICES" <%=filterAction==='IMPORT_SERVICES'?'selected':''%>>Import Service</option>
                                                                     </select>
                                                                     <input type="date" name="start" class="form-control" value="<%= dateStart || '' %>" style="width:auto">
                                                                     <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
@@ -1025,7 +1131,7 @@
                                                                 </form>
                                                             </div>
                                                             <div class="card">
-                                                                <div class="card-header"><div class="card-title"><i data-lucide="shield-alert"></i> Audit Log (<%= total %> total)</div></div>
+                                                                <div class="card-header"><div class="card-title"><i data-lucide="shield-alert"></i> Log Audit (<%= total %> total)</div></div>
                                                                 <div class="table-wrapper">
                                                                     <table>
                                                                         <thead><tr><th>#</th><th>Waktu</th><th>User</th><th>Aksi</th><th>Resource</th><th>Detail</th><th>IP</th></tr></thead>
@@ -1056,7 +1162,7 @@
 
                                                         <!-- HEALTH HISTORY -->
                                                         <% } else if (section==='health_history') { %>
-                                                            <div class="page-title">Service Health History</div>
+                                                            <div class="page-title">Riwayat Health Service</div>
                                                             <div class="page-subtitle">Rekaman status Online/Down setiap service dalam 24 jam terakhir (dicek setiap 1 menit).</div>
                                                             <div class="card" style="margin-bottom:16px">
                                                                 <form class="filter-bar" method="GET" action="/dashboard/health-history">
@@ -1143,7 +1249,7 @@
                                                                 <% } %>
                                                             </div>
                                                         <% } else if (section==='architecture') { %>
-                                                            <div class="page-title">System Architecture</div>
+                                                            <div class="page-title">Arsitektur Sistem</div>
                                                             <div class="page-subtitle">Peta modul, alur request, dan service ekosistem yang digunakan gateway.</div>
                                                             <div class="plugin-grid" style="margin-bottom:16px">
                                                                 <% modules.forEach(m => { %>
@@ -1189,7 +1295,7 @@
                                                             <div class="page-subtitle">Referensi endpoint gateway, format autentikasi, dan route service dinamis.</div>
                                                             <div class="card" style="margin-bottom:16px">
                                                                 <div class="card-header"><div class="card-title"><i data-lucide="key-round"></i> Authentication</div></div>
-                                                                <div class="card-note">Gunakan header <code>Authorization: Bearer &lt;JWT atau API Key igw_...&gt;</code>. JWT bisa dibuat dari API Simulator, sedangkan API Key dikelola dari menu API Keys.</div>
+                                                                <div class="card-note">Gunakan header <code>Authorization: Bearer &lt;JWT atau API Key igw_...&gt;</code>. JWT bisa dibuat dari Simulator API, sedangkan API Key dikelola dari menu Kunci API.</div>
                                                             </div>
                                                             <div class="card" style="margin-bottom:16px">
                                                                 <div class="card-header"><div class="card-title"><i data-lucide="book-open"></i> Endpoint Utama</div></div>
@@ -1294,7 +1400,7 @@
         }
         // Reset service modal on open for "New"
         document.querySelector('[onclick="openModal(\'serviceModal\')"]')?.addEventListener('click', () => {
-            document.getElementById('serviceModalTitle').textContent = 'New Service';
+            document.getElementById('serviceModalTitle').textContent = 'Service Baru';
             document.getElementById('svcId').value = '';
             document.getElementById('svcName').value = '';
             document.getElementById('svcUrl').value = '';
@@ -1462,7 +1568,7 @@
     <!-- Modal Import CSV -->
     <div class="modal-overlay" id="importCsvModal">
         <div class="modal-dialog">
-            <div class="modal-header"><span class="modal-title">Import Services dari CSV</span><button class="modal-close" onclick="closeModal('importCsvModal')">&times;</button></div>
+            <div class="modal-header"><span class="modal-title">Import Service dari CSV</span><button class="modal-close" onclick="closeModal('importCsvModal')">&times;</button></div>
             <div class="card-note" style="margin-bottom:12px">Format CSV: <code>nama_service,url_tujuan,health_path,status_aktif</code><br>Contoh: <code>newservice,http://localhost:3007,/health,1</code><br>Kolom health_path boleh dikosongkan atau memakai format lama <code>nama_service,url_tujuan,status_aktif</code>.</div>
             <div class="form-group"><label class="form-label">File CSV</label><input type="file" id="csvFileInput" class="form-control" accept=".csv,.txt"></div>
             <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('importCsvModal')">Batal</button><button id="importCsvBtn" class="btn btn-success" onclick="submitImportCsv()"><i data-lucide="upload"></i> Import</button></div>

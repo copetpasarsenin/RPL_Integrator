@@ -8,7 +8,7 @@
   "servers": [
     {
       "url": "http://localhost:3000",
-      "description": "Local development"
+      "description": "Pengembangan lokal"
     }
   ],
   "components": {
@@ -22,7 +22,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "Authorization",
-        "description": "Use `ApiKey igw_...` or raw `igw_...` value."
+        "description": "Gunakan `ApiKey igw_...` atau nilai mentah `igw_...`."
       },
       "csrfToken": {
         "type": "apiKey",
@@ -63,16 +63,69 @@
   "paths": {
     "/api/status": {
       "get": {
-        "summary": "Gateway status",
+        "summary": "Status gateway",
         "responses": {
-          "200": { "description": "Gateway status and service counts" },
-          "500": { "description": "Database error" }
+          "200": { "description": "Status gateway dan jumlah service" },
+          "500": { "description": "Kesalahan database" }
         }
       }
     },
-    "/generate-test-token": {
+    "/login": {
+      "get": {
+        "summary": "Halaman login dashboard",
+        "responses": {
+          "200": { "description": "Halaman login dengan tombol demo satu klik" }
+        }
+      },
       "post": {
-        "summary": "Generate API JWT from dashboard session",
+        "summary": "Proses login dashboard",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" },
+                  "demo_role": { "type": "string", "enum": ["admin", "operator", "user"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": { "description": "Login berhasil dan diarahkan sesuai role" },
+          "401": { "description": "Username atau password salah" }
+        }
+      }
+    },
+    "/api/services": {
+      "get": {
+        "summary": "Daftar service gateway",
+        "responses": {
+          "200": { "description": "Daftar service yang terdaftar" },
+          "401": { "description": "Login dashboard diperlukan" },
+          "403": { "description": "Role tidak memiliki izin" }
+        }
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "summary": "Daftar request log terbaru",
+        "parameters": [
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 200 } }
+        ],
+        "responses": {
+          "200": { "description": "Request log terbaru" },
+          "401": { "description": "Login dashboard diperlukan" },
+          "403": { "description": "Role tidak memiliki izin" }
+        }
+      }
+    },
+    "/api/demo/simulate": {
+      "post": {
+        "summary": "Simulasi request gateway untuk demo",
         "security": [{ "csrfToken": [] }],
         "requestBody": {
           "required": false,
@@ -81,24 +134,62 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": { "type": "string", "description": "Admin/operator only override" },
-                  "name": { "type": "string", "description": "Admin/operator only override" },
-                  "npm": { "type": "string", "description": "Admin/operator only override" }
+                  "service": { "type": "string", "example": "smartbank" },
+                  "endpoint": { "type": "string", "example": "pembayaran_transaksi" },
+                  "amount": { "type": "number", "minimum": 0 },
+                  "source_app": { "type": "string", "example": "demo_simulator" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "API token generated" },
-          "401": { "description": "Dashboard login required" },
-          "403": { "description": "CSRF or role failure" }
+          "200": { "description": "Simulasi berhasil dan dicatat ke request_logs serta shadow_service_usage" },
+          "400": { "description": "Input simulasi tidak valid" },
+          "401": { "description": "Login dashboard diperlukan" }
+        }
+      }
+    },
+    "/api/demo/seed-data": {
+      "post": {
+        "summary": "Seed data demo untuk presentasi",
+        "security": [{ "csrfToken": [] }],
+        "responses": {
+          "200": { "description": "Data demo request, revenue, alert, dan shadow usage berhasil dibuat" },
+          "401": { "description": "Login dashboard diperlukan" },
+          "403": { "description": "Hanya admin yang dapat menjalankan seed data" }
+        }
+      }
+    },
+    "/generate-test-token": {
+      "post": {
+        "summary": "Generate JWT API dari session dashboard",
+        "security": [{ "csrfToken": [] }],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": { "type": "string", "description": "Override khusus admin/operator" },
+                  "name": { "type": "string", "description": "Override khusus admin/operator" },
+                  "npm": { "type": "string", "description": "Override khusus admin/operator" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Token API berhasil dibuat" },
+          "401": { "description": "Login dashboard diperlukan" },
+          "403": { "description": "Token CSRF atau role tidak valid" }
         }
       }
     },
     "/api/tokens/revoke": {
       "post": {
-        "summary": "Revoke an API JWT before expiry",
+        "summary": "Cabut JWT API sebelum kedaluwarsa",
         "security": [{ "csrfToken": [] }],
         "requestBody": {
           "required": true,
@@ -116,22 +207,22 @@
           }
         },
         "responses": {
-          "200": { "description": "Token revoked" },
-          "400": { "description": "Invalid token" },
-          "403": { "description": "Cannot revoke another user's token" }
+          "200": { "description": "Token berhasil dicabut" },
+          "400": { "description": "Token tidak valid" },
+          "403": { "description": "Tidak dapat mencabut token milik user lain" }
         }
       }
     },
     "/api/keys": {
       "get": {
-        "summary": "List API keys for current dashboard user",
+        "summary": "Daftar API key user dashboard aktif",
         "security": [{ "csrfToken": [] }],
         "responses": {
-          "200": { "description": "API key list" }
+          "200": { "description": "Daftar API key" }
         }
       },
       "post": {
-        "summary": "Create API key with optional scopes",
+        "summary": "Buat API key dengan scope opsional",
         "security": [{ "csrfToken": [] }],
         "requestBody": {
           "required": true,
@@ -153,28 +244,28 @@
           }
         },
         "responses": {
-          "200": { "description": "API key created; raw key is only returned once" },
-          "400": { "description": "Validation error" }
+          "200": { "description": "API key berhasil dibuat; nilai mentah hanya ditampilkan sekali" },
+          "400": { "description": "Validasi gagal" }
         }
       }
     },
     "/integrator/validasi_request": {
       "get": {
-        "summary": "Validate API JWT or API key",
+        "summary": "Validasi JWT API atau API key",
         "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
         "responses": {
           "200": { "description": "Token/key valid" },
-          "401": { "description": "Missing token/key" },
-          "403": { "description": "Invalid, expired, or revoked token/key" }
+          "401": { "description": "Token/key belum dikirim" },
+          "403": { "description": "Token/key tidak valid, kedaluwarsa, atau sudah dicabut" }
         }
       }
     },
     "/integrator/routing_api": {
       "get": {
-        "summary": "List active gateway routes",
+        "summary": "Daftar route gateway aktif",
         "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
         "responses": {
-          "200": { "description": "Registered active services" }
+          "200": { "description": "Service aktif yang terdaftar" }
         }
       }
     },
@@ -184,7 +275,7 @@
         { "name": "path", "in": "path", "required": true, "schema": { "type": "string" } }
       ],
       "post": {
-        "summary": "Proxy POST request to downstream service",
+        "summary": "Proxy request POST ke service downstream",
         "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
         "parameters": [
           {
@@ -192,7 +283,7 @@
             "in": "header",
             "required": false,
             "schema": { "type": "string" },
-            "description": "When present, repeated identical requests replay the stored response."
+            "description": "Jika dikirim, request identik yang berulang akan memakai ulang response tersimpan."
           }
         ],
         "requestBody": {
@@ -210,13 +301,28 @@
           }
         },
         "responses": {
-          "200": { "description": "Downstream success", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GatewayProxyResponse" } } } },
-          "400": { "description": "Invalid request body" },
-          "403": { "description": "API key scope missing" },
-          "409": { "description": "Idempotency conflict or request still processing" },
-          "502": { "description": "Downstream error or unsafe service URL" },
-          "503": { "description": "Circuit breaker open" },
+          "200": { "description": "Downstream sukses", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GatewayProxyResponse" } } } },
+          "400": { "description": "Body request tidak valid" },
+          "403": { "description": "Scope API key tidak mencukupi" },
+          "409": { "description": "Konflik idempotency atau request masih diproses" },
+          "502": { "description": "Downstream error atau URL service tidak aman" },
+          "503": { "description": "Circuit breaker aktif" },
           "504": { "description": "Downstream timeout" }
+        }
+      }
+    },
+    "/integrator/{service}": {
+      "parameters": [
+        { "name": "service", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "Proxy request ke root service downstream",
+        "security": [{ "bearerApiToken": [] }, { "apiKeyAuth": [] }],
+        "responses": {
+          "200": { "description": "Response dari service downstream" },
+          "401": { "description": "Token/key belum dikirim" },
+          "403": { "description": "Token/key atau scope tidak valid" },
+          "502": { "description": "Downstream error atau URL service tidak aman" }
         }
       }
     }

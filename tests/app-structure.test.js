@@ -13,8 +13,10 @@ test("database schema contains gateway core and advanced operational tables", ()
   const sql = read("config/init.sql");
   [
     "CREATE TABLE IF NOT EXISTS users",
+    "CREATE TABLE IF NOT EXISTS employees",
     "CREATE TABLE IF NOT EXISTS api_services",
     "CREATE TABLE IF NOT EXISTS request_logs",
+    "CREATE TABLE IF NOT EXISTS shadow_service_usage",
     "CREATE TABLE IF NOT EXISTS revenue_logs",
     "CREATE TABLE IF NOT EXISTS api_keys",
     "CREATE TABLE IF NOT EXISTS api_key_usage",

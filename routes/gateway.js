@@ -311,6 +311,41 @@ async function recordRevenue(requestId, nominalFee) {
   );
 }
 
+async function recordShadowUsage(req, details) {
+  try {
+    const sourceApp = String(
+      req.headers["x-source-app"] ||
+        req.headers["x-consumer-app"] ||
+        "unknown_app",
+    ).slice(0, 120);
+    const consumerId = String(
+      req.user?.user_id ||
+        req.user?.username ||
+        req.body?.user_id ||
+        req.query?.user_id ||
+        "anonymous",
+    ).slice(0, 120);
+
+    await pool.query(
+      `INSERT INTO shadow_service_usage
+         (request_log_id, source_app, service_name, endpoint, consumer_id, request_method, request_status, response_code, used_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        req.logId || null,
+        sourceApp || "unknown_app",
+        String(details.serviceName || "unknown_service").slice(0, 100),
+        String(req.originalUrl || details.endpoint || "-").slice(0, 500),
+        consumerId || "anonymous",
+        String(req.method || "GET").slice(0, 10),
+        details.requestStatus === "SUCCESS" ? "SUCCESS" : "ERROR",
+        details.responseCode || null,
+      ],
+    );
+  } catch (err) {
+    console.error("[SHADOW_USAGE] Gagal mencatat shadow usage:", err.message);
+  }
+}
+
 async function tryDebitGatewayFee(req, gatewayFee, transactionAmount) {
   if (transactionAmount <= 0 || gatewayFee <= 0) return "tidak_ada_amount";
 
@@ -366,6 +401,17 @@ async function tryDebitGatewayFee(req, gatewayFee, transactionAmount) {
 
 async function proxyToService(req, res, serviceName, forwardPath = "") {
   const normalizedServiceName = normalizeServiceName(serviceName);
+  let shadowUsageRecorded = false;
+  res.on("finish", () => {
+    if (shadowUsageRecorded) return;
+    shadowUsageRecorded = true;
+    recordShadowUsage(req, {
+      serviceName: normalizedServiceName,
+      endpoint: req.originalUrl,
+      requestStatus: res.statusCode < 400 ? "SUCCESS" : "ERROR",
+      responseCode: res.statusCode,
+    });
+  });
   const targetService = await getActiveServiceByName(normalizedServiceName);
 
   if (!targetService) {

@@ -106,6 +106,26 @@
             line-height: 1.6;
         }
 
+        .demo-login-panel {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .demo-login-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .demo-login-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
         @media (max-width: 860px) {
             .login-shell {
                 grid-template-columns: 1fr;
@@ -121,7 +141,7 @@
 </head>
 
 <body class="no-sidebar">
-    <div style="position:absolute;top:24px;right:24px;z-index:999"><button class="btn btn-outline" id="darkModeToggle" title="Toggle Dark Mode" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button></div>
+    <div style="position:absolute;top:24px;right:24px;z-index:999"><button class="btn btn-outline" id="darkModeToggle" title="Ubah Mode Gelap" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button></div>
     <div class="login-shell">
         <div class="login-intro" style="animation: fadeInUp 0.6s ease both;">
             <div class="login-eyebrow"><i data-lucide="shield-check"></i> Secure Gateway Access</div>
@@ -149,6 +169,16 @@
             </div>
 
             <button class="btn btn-primary" style="width: 100%; margin-top: 8px;"><i data-lucide="log-in"></i> Login</button>
+
+            <div class="demo-login-panel">
+                <div class="form-label">Login demo satu klik</div>
+                <div class="demo-login-actions">
+                    <button class="btn btn-outline" type="submit" name="demo_role" value="admin" formnovalidate><i data-lucide="shield-check"></i> Login sebagai Admin</button>
+                    <button class="btn btn-outline" type="submit" name="demo_role" value="operator" formnovalidate><i data-lucide="headphones"></i> Login sebagai Operator</button>
+                    <button class="btn btn-outline" type="submit" name="demo_role" value="user" formnovalidate><i data-lucide="user-round"></i> Login sebagai User</button>
+                </div>
+                <div class="demo-login-note">Akun demo hanya digunakan untuk pengujian dan presentasi.</div>
+            </div>
 
             <div class="login-help">
                 Akun awal: admin/admin123, operator/operator123, user/user123.<br>
