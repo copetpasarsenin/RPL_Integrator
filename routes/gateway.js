@@ -311,6 +311,41 @@ async function recordRevenue(requestId, nominalFee) {
   );
 }
 
+async function recordShadowUsage(req, serviceName, requestStatus, responseCode) {
+  try {
+    const sourceApp = String(
+      req.headers["x-source-app"] ||
+        req.headers["x-consumer-app"] ||
+        "unknown_app",
+    ).slice(0, 150);
+    const consumerId = String(
+      req.user?.user_id ||
+        req.user?.username ||
+        req.body?.user_id ||
+        req.query?.user_id ||
+        "anonymous",
+    ).slice(0, 150);
+
+    await pool.query(
+      `INSERT INTO shadow_service_usage
+         (request_log_id, source_app, service_name, endpoint, consumer_id, request_method, request_status, response_code, used_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        req.logId || null,
+        sourceApp,
+        normalizeServiceName(serviceName),
+        String(req.originalUrl || req.url || "-").slice(0, 500),
+        consumerId,
+        String(req.method || "GET").slice(0, 10),
+        requestStatus,
+        responseCode || null,
+      ],
+    );
+  } catch (err) {
+    console.error("[SHADOW USAGE] Gagal mencatat penggunaan service:", err.message);
+  }
+}
+
 async function tryDebitGatewayFee(req, gatewayFee, transactionAmount) {
   if (transactionAmount <= 0 || gatewayFee <= 0) return "tidak_ada_amount";
 
@@ -370,6 +405,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
 
   if (!targetService) {
     const services = await getActiveServices();
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 404);
     return res.status(404).json({
       status: "error",
       message: `Service "${normalizedServiceName}" tidak terdaftar atau tidak aktif di gateway`,
@@ -384,6 +420,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
       status: "ERROR",
       response_status: 403,
     });
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 403);
     return rejectMissingScope(res, requiredScope);
   }
 
@@ -394,6 +431,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
       status: "ERROR",
       response_status: 502,
     });
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 502);
     return res.status(502).json({
       status: "error",
       message: `Service "${normalizedServiceName}" memiliki target URL tidak aman`,
@@ -411,6 +449,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
       status: "ERROR",
       response_status: 503,
     });
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 503);
     return res.status(503).json({
       status: "error",
       message: `Service "${normalizedServiceName}" sedang mengalami gangguan (Offline). Circuit Breaker aktif, request ditolak.`,
@@ -426,6 +465,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
       status: "ERROR",
       response_status: 400,
     });
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 400);
     return res.status(400).json({
       status: "error",
       message: "Amount tidak valid. Nilai amount harus berupa angka >= 0.",
@@ -438,6 +478,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
     forwardPath,
   );
   if (idempotency?.conflict) {
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 409);
     return res.status(409).json({
       status: "error",
       message:
@@ -445,6 +486,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
     });
   }
   if (idempotency?.processing) {
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", 409);
     return res.status(409).json({
       status: "error",
       message: "Request dengan Idempotency-Key ini masih diproses",
@@ -452,6 +494,14 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
   }
   if (idempotency?.replay) {
     res.setHeader("X-Idempotency-Replayed", "true");
+    await recordShadowUsage(
+      req,
+      normalizedServiceName,
+      idempotency.responseStatus >= 200 && idempotency.responseStatus < 400
+        ? "SUCCESS"
+        : "ERROR",
+      idempotency.responseStatus,
+    );
     return res
       .status(idempotency.responseStatus)
       .json(idempotency.responseBody);
@@ -506,6 +556,12 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
       status: downstreamSuccess ? "SUCCESS" : "ERROR",
       response_status: response.status,
     });
+    await recordShadowUsage(
+      req,
+      normalizedServiceName,
+      downstreamSuccess ? "SUCCESS" : "ERROR",
+      response.status,
+    );
 
     if (req.method === "HEAD") {
       return res.status(response.status).end();
@@ -535,6 +591,7 @@ async function proxyToService(req, res, serviceName, forwardPath = "") {
       response_status: responseStatus,
       service_tujuan: normalizedServiceName,
     });
+    await recordShadowUsage(req, normalizedServiceName, "ERROR", responseStatus);
 
     const responseBody = {
       status: "error",

@@ -125,6 +125,31 @@ async function seedUsers() {
   }
 }
 
+async function seedEmployees() {
+  const employees = [
+    ["EMP001", "Admin Demo", "admin", "Teknologi Informasi", "admin.demo@rpl-integrator.test", "081200000001", "active"],
+    ["EMP002", "Operator Demo", "operator", "Operasional Gateway", "operator.demo@rpl-integrator.test", "081200000002", "active"],
+    ["EMP003", "User Demo", "user", "Client Portal", "user.demo@rpl-integrator.test", "081200000003", "active"],
+    ["EMP004", "Finance Staff", "staff", "Keuangan", "finance.staff@rpl-integrator.test", "081200000004", "active"],
+    ["EMP005", "Integration Staff", "staff", "Integrasi Service", "integration.staff@rpl-integrator.test", "081200000005", "active"],
+  ];
+
+  for (const employee of employees) {
+    await pool.query(
+      `INSERT INTO employees (employee_code, name, role, department, email, phone, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                role = VALUES(role),
+                department = VALUES(department),
+                email = VALUES(email),
+                phone = VALUES(phone),
+                status = VALUES(status)`,
+      employee,
+    );
+  }
+}
+
 async function initDatabase() {
   try {
     await pool.query(`
@@ -377,17 +402,67 @@ async function initDatabase() {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
 
+    await pool.query(`
+            CREATE TABLE IF NOT EXISTS employees (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                employee_code VARCHAR(30) NOT NULL UNIQUE,
+                name VARCHAR(150) NOT NULL,
+                role VARCHAR(50) NOT NULL,
+                department VARCHAR(100) NOT NULL,
+                email VARCHAR(150) NOT NULL,
+                phone VARCHAR(30),
+                status VARCHAR(30) NOT NULL DEFAULT 'active',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_employee_role (role),
+                INDEX idx_employee_department (department),
+                INDEX idx_employee_status (status)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        `);
+
+    await pool.query(`
+            CREATE TABLE IF NOT EXISTS shadow_service_usage (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                request_log_id INT NULL,
+                source_app VARCHAR(150) NOT NULL DEFAULT 'unknown_app',
+                service_name VARCHAR(100) NOT NULL,
+                endpoint VARCHAR(500) NOT NULL,
+                consumer_id VARCHAR(150) NOT NULL DEFAULT 'anonymous',
+                request_method VARCHAR(10) NOT NULL,
+                request_status VARCHAR(20) NOT NULL,
+                response_code INT NULL,
+                used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_shadow_source_app (source_app),
+                INDEX idx_shadow_service_name (service_name),
+                INDEX idx_shadow_consumer_id (consumer_id),
+                INDEX idx_shadow_request_status (request_status),
+                INDEX idx_shadow_used_at (used_at),
+                INDEX idx_shadow_request_log_id (request_log_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        `);
+
+    await addForeignKeyIfMissing(
+      "shadow_service_usage",
+      "fk_shadow_request_log",
+      `ALTER TABLE shadow_service_usage
+             ADD CONSTRAINT fk_shadow_request_log
+             FOREIGN KEY (request_log_id) REFERENCES request_logs(id)
+             ON DELETE SET NULL`,
+    );
+
     await seedApiServices();
+    const isProduction = process.env.NODE_ENV === "production";
     if (
       process.env.SEED_DEFAULT_USERS === "true" ||
-      process.env.NODE_ENV !== "production"
+      !isProduction
     ) {
       await seedUsers();
     } else {
       console.log(
-        "   Seed default users dilewati di production. Buat admin secara eksplisit.",
+        "   Lewati seeding user default di production. Buat admin secara eksplisit.",
       );
     }
+    await seedEmployees();
 
     console.log("   Database MySQL terhubung & tabel siap");
   } catch (error) {

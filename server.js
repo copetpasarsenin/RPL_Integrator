@@ -138,7 +138,14 @@ app.get("/", (req, res) => res.render("index"));
 app.get("/login", (req, res) => res.render("login", { error: null }));
 
 app.post("/login", loginLimiter, async (req, res) => {
-  const { username, password } = req.body;
+  const demoAccounts = {
+    admin: { username: "admin", password: "admin123" },
+    operator: { username: "operator", password: "operator123" },
+    user: { username: "user", password: "user123" },
+  };
+  const demoAccount = demoAccounts[req.body.demo_role];
+  const username = demoAccount?.username || req.body.username;
+  const password = demoAccount?.password || req.body.password;
   try {
     const [rows] = await pool.query(
       "SELECT id, username, password_hash, role FROM users WHERE username = ? LIMIT 1",
@@ -743,7 +750,16 @@ app.get("/dashboard/plugins", ...dashboardAuth, async (req, res) => {
 app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
   try {
     const range = getDateRange(req.query, 14);
-    const [base, [serviceChart], [timelineChart], [errorRate], [topConsumers]] =
+    const [
+      base,
+      [serviceChart],
+      [timelineChart],
+      [errorRate],
+      [topConsumers],
+      [sourceUsage],
+      [serviceEffectiveness],
+      [shadowSummary],
+    ] =
       await Promise.all([
         dashboardBase(req),
         pool.query(
@@ -787,9 +803,51 @@ app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
             `,
           range.params,
         ),
+        pool.query(
+          `
+                SELECT source_app,
+                       COUNT(*) AS total_usage,
+                       SUM(CASE WHEN request_status = 'SUCCESS' THEN 1 ELSE 0 END) AS success_count,
+                       SUM(CASE WHEN request_status = 'ERROR' THEN 1 ELSE 0 END) AS error_count
+                FROM shadow_service_usage
+                WHERE used_at BETWEEN ? AND ?
+                GROUP BY source_app
+                ORDER BY total_usage DESC
+                LIMIT 8
+            `,
+          range.params,
+        ),
+        pool.query(
+          `
+                SELECT service_name,
+                       COUNT(*) AS total_usage,
+                       SUM(CASE WHEN request_status = 'SUCCESS' THEN 1 ELSE 0 END) AS success_count,
+                       SUM(CASE WHEN request_status = 'ERROR' THEN 1 ELSE 0 END) AS error_count,
+                       ROUND(SUM(CASE WHEN request_status = 'SUCCESS' THEN 1 ELSE 0 END) * 100 / COUNT(*), 1) AS success_rate
+                FROM shadow_service_usage
+                WHERE used_at BETWEEN ? AND ?
+                GROUP BY service_name
+                ORDER BY total_usage DESC
+                LIMIT 10
+            `,
+          range.params,
+        ),
+        pool.query(
+          `
+                SELECT COUNT(*) AS total_usage,
+                       COUNT(DISTINCT source_app) AS source_apps,
+                       COUNT(DISTINCT service_name) AS active_services,
+                       SUM(CASE WHEN request_status = 'SUCCESS' THEN 1 ELSE 0 END) AS success_count
+                FROM shadow_service_usage
+                WHERE used_at BETWEEN ? AND ?
+            `,
+          range.params,
+        ),
       ]);
     const totalReqs = errorRate[0].total || 0;
     const totalErrors = errorRate[0].errors || 0;
+    const shadowTotal = shadowSummary[0]?.total_usage || 0;
+    const shadowSuccess = shadowSummary[0]?.success_count || 0;
     res.render("dashboard", {
       ...base,
       section: "analytics",
@@ -804,6 +862,13 @@ app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
       errorRatePercent:
         totalReqs > 0 ? ((totalErrors / totalReqs) * 100).toFixed(1) : "0.0",
       totalRequests: totalReqs,
+      shadowTotalUsage: shadowTotal,
+      shadowSuccessRate:
+        shadowTotal > 0 ? ((shadowSuccess / shadowTotal) * 100).toFixed(1) : "0.0",
+      shadowSourceAppCount: shadowSummary[0]?.source_apps || 0,
+      shadowActiveServiceCount: shadowSummary[0]?.active_services || 0,
+      sourceUsage,
+      serviceEffectiveness,
       topConsumers,
       dateStart: range.start,
       dateEnd: range.end,
@@ -818,9 +883,47 @@ app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
       timelineChart: { labels: [], data: [] },
       errorRatePercent: "0.0",
       totalRequests: 0,
+      shadowTotalUsage: 0,
+      shadowSuccessRate: "0.0",
+      shadowSourceAppCount: 0,
+      shadowActiveServiceCount: 0,
+      sourceUsage: [],
+      serviceEffectiveness: [],
       topConsumers: [],
       dateStart: "",
       dateEnd: "",
+    });
+  }
+});
+
+app.get("/dashboard/employees", ...dashboardAuth, async (req, res) => {
+  try {
+    const [base, [employees], [summaryRows]] = await Promise.all([
+      dashboardBase(req),
+      pool.query("SELECT * FROM employees ORDER BY employee_code ASC"),
+      pool.query(`
+                SELECT COUNT(*) AS total,
+                       SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) AS admin_count,
+                       SUM(CASE WHEN role = 'operator' THEN 1 ELSE 0 END) AS operator_count,
+                       SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active_count
+                FROM employees
+            `),
+    ]);
+    const employeeSummary = summaryRows[0] || {};
+    res.render("dashboard", {
+      ...base,
+      section: "employees",
+      employees,
+      employeeSummary,
+    });
+  } catch (err) {
+    console.error("[EMPLOYEES]", err.message);
+    const base = await dashboardBase(req);
+    res.render("dashboard", {
+      ...base,
+      section: "employees",
+      employees: [],
+      employeeSummary: {},
     });
   }
 });
@@ -1775,6 +1878,21 @@ app.post(
           [result.insertId, gatewayFee, new Date()],
         );
       }
+      await pool.query(
+        `INSERT INTO shadow_service_usage
+           (request_log_id, source_app, service_name, endpoint, consumer_id, request_method, request_status, response_code, used_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          result.insertId,
+          req.headers["x-source-app"] || req.headers["x-consumer-app"] || "demo_simulator",
+          service,
+          `/integrator/${service}/${endpoint}`,
+          user.user_id || user.npm || user.username || "demo",
+          "POST",
+          "SUCCESS",
+          200,
+        ],
+      );
       res.json({
         status: "success",
         mode: "DEMO_SIMULASI",
@@ -1869,6 +1987,24 @@ app.post("/api/demo/seed-data", ...adminOnly, async (req, res) => {
             );
             revenueInserted++;
           }
+          await pool.query(
+            `INSERT INTO shadow_service_usage
+               (request_log_id, source_app, service_name, endpoint, consumer_id, request_method, request_status, response_code, used_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              result.insertId,
+              ["web_umkm", "mobile_pos", "finance_portal", "integration_console"][
+                (day + i + index) % 4
+              ],
+              service,
+              `/integrator/${service}/${endpoint}`,
+              userId,
+              method,
+              status,
+              status === "SUCCESS" ? 200 : 502,
+              timestamp,
+            ],
+          );
         }
       }
     }

@@ -440,11 +440,14 @@ svg {
 
 .table-wrapper {
     overflow-x: auto;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 720px;
 }
 
 th {
@@ -476,7 +479,7 @@ tbody tr:hover td {
 }
 
 tbody tr:hover {
-    transform: scale(1.002);
+    transform: none;
 }
 
 code {
@@ -509,6 +512,98 @@ code {
 .badge-error { background: var(--danger-bg); color: var(--danger); }
 .badge-warning { background: var(--warning-bg); color: var(--warning); }
 .badge-info { background: var(--info-bg); color: var(--info); }
+
+.empty-cell,
+.empty-state {
+    text-align: center;
+    padding: 28px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.empty-state {
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    background: #f8fafc;
+    margin-top: 12px;
+}
+
+.analytics-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.apikey-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.apikey-guide-card,
+.apikey-table-card {
+    margin-bottom: 18px;
+}
+
+.apikey-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.apikey-guide-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+}
+
+.guide-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.guide-text,
+.table-subtext {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.key-prefix-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.quota-cell {
+    min-width: 140px;
+}
+
+.quota-meter {
+    height: 6px;
+    margin-top: 7px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.quota-meter span {
+    display: block;
+    height: 100%;
+    background: #2563eb;
+    border-radius: inherit;
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+}
 
 .btn {
     display: inline-flex;
@@ -731,8 +826,24 @@ code {
     .form-grid,
     .form-grid-wide,
     .action-grid,
-    .quick-grid {
+    .quick-grid,
+    .analytics-summary-grid,
+    .apikey-summary-grid,
+    .apikey-guide-grid {
         grid-template-columns: 1fr;
+    }
+
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-box {
+        min-height: 260px;
+    }
+
+    .filter-bar .form-control,
+    .filter-bar .btn {
+        width: 100% !important;
     }
 }
 
@@ -1128,6 +1239,18 @@ body.dark-mode .btn-outline {
 body.dark-mode .form-control {
     background: #0f172a;
     color: var(--ink);
+}
+
+body.dark-mode .empty-state {
+    background: #111827;
+}
+
+body.dark-mode .apikey-guide-grid > div {
+    background: #111827;
+}
+
+body.dark-mode .quota-meter {
+    background: #334155;
 }
 
 body.dark-mode tbody tr:hover td {

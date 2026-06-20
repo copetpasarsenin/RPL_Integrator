@@ -4,227 +4,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gateway Integrator - Ekosistem UMKM</title>
-    <meta name="description" content="API Gateway / Integrator - Middleware pengendali ekosistem ekonomi UMKM. Kelompok 7 RPL 2 ULBI.">
+    <title>RPL Integrator - API Gateway</title>
+    <meta name="description" content="RPL Integrator adalah dashboard API Gateway untuk routing service, logging request, API key, analytics, tabel shadow, dan data karyawan.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/kong-theme.css">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .hero-container {
-            width: min(100%, 1080px);
-            padding: 64px 28px;
-            color: #ffffff;
-        }
-
-        .hero-top {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            color: #bfdbfe;
-            font-size: 13px;
-            font-weight: 800;
-            margin-bottom: 24px;
-        }
-
-        .hero-title {
-            max-width: 820px;
-            font-size: 56px;
-            line-height: 1.02;
-            font-weight: 850;
-            margin-bottom: 18px;
-        }
-
-        .hero-subtitle {
-            max-width: 700px;
-            font-size: 17px;
-            color: #bfd0e2;
-            margin-bottom: 34px;
-            line-height: 1.7;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-            margin: 46px 0 0;
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.13);
-            border-radius: var(--radius);
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: fadeInUp 0.5s ease both;
-        }
-
-        .feature-card:nth-child(1) { animation-delay: 0.3s; }
-        .feature-card:nth-child(2) { animation-delay: 0.4s; }
-        .feature-card:nth-child(3) { animation-delay: 0.5s; }
-        .feature-card:nth-child(4) { animation-delay: 0.6s; }
-
-        .feature-card:hover {
-            background: rgba(255, 255, 255, 0.14);
-            border-color: rgba(255, 255, 255, 0.24);
-            transform: translateY(-4px);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .feature-icon {
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            color: #67e8f9;
-            background: rgba(8, 145, 178, 0.18);
-            margin-bottom: 14px;
-            transition: transform 0.3s ease, background 0.3s ease;
-        }
-
-        .feature-card:hover .feature-icon {
-            transform: scale(1.15) rotate(-5deg);
-            background: rgba(8, 145, 178, 0.3);
-        }
-
-        .feature-title {
-            font-size: 15px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .feature-desc {
-            font-size: 13px;
-            color: #b6c7da;
-        }
-
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-        }
-
-        .btn-outline-light {
-            border-color: rgba(255, 255, 255, 0.22);
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .btn-outline-light:hover {
-            background: rgba(255, 255, 255, 0.14);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.32);
-        }
-
-        @media (max-width: 900px) {
-            .hero-title {
-                font-size: 40px;
-            }
-
-            .features-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 560px) {
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .hero-container { width: min(100%, 1120px); padding: 68px 28px 36px; color: #fff; }
+        .hero-top { display: inline-flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: #bfdbfe; font-size: 13px; font-weight: 800; margin-bottom: 24px; }
+        .hero-title { max-width: 860px; font-size: 54px; line-height: 1.04; font-weight: 850; margin-bottom: 18px; }
+        .hero-subtitle { max-width: 720px; font-size: 17px; color: #bfd0e2; margin-bottom: 34px; line-height: 1.7; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 14px; }
+        .btn-outline-light { border-color: rgba(255,255,255,.22); color: #fff; background: rgba(255,255,255,.08); }
+        .btn-outline-light:hover { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.32); }
+        .features-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 46px 0 0; }
+        .feature-card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.13); border-radius: var(--radius); padding: 20px; backdrop-filter: blur(10px); transition: background .25s ease, border-color .25s ease, transform .25s ease; animation: fadeInUp .5s ease both; }
+        .feature-card:nth-child(1) { animation-delay: .30s; } .feature-card:nth-child(2) { animation-delay: .38s; } .feature-card:nth-child(3) { animation-delay: .46s; } .feature-card:nth-child(4) { animation-delay: .54s; } .feature-card:nth-child(5) { animation-delay: .62s; } .feature-card:nth-child(6) { animation-delay: .70s; }
+        .feature-card:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.24); transform: translateY(-3px); }
+        .feature-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; color: #67e8f9; background: rgba(8,145,178,.18); margin-bottom: 14px; }
+        .feature-title { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+        .feature-desc { font-size: 13px; color: #b6c7da; line-height: 1.55; }
+        .stack-strip { margin-top: 44px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.1); animation: fadeInUp .5s ease .72s both; }
+        .stack-title { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+        .stack-list { display: flex; gap: 12px; flex-wrap: wrap; }
+        .stack-pill { display: inline-flex; align-items: center; gap: 8px; color: #dbeafe; font-size: 13px; font-weight: 700; background: rgba(255,255,255,.06); padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); }
+        .landing-footer { margin-top: 34px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; color: #94a3b8; font-size: 13px; }
+        .landing-links { display: flex; gap: 16px; }
+        .landing-links a { color: #93c5fd; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        @media (max-width: 900px) { .hero-title { font-size: 40px; } .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 560px) { .features-grid { grid-template-columns: 1fr; } .hero-container { padding-top: 86px; } }
     </style>
 </head>
 
 <body class="no-sidebar">
-    <div style="position:absolute;top:24px;right:24px;z-index:999"><button class="btn btn-outline" id="darkModeToggle" title="Toggle Dark Mode" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button></div>
+    <div style="position:absolute;top:24px;right:24px;z-index:999"><button class="btn btn-outline" id="darkModeToggle" title="Ubah mode tampilan" style="border-radius:50%;padding:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center"><i data-lucide="moon"></i></button></div>
     <div class="hero-container">
-        <div class="hero-top" style="animation: fadeInUp 0.5s ease both;"><i data-lucide="network"></i> API Gateway Integrator</div>
-        <h1 class="hero-title" style="animation: fadeInUp 0.6s ease 0.08s both;">Gateway Integrator untuk Ekosistem UMKM</h1>
-        <p class="hero-subtitle" style="animation: fadeInUp 0.6s ease 0.16s both;">
-            Middleware operasional untuk routing API, validasi token, logging request, dan pencatatan pendapatan gateway dalam satu panel yang mudah dipantau.
-        </p>
+        <div class="hero-top" style="animation: fadeInUp .5s ease both;"><i data-lucide="network"></i> RPL Integrator</div>
+        <h1 class="hero-title" style="animation: fadeInUp .6s ease .08s both;">Satu pintu untuk memantau dan menguji integrasi service</h1>
+        <p class="hero-subtitle" style="animation: fadeInUp .6s ease .16s both;">Dashboard API Gateway untuk mengatur routing, melihat log request, mengelola API key, membaca tabel shadow, dan menilai efektivitas penggunaan service dari aplikasi sumber.</p>
 
-        <div class="action-buttons" style="animation: fadeInUp 0.6s ease 0.24s both;">
-            <a href="/login" class="btn btn-primary"><i data-lucide="log-in"></i> Login Dashboard</a>
+        <div class="action-buttons" style="animation: fadeInUp .6s ease .24s both;">
+            <a href="/login" class="btn btn-primary"><i data-lucide="log-in"></i> Masuk ke Dashboard</a>
             <a href="/register" class="btn btn-outline-light"><i data-lucide="user-plus"></i> Daftar Akun</a>
             <a href="/api/status" class="btn btn-outline-light"><i data-lucide="activity"></i> Cek Status API</a>
         </div>
 
         <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i data-lucide="shield-check"></i></div>
-                <div class="feature-title">Validasi JWT</div>
-                <div class="feature-desc">Request divalidasi sebelum diteruskan ke service tujuan.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-lucide="route"></i></div>
-                <div class="feature-title">Dynamic Routing</div>
-                <div class="feature-desc">Service tujuan dibaca dari tabel api_services, bukan hardcode.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-lucide="coins"></i></div>
-                <div class="feature-title">Revenue Ledger</div>
-                <div class="feature-desc">Pendapatan fee dipisahkan dari metadata traffic request.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-lucide="bar-chart-3"></i></div>
-                <div class="feature-title">Dashboard Statistik</div>
-                <div class="feature-desc">Admin dan operator mendapat insight sesuai role masing-masing.</div>
+            <div class="feature-card"><div class="feature-icon"><i data-lucide="route"></i></div><div class="feature-title">Routing Gateway</div><div class="feature-desc">Request diarahkan ke service tujuan berdasarkan konfigurasi database.</div></div>
+            <div class="feature-card"><div class="feature-icon"><i data-lucide="clipboard-list"></i></div><div class="feature-title">Logging Request</div><div class="feature-desc">Aktivitas gateway tersimpan sebagai audit trail yang mudah diperiksa.</div></div>
+            <div class="feature-card"><div class="feature-icon"><i data-lucide="key-round"></i></div><div class="feature-title">Kunci API</div><div class="feature-desc">Akses integrasi dapat dibatasi dengan API key dan kuota harian.</div></div>
+            <div class="feature-card"><div class="feature-icon"><i data-lucide="bar-chart-3"></i></div><div class="feature-title">Analitik</div><div class="feature-desc">Traffic, tingkat sukses, dan konsumen teratas terlihat dalam grafik.</div></div>
+            <div class="feature-card"><div class="feature-icon"><i data-lucide="database"></i></div><div class="feature-title">Tabel Shadow</div><div class="feature-desc">Penggunaan service dari aplikasi sumber dicatat tanpa mengganggu log utama.</div></div>
+            <div class="feature-card"><div class="feature-icon"><i data-lucide="id-card"></i></div><div class="feature-title">Data Karyawan</div><div class="feature-desc">Data demo karyawan tersedia untuk bukti repository dan presentasi.</div></div>
+        </div>
+
+        <div class="stack-strip">
+            <div class="stack-title">Teknologi proyek</div>
+            <div class="stack-list">
+                <span class="stack-pill"><i data-lucide="server" style="width:16px;height:16px"></i> Node.js</span>
+                <span class="stack-pill"><i data-lucide="layers" style="width:16px;height:16px"></i> Express</span>
+                <span class="stack-pill"><i data-lucide="database" style="width:16px;height:16px"></i> MySQL</span>
+                <span class="stack-pill"><i data-lucide="layout-template" style="width:16px;height:16px"></i> EJS</span>
             </div>
         </div>
-        <div style="margin-top: 48px; text-align: center; animation: fadeInUp 0.5s ease 0.7s both;">
-            <div style="font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;">Powered By Tech Stack</div>
-            <div style="display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; align-items: center;">
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="server" style="width:16px;height:16px"></i> Node.js</span>
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="layers" style="width:16px;height:16px"></i> Express</span>
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="database" style="width:16px;height:16px"></i> MySQL</span>
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="layout-template" style="width:16px;height:16px"></i> EJS Templates</span>
-            </div>
-        </div>
-        <footer style="margin-top: 60px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div style="font-size: 13px; color: #64748b;">© 2026 Kelompok 7 — Tugas Besar RPL 2 ULBI</div>
-            <div style="display: flex; gap: 16px;">
-                <a href="/download-docs" style="font-size: 13px; color: #93c5fd; text-decoration: none;"><i data-lucide="file-text" style="width: 14px; height: 14px; vertical-align: middle;"></i> Dokumentasi</a>
-                <a href="/api/status" style="font-size: 13px; color: #93c5fd; text-decoration: none;"><i data-lucide="activity" style="width: 14px; height: 14px; vertical-align: middle;"></i> Status</a>
+
+        <footer class="landing-footer">
+            <div>© 2026 Kelompok 7 - Tugas Besar RPL 2 ULBI</div>
+            <div class="landing-links">
+                <a href="/download-docs"><i data-lucide="file-text" style="width:14px;height:14px"></i> Dokumentasi</a>
+                <a href="/api/status"><i data-lucide="activity" style="width:14px;height:14px"></i> Status</a>
             </div>
         </footer>
     </div>
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const toggle = document.getElementById('darkModeToggle');
+            if (!toggle) return;
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) document.body.classList.add('dark-mode');
+            toggle.innerHTML = isDark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+            lucide.createIcons();
+            toggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const dark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', dark);
+                toggle.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
                 lucide.createIcons();
-                        const toggle = document.getElementById('darkModeToggle');
-            if (toggle) {
-                const isDark = localStorage.getItem('darkMode') === 'true';
-                if (isDark) document.body.classList.add('dark-mode');
-                
-                toggle.innerHTML = isDark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
-                if (window.lucide) lucide.createIcons();
-
-                // Hapus event listener lama dengan clone node (jika ada script ganda)
-                const newToggle = toggle.cloneNode(true);
-                toggle.parentNode.replaceChild(newToggle, toggle);
-
-                newToggle.addEventListener('click', () => {
-                    document.body.classList.toggle('dark-mode');
-                    const dark = document.body.classList.contains('dark-mode');
-                    localStorage.setItem('darkMode', dark);
-                    
-                    newToggle.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
-                    if (window.lucide) lucide.createIcons();
-                });
-            } else {
-                if (localStorage.getItem('darkMode') === 'true') {
-                    document.body.classList.add('dark-mode');
-                }
-            }
             });
+        });
     </script>
 </body>
 
