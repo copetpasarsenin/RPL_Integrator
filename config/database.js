@@ -125,6 +125,71 @@ async function seedUsers() {
   }
 }
 
+async function seedEmployees() {
+  const employees = [
+    [
+      "EMP001",
+      "Admin Demo",
+      "Admin",
+      "IT Integrator",
+      "admin.demo@rpl-integrator.local",
+      "081100000001",
+      "active",
+    ],
+    [
+      "EMP002",
+      "Operator Demo",
+      "Operator",
+      "Operasional Gateway",
+      "operator.demo@rpl-integrator.local",
+      "081100000002",
+      "active",
+    ],
+    [
+      "EMP003",
+      "User Demo",
+      "User",
+      "Client UMKM",
+      "user.demo@rpl-integrator.local",
+      "081100000003",
+      "active",
+    ],
+    [
+      "EMP004",
+      "Finance Staff",
+      "Finance",
+      "Keuangan",
+      "finance.staff@rpl-integrator.local",
+      "081100000004",
+      "active",
+    ],
+    [
+      "EMP005",
+      "Integration Staff",
+      "Integration Staff",
+      "Integrasi Service",
+      "integration.staff@rpl-integrator.local",
+      "081100000005",
+      "active",
+    ],
+  ];
+
+  for (const employee of employees) {
+    await pool.query(
+      `INSERT INTO employees (employee_code, name, role, department, email, phone, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                role = VALUES(role),
+                department = VALUES(department),
+                email = VALUES(email),
+                phone = VALUES(phone),
+                status = VALUES(status)`,
+      employee,
+    );
+  }
+}
+
 async function initDatabase() {
   try {
     await pool.query(`
@@ -135,6 +200,24 @@ async function initDatabase() {
                 role ENUM('admin', 'operator', 'user') NOT NULL DEFAULT 'user',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_role (role)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        `);
+
+    await pool.query(`
+            CREATE TABLE IF NOT EXISTS employees (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                employee_code VARCHAR(30) NOT NULL UNIQUE,
+                name VARCHAR(150) NOT NULL,
+                role VARCHAR(100) NOT NULL,
+                department VARCHAR(120) NOT NULL,
+                email VARCHAR(150) NOT NULL,
+                phone VARCHAR(30),
+                status VARCHAR(30) NOT NULL DEFAULT 'active',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_employee_role (role),
+                INDEX idx_employee_department (department),
+                INDEX idx_employee_status (status)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
 
@@ -150,6 +233,7 @@ async function initDatabase() {
                 INDEX idx_status_aktif (status_aktif)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
+
     await addColumnIfMissing(
       "api_services",
       "health_path",
@@ -169,6 +253,30 @@ async function initDatabase() {
                 status VARCHAR(20) DEFAULT 'PENDING',
                 response_status INT,
                 mode VARCHAR(20) DEFAULT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        `);
+
+    await pool.query(`
+            CREATE TABLE IF NOT EXISTS shadow_service_usage (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                request_log_id INT NULL,
+                source_app VARCHAR(120) NOT NULL DEFAULT 'unknown_app',
+                service_name VARCHAR(100) NOT NULL,
+                endpoint VARCHAR(500) NOT NULL,
+                consumer_id VARCHAR(120) NOT NULL DEFAULT 'anonymous',
+                request_method VARCHAR(10) NOT NULL,
+                request_status VARCHAR(20) NOT NULL,
+                response_code INT NULL,
+                used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_shadow_source_app (source_app),
+                INDEX idx_shadow_service_name (service_name),
+                INDEX idx_shadow_consumer_id (consumer_id),
+                INDEX idx_shadow_request_status (request_status),
+                INDEX idx_shadow_used_at (used_at),
+                INDEX idx_shadow_request_log_id (request_log_id),
+                CONSTRAINT fk_shadow_request_log
+                    FOREIGN KEY (request_log_id) REFERENCES request_logs(id)
+                    ON DELETE SET NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         `);
 
@@ -378,16 +486,15 @@ async function initDatabase() {
         `);
 
     await seedApiServices();
-    if (
-      process.env.SEED_DEFAULT_USERS === "true" ||
-      process.env.NODE_ENV !== "production"
-    ) {
+    const isProduction = process.env.NODE_ENV === "production";
+    if (process.env.SEED_DEFAULT_USERS === "true" || !isProduction) {
       await seedUsers();
     } else {
       console.log(
-        "   Seed default users dilewati di production. Buat admin secara eksplisit.",
+        "   Lewati seeding user default di production. Buat admin secara eksplisit.",
       );
     }
+    await seedEmployees();
 
     console.log("   Database MySQL terhubung & tabel siap");
   } catch (error) {

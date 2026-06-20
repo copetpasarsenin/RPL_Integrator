@@ -138,7 +138,14 @@ app.get("/", (req, res) => res.render("index"));
 app.get("/login", (req, res) => res.render("login", { error: null }));
 
 app.post("/login", loginLimiter, async (req, res) => {
-  const { username, password } = req.body;
+  const demoAccounts = {
+    admin: { username: "admin", password: "admin123" },
+    operator: { username: "operator", password: "operator123" },
+    user: { username: "user", password: "user123" },
+  };
+  const demoRole = String(req.body.demo_role || "").toLowerCase();
+  const credentials = demoAccounts[demoRole] || req.body;
+  const { username, password } = credentials;
   try {
     const [rows] = await pool.query(
       "SELECT id, username, password_hash, role FROM users WHERE username = ? LIMIT 1",
@@ -670,6 +677,28 @@ app.get("/dashboard/consumers", ...dashboardAuth, async (req, res) => {
   }
 });
 
+app.get("/dashboard/employees", ...dashboardAuth, async (req, res) => {
+  try {
+    const [base, [employees]] = await Promise.all([
+      dashboardBase(req),
+      pool.query("SELECT * FROM employees ORDER BY employee_code ASC"),
+    ]);
+    res.render("dashboard", {
+      ...base,
+      section: "employees",
+      employees,
+    });
+  } catch (err) {
+    console.error("[EMPLOYEES]", err.message);
+    const base = await dashboardBase(req);
+    res.render("dashboard", {
+      ...base,
+      section: "employees",
+      employees: [],
+    });
+  }
+});
+
 // 5. Plugins
 app.get("/dashboard/plugins", ...dashboardAuth, async (req, res) => {
   const base = await dashboardBase(req);
@@ -743,11 +772,20 @@ app.get("/dashboard/plugins", ...dashboardAuth, async (req, res) => {
 app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
   try {
     const range = getDateRange(req.query, 14);
-    const [base, [serviceChart], [timelineChart], [errorRate], [topConsumers]] =
-      await Promise.all([
-        dashboardBase(req),
-        pool.query(
-          `
+    const [
+      base,
+      [serviceChart],
+      [timelineChart],
+      [requestSummary],
+      [consumerSummary],
+      [topConsumers],
+      [sourceAppUsage],
+      [sourceAppSummary],
+      [serviceEffectiveness],
+    ] = await Promise.all([
+      dashboardBase(req),
+      pool.query(
+        `
                 SELECT s.nama_service AS label, COUNT(r.id) AS total
                 FROM api_services s
                 LEFT JOIN request_logs r ON r.service_tujuan = s.nama_service
@@ -755,41 +793,98 @@ app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
                 GROUP BY s.id, s.nama_service
                 ORDER BY s.id ASC
             `,
-          range.params,
-        ),
-        pool.query(
-          `
+        range.params,
+      ),
+      pool.query(
+        `
                 SELECT DATE_FORMAT(timestamp, '%m/%d') AS label, COUNT(*) AS total
                 FROM request_logs
                 WHERE timestamp BETWEEN ? AND ?
                 GROUP BY DATE(timestamp), DATE_FORMAT(timestamp, '%m/%d')
                 ORDER BY DATE(timestamp) ASC
             `,
-          range.params,
-        ),
-        pool.query(
-          `
+        range.params,
+      ),
+      pool.query(
+        `
                 SELECT
                     COUNT(*) AS total,
+                    SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END) AS success,
                     SUM(CASE WHEN status = 'ERROR' THEN 1 ELSE 0 END) AS errors
                 FROM request_logs
                 WHERE timestamp BETWEEN ? AND ?
             `,
-          range.params,
-        ),
-        pool.query(
-          `
+        range.params,
+      ),
+      pool.query(
+        `
+                SELECT COUNT(DISTINCT consumer_id) AS unique_consumers
+                FROM (
+                    SELECT user_id AS consumer_id
+                    FROM request_logs
+                    WHERE timestamp BETWEEN ? AND ?
+                        AND user_id IS NOT NULL AND user_id != ''
+                    UNION
+                    SELECT consumer_id
+                    FROM shadow_service_usage
+                    WHERE used_at BETWEEN ? AND ?
+                        AND consumer_id IS NOT NULL AND consumer_id != ''
+                ) combined_consumers
+            `,
+        [...range.params, ...range.params],
+      ),
+      pool.query(
+        `
                 SELECT user_id, COUNT(*) AS total
                 FROM request_logs
                 WHERE user_id IS NOT NULL AND user_id != ''
                     AND timestamp BETWEEN ? AND ?
                 GROUP BY user_id ORDER BY total DESC LIMIT 5
             `,
-          range.params,
-        ),
-      ]);
-    const totalReqs = errorRate[0].total || 0;
-    const totalErrors = errorRate[0].errors || 0;
+        range.params,
+      ),
+      pool.query(
+        `
+                SELECT source_app AS label, COUNT(*) AS total
+                FROM shadow_service_usage
+                WHERE used_at BETWEEN ? AND ?
+                GROUP BY source_app
+                ORDER BY total DESC, source_app ASC
+                LIMIT 8
+            `,
+        range.params,
+      ),
+      pool.query(
+        `
+                SELECT COUNT(DISTINCT source_app) AS total
+                FROM shadow_service_usage
+                WHERE used_at BETWEEN ? AND ?
+            `,
+        range.params,
+      ),
+      pool.query(
+        `
+                SELECT
+                    service_name,
+                    COUNT(*) AS total_usage,
+                    SUM(CASE WHEN request_status = 'SUCCESS' THEN 1 ELSE 0 END) AS success_count,
+                    SUM(CASE WHEN request_status = 'ERROR' THEN 1 ELSE 0 END) AS error_count,
+                    ROUND(
+                        (SUM(CASE WHEN request_status = 'SUCCESS' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100,
+                        1
+                    ) AS success_rate
+                FROM shadow_service_usage
+                WHERE used_at BETWEEN ? AND ?
+                GROUP BY service_name
+                ORDER BY total_usage DESC, service_name ASC
+                LIMIT 10
+            `,
+        range.params,
+      ),
+    ]);
+    const totalReqs = requestSummary[0].total || 0;
+    const totalSuccess = requestSummary[0].success || 0;
+    const totalErrors = requestSummary[0].errors || 0;
     res.render("dashboard", {
       ...base,
       section: "analytics",
@@ -801,10 +896,22 @@ app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
         labels: timelineChart.map((r) => r.label),
         data: timelineChart.map((r) => Number(r.total)),
       },
+      sourceAppChart: {
+        labels: sourceAppUsage.map((r) => r.label),
+        data: sourceAppUsage.map((r) => Number(r.total)),
+      },
       errorRatePercent:
         totalReqs > 0 ? ((totalErrors / totalReqs) * 100).toFixed(1) : "0.0",
+      successRatePercent:
+        totalReqs > 0 ? ((totalSuccess / totalReqs) * 100).toFixed(1) : "0.0",
       totalRequests: totalReqs,
+      totalSuccess,
+      totalErrors,
+      uniqueConsumers: consumerSummary[0]?.unique_consumers || 0,
+      sourceApplications: sourceAppSummary[0]?.total || 0,
       topConsumers,
+      sourceAppUsage,
+      serviceEffectiveness,
       dateStart: range.start,
       dateEnd: range.end,
     });
@@ -816,9 +923,17 @@ app.get("/dashboard/analytics", ...dashboardAuth, async (req, res) => {
       section: "analytics",
       serviceChart: { labels: [], data: [] },
       timelineChart: { labels: [], data: [] },
+      sourceAppChart: { labels: [], data: [] },
       errorRatePercent: "0.0",
+      successRatePercent: "0.0",
       totalRequests: 0,
+      totalSuccess: 0,
+      totalErrors: 0,
+      uniqueConsumers: 0,
+      sourceApplications: 0,
       topConsumers: [],
+      sourceAppUsage: [],
+      serviceEffectiveness: [],
       dateStart: "",
       dateEnd: "",
     });
@@ -848,10 +963,10 @@ app.get("/dashboard/analytics/export", ...dashboardAuth, async (req, res) => {
       `analytics_${range.start}_${range.end}.csv`,
       [
         { key: "service", label: "Service" },
-        { key: "total_requests", label: "Total Requests" },
-        { key: "success_requests", label: "Success" },
+        { key: "total_requests", label: "Total Request" },
+        { key: "success_requests", label: "Sukses" },
         { key: "error_requests", label: "Error" },
-        { key: "last_activity", label: "Last Activity" },
+        { key: "last_activity", label: "Aktivitas Terakhir" },
       ],
       rows,
     );
@@ -1769,6 +1884,21 @@ app.post(
           "DEMO",
         ],
       );
+      await pool.query(
+        `INSERT INTO shadow_service_usage
+             (request_log_id, source_app, service_name, endpoint, consumer_id, request_method, request_status, response_code, used_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          result.insertId,
+          req.body.source_app || "demo_simulator",
+          service,
+          `/integrator/${service}/${endpoint}`,
+          user.user_id || user.npm || user.username || "demo",
+          "POST",
+          "SUCCESS",
+          200,
+        ],
+      );
       if (amount > 0 && gatewayFee > 0) {
         await pool.query(
           "INSERT INTO revenue_logs (request_id, nominal_fee, waktu) VALUES (?, ?, ?)",
@@ -1817,6 +1947,14 @@ app.post("/api/demo/seed-data", ...adminOnly, async (req, res) => {
     "client-umkm-01",
     "client-umkm-02",
   ];
+  const sourceApps = [
+    "smartbank_app",
+    "marketplace_app",
+    "pos_app",
+    "supplierhub_app",
+    "logistikita_app",
+    "umkm_insight_app",
+  ];
   const now = Date.now();
   let logsInserted = 0;
   let revenueInserted = 0;
@@ -1861,6 +1999,23 @@ app.post("/api/demo/seed-data", ...adminOnly, async (req, res) => {
             ],
           );
           logsInserted++;
+
+          await pool.query(
+            `INSERT INTO shadow_service_usage
+                         (request_log_id, source_app, service_name, endpoint, consumer_id, request_method, request_status, response_code, used_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              result.insertId,
+              sourceApps[(day + index) % sourceApps.length],
+              service,
+              `/integrator/${service}/${endpoint}`,
+              userId,
+              method,
+              status,
+              status === "SUCCESS" ? 200 : 502,
+              timestamp,
+            ],
+          );
 
           if (status === "SUCCESS" && amount > 0 && fee > 0) {
             await pool.query(
@@ -2367,7 +2522,7 @@ app.get("/dashboard/architecture", ...dashboardAuth, async (req, res) => {
     "Gateway membaca api_services untuk menentukan target URL aktif.",
     "Jika amount > 0, gateway menghitung fee dan mencoba debit SmartBank.",
     "Request diteruskan ke service tujuan, lalu response dan status dicatat.",
-    "Dashboard membaca request_logs, revenue_logs, audit_logs, service_health_logs, dan system_alerts.",
+    "Dashboard membaca request_logs, shadow_service_usage, employees, revenue_logs, audit_logs, service_health_logs, dan system_alerts.",
   ];
   res.render("dashboard", {
     ...base,
@@ -2410,15 +2565,81 @@ app.get("/dashboard/docs", ...dashboardAuth, async (req, res) => {
   const docs = [
     {
       method: "GET",
-      path: "/api/status",
-      auth: "Public",
-      desc: "Status gateway dan jumlah service aktif.",
+      path: "/login",
+      auth: "Publik",
+      desc: "Menampilkan halaman login dan tombol login demo satu klik.",
     },
     {
       method: "POST",
-      path: "/generate-test-token",
-      auth: "Login",
-      desc: "Generate JWT demo untuk simulator.",
+      path: "/login",
+      auth: "Publik",
+      desc: "Memproses login manual atau demo_role admin/operator/user.",
+    },
+    {
+      method: "GET",
+      path: "/dashboard",
+      auth: "Admin/Operator",
+      desc: "Menampilkan ringkasan operasional gateway.",
+    },
+    {
+      method: "GET",
+      path: "/dashboard/analytics",
+      auth: "Admin/Operator",
+      desc: "Menampilkan traffic, consumer, source app, dan efektivitas service.",
+    },
+    {
+      method: "GET",
+      path: "/dashboard/employees",
+      auth: "Admin/Operator",
+      desc: "Menampilkan data karyawan demo dari tabel employees.",
+    },
+    {
+      method: "GET",
+      path: "/api/status",
+      auth: "Publik",
+      desc: "Status gateway dan jumlah service aktif.",
+    },
+    {
+      method: "GET",
+      path: "/api/services",
+      auth: "Admin/Operator",
+      desc: "Mengambil daftar service yang terdaftar di gateway.",
+    },
+    {
+      method: "GET",
+      path: "/api/logs",
+      auth: "Admin/Operator",
+      desc: "Mengambil request log terbaru dalam format JSON.",
+    },
+    {
+      method: "GET",
+      path: "/api/keys",
+      auth: "Login Admin/Operator/User",
+      desc: "Mengambil API key milik user yang sedang login.",
+    },
+    {
+      method: "POST",
+      path: "/api/demo/simulate",
+      auth: "Login Admin/Operator/User",
+      desc: "Membuat simulasi request gateway untuk presentasi.",
+    },
+    {
+      method: "POST",
+      path: "/api/demo/seed-data",
+      auth: "Admin",
+      desc: "Membuat data demo untuk grafik, revenue, request_logs, dan shadow_service_usage.",
+    },
+    {
+      method: "GET",
+      path: "/integrator/:service",
+      auth: "Bearer JWT/API Key",
+      desc: "Proxy request ke root service tujuan dinamis.",
+    },
+    {
+      method: "ALL",
+      path: "/integrator/:service/:path",
+      auth: "Bearer JWT/API Key",
+      desc: "Proxy request ke path service tujuan dinamis dan mencatat shadow usage.",
     },
     {
       method: "GET",
@@ -2434,39 +2655,9 @@ app.get("/dashboard/docs", ...dashboardAuth, async (req, res) => {
     },
     {
       method: "POST",
-      path: "/api/tokens/revoke",
-      auth: "Login + CSRF",
-      desc: "Mencabut API JWT yang memiliki jti sebelum masa berlakunya habis.",
-    },
-    {
-      method: "ANY",
-      path: "/integrator/:service/:path",
-      auth: "Bearer JWT/API Key",
-      desc: "Proxy request ke service tujuan dinamis.",
-    },
-    {
-      method: "GET",
-      path: "/dashboard/logs/export",
-      auth: "Admin/Operator",
-      desc: "Export request log sesuai filter.",
-    },
-    {
-      method: "GET",
-      path: "/dashboard/revenue/export",
-      auth: "Admin",
-      desc: "Export revenue log sesuai filter.",
-    },
-    {
-      method: "POST",
-      path: "/api/demo/seed-data",
-      auth: "Admin",
-      desc: "Membuat data demo untuk grafik, revenue, logs, dan alerts.",
-    },
-    {
-      method: "POST",
-      path: "/api/alerts/:id/resolve",
-      auth: "Admin/Operator",
-      desc: "Menandai system alert sebagai resolved.",
+      path: "/generate-test-token",
+      auth: "Login + token CSRF",
+      desc: "Generate JWT API demo untuk simulator.",
     },
   ];
   res.render("dashboard", { ...base, section: "docs", docs, services });

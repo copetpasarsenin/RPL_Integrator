@@ -140,6 +140,55 @@ POST /api/demo/simulate  → 1. Parse service & amount        → Response sukse
 
 ### C. Contoh Request & Response
 
+### 5.1 Kebutuhan Fungsional Tambahan Berdasarkan Evaluasi Dosen
+
+Sub-bab ini menyesuaikan SRS agar sesuai dengan aplikasi **RPL Integrator**, bukan PointMarket Psychometric Questionnaire. Fokus revisi adalah endpoint gateway, login demo, data karyawan, shadow table, dan diagram efektivitas penggunaan service.
+
+| ID | Kebutuhan Fungsional | Implementasi pada RPL Integrator |
+|---|---|---|
+| FR-17 Endpoint Verification | Sistem harus mendokumentasikan endpoint yang benar-benar tersedia. | Endpoint diverifikasi dari `server.js` dan `routes/gateway.js`, lalu dicatat di README dan menu Dokumentasi API dashboard. |
+| FR-18 One-Click Demo Login | Demo login harus dapat dilakukan tanpa mengetik username/password. | Halaman `/login` menyediakan tombol `Login sebagai Admin`, `Login sebagai Operator`, dan `Login sebagai User`. |
+| FR-19 Employee Demo Data | Repository GitHub harus memuat data karyawan. | Tabel `employees` dibuat otomatis dan diisi EMP001 sampai EMP005 melalui `config/database.js` dan `config/init.sql`. |
+| FR-20 Shadow Table | Sistem harus memiliki shadow table untuk mencatat jejak penggunaan service. | Tabel `shadow_service_usage` menyimpan source app, service, endpoint, consumer, status, response code, dan waktu penggunaan. |
+| FR-21 Usage Analytics Diagram | Data dari aplikasi pengguna service harus tampil sebagai diagram penggunaan/efektivitas. | Dashboard analitik menampilkan grafik penggunaan berdasarkan aplikasi sumber dan bagian `Efektivitas Penggunaan Service`. |
+| FR-22 GitHub Repository Evidence | Repository harus menjadi bukti implementasi revisi dosen. | README, schema SQL, seed database, route dashboard, dan view dashboard memuat bukti revisi. |
+
+Endpoint yang telah diverifikasi tersedia:
+
+| Method | Endpoint | Akses | Keterangan |
+|---|---|---|---|
+| GET | `/login` | Publik | Halaman login manual dan demo satu klik. |
+| POST | `/login` | Publik | Proses login manual atau `demo_role`. |
+| GET | `/dashboard` | Admin/Operator | Ringkasan operasional gateway. |
+| GET | `/dashboard/analytics` | Admin/Operator | Analitik traffic, consumer, aplikasi sumber, dan efektivitas service. |
+| GET | `/dashboard/employees` | Admin/Operator | Tabel data karyawan demo. |
+| GET | `/api/status` | Publik | Status gateway dan service aktif. |
+| GET | `/api/services` | Admin/Operator | Daftar service. |
+| GET | `/api/logs` | Admin/Operator | Log request terbaru. |
+| GET | `/api/keys` | Login | Daftar API key user aktif. |
+| POST | `/api/demo/simulate` | Login | Simulasi request demo. |
+| POST | `/api/demo/seed-data` | Admin | Seed data demo untuk grafik dan shadow table. |
+| GET | `/integrator/:service` | Bearer JWT/API Key | Proxy ke root service. |
+| ALL | `/integrator/:service/:path` | Bearer JWT/API Key | Proxy ke path service. |
+
+Data karyawan demo yang tersedia di repository:
+
+| Kode | Nama | Role | Departemen |
+|---|---|---|---|
+| EMP001 | Admin Demo | Admin | IT Integrator |
+| EMP002 | Operator Demo | Operator | Operasional Gateway |
+| EMP003 | User Demo | User | Client UMKM |
+| EMP004 | Finance Staff | Finance | Keuangan |
+| EMP005 | Integration Staff | Integration Staff | Integrasi Service |
+
+Langkah demo revisi kepada dosen:
+
+1. Buka `/login`, lalu klik `Login sebagai Admin`.
+2. Buka `/dashboard/employees` untuk menunjukkan data karyawan demo.
+3. Klik `Seed Demo Data` dari dashboard agar data analytics terisi.
+4. Buka `/dashboard/analytics` dan tunjukkan `Efektivitas Penggunaan Service`.
+5. Buka `/dashboard/docs` atau README untuk menunjukkan endpoint yang sudah diverifikasi.
+
 **Live Request:**
 ```http
 POST /integrator/smartbank/pembayaran_transaksi
