@@ -1149,3 +1149,136 @@ body.dark-mode .login-card {
 body.dark-mode .modal-dialog {
     background: var(--surface);
 }
+
+/* Final UI polish for demo presentation */
+.sidebar {
+    box-shadow: 4px 0 24px rgba(2, 6, 23, 0.16);
+}
+
+.menu-item {
+    min-height: 40px;
+    margin-bottom: 2px;
+}
+
+.menu-item:hover {
+    transform: none;
+}
+
+.menu-item.active {
+    background: rgba(37, 99, 235, 0.22);
+    border-color: rgba(147, 197, 253, 0.24);
+    box-shadow: inset 4px 0 0 0 #60a5fa;
+}
+
+.content {
+    max-width: 1280px;
+}
+
+.page-title {
+    font-size: 24px;
+}
+
+.page-subtitle {
+    max-width: 760px;
+    line-height: 1.65;
+}
+
+.card,
+.stat-box,
+.plugin-card {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.card:hover,
+.stat-box:hover,
+.plugin-card:hover {
+    transform: none;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.stat-box {
+    min-height: 112px;
+}
+
+.stat-value {
+    font-size: 28px;
+}
+
+.table-wrapper {
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.table-wrapper table {
+    min-width: 720px;
+}
+
+th {
+    background: #f8fafc;
+    color: #475569;
+}
+
+td {
+    line-height: 1.45;
+}
+
+tbody tr:hover {
+    transform: none;
+}
+
+tbody tr:hover td {
+    background: #f8fbff;
+}
+
+.badge {
+    border: 1px solid transparent;
+}
+
+.badge-success { border-color: #bbf7d0; }
+.badge-error { border-color: #fecaca; }
+.badge-warning { border-color: #fde68a; }
+.badge-info { border-color: #bfdbfe; }
+
+.badge:hover {
+    transform: none;
+}
+
+.chart-box {
+    min-height: 260px;
+}
+
+.filter-bar .form-control {
+    min-width: 170px;
+}
+
+body.dark-mode th {
+    background: #111827;
+    color: #cbd5e1;
+}
+
+body.dark-mode .table-wrapper {
+    background: var(--surface);
+    border-color: var(--line);
+}
+
+body.dark-mode tbody tr:hover td {
+    background: #172033;
+}
+
+@media (max-width: 760px) {
+    .stats-grid,
+    .chart-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .filter-bar .form-control,
+    .filter-bar .btn,
+    .filter-bar a.btn {
+        width: 100%;
+    }
+}

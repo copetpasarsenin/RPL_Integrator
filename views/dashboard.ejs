@@ -76,7 +76,7 @@
     <div class="main-wrapper">
         <div class="topbar">
             <div class="breadcrumb">
-                <a href="/">Home</a><i data-lucide="chevron-right"></i>
+                <a href="/">Beranda</a><i data-lucide="chevron-right"></i>
                 <a href="/dashboard">Gateway</a><i data-lucide="chevron-right"></i>
                 <span style="color: var(--ink); font-weight: 700;" id="breadcrumb-current">
                     <%= section==='overview' ? 'Ringkasan' : section==='services' ? 'Service' : section==='routes'
@@ -95,7 +95,7 @@
                             <% for (const [role, info] of Object.entries(sessions)) { %>
                                 <a href="/switch-session/<%= role %>"
                                     class="session-tab <%= role === activeRole ? 'active' : '' %>"
-                                    title="Switch ke <%= info.username %> (<%= role %>)">
+                                    title="Pindah ke <%= info.username %> (<%= role %>)">
                                     <span class="session-dot session-dot-<%= role %>"></span>
                                     <%= info.username %> <span class="session-role-label">(<%= role %>)</span>
                                 </a>
@@ -130,17 +130,17 @@
                 <div class="page-subtitle">Ringkasan status gateway, traffic, dan aktivitas terkini.</div>
 
                 <div class="status-bar" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-                    <span><span class="status-dot online"></span> Gateway <strong>ONLINE</strong> —
+                    <span><span class="status-dot online"></span> Gateway <strong>AKTIF</strong> -
                     Uptime: <%= Math.floor(uptime / 3600) %>h <%= Math.floor((uptime % 3600) / 60) %>m</span>
                     <% if (isAdmin) { %>
-                        <button class="btn btn-outline btn-sm" onclick="seedDemoData()"><i data-lucide="database"></i> Seed Demo Data</button>
+                        <button class="btn btn-outline btn-sm" onclick="seedDemoData()"><i data-lucide="database"></i> Buat Data Demo</button>
                     <% } %>
                 </div>
 
                 <% if (alerts && alerts.length > 0) { %>
                     <div class="card" style="margin-bottom:16px;border-color:#fbbf24;background:#fffbeb">
                         <div class="card-header">
-                            <div class="card-title"><i data-lucide="bell-ring"></i> Active Alerts</div>
+                            <div class="card-title"><i data-lucide="bell-ring"></i> Peringatan Aktif</div>
                             <a href="/dashboard/alerts" class="btn btn-outline btn-sm">Lihat Semua</a>
                         </div>
                         <div class="table-wrapper">
@@ -176,7 +176,7 @@
                             <div class="stat-value">
                                 <%= totalRequests %>
                             </div>
-                            <div class="stat-desc">Success rate: <%= successRate %>%</div>
+                            <div class="stat-desc">Tingkat sukses: <%= successRate %>%</div>
                         </div>
                         <div class="stat-icon"><i data-lucide="bar-chart-3"></i></div>
                     </div>
@@ -186,14 +186,14 @@
                             <div class="stat-value">
                                 <%= totalConsumers %>
                             </div>
-                            <div class="stat-desc">Unique API consumers</div>
+                            <div class="stat-desc">Konsumen API unik</div>
                         </div>
                         <div class="stat-icon"><i data-lucide="users"></i></div>
                     </div>
                     <% if (canViewRevenue) { %>
                         <div class="stat-box stat-red">
                             <div>
-                                <div class="stat-title">Revenue</div>
+                                <div class="stat-title">Pendapatan</div>
                                 <div class="stat-value">Rp <%= totalRevenue.toLocaleString('id-ID') %>
                                 </div>
                                 <div class="stat-desc">Total fee gateway</div>
@@ -322,7 +322,7 @@
                                             <td><code><%= s.url_tujuan %></code></td>
                                             <td><code><%= s.health_path || '/' %></code></td>
                                             <td><span class="badge badge-<%= s.status_aktif ? 'info' : 'warning' %>">
-                                                    <%= s.status_aktif ? 'Active' : 'Inactive' %>
+                                                    <%= s.status_aktif ? 'Aktif' : 'Nonaktif' %>
                                                 </span></td>
                                             <td><span class="badge badge-<%= serviceHealth[s.nama_service] === 'Online' ? 'success' : serviceHealth[s.nama_service] === 'Down' ? 'error' : 'warning' %>">
                                                     <%= serviceHealth[s.nama_service] || 'Unknown' %>
@@ -378,8 +378,8 @@
                                 </div>
                                 <div class="form-group"><label class="form-label">Status</label><select id="svcStatus"
                                         class="form-control">
-                                        <option value="1">Active</option>
-                                        <option value="0">Inactive</option>
+                                        <option value="1">Aktif</option>
+                                        <option value="0">Nonaktif</option>
                                     </select></div>
                                 <div class="modal-footer"><button type="button" class="btn btn-outline"
                                         onclick="closeModal('serviceModal')">Batal</button><button type="submit"
@@ -489,10 +489,45 @@
                             <!-- ═══════════════════════════════════════════════════════ -->
                             <!-- EMPLOYEES -->
                             <% } else if (section==='employees' ) { %>
+                                <% const totalEmployees = employees.length; const adminEmployees = employees.filter(e => String(e.role || '').toLowerCase().includes('admin')).length; const operatorEmployees = employees.filter(e => String(e.role || '').toLowerCase().includes('operator')).length; const activeEmployees = employees.filter(e => String(e.status || '').toLowerCase() === 'active').length; %>
                                 <div class="page-title">Data Karyawan</div>
-                                <div class="page-subtitle">Data karyawan demo yang disertakan di repository dan seed database untuk kebutuhan presentasi.</div>
+                                <div class="page-subtitle">Data demo untuk menunjukkan bahwa repository menyertakan bukti karyawan dan role operasional.</div>
+
+                                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                                    <div class="stat-box stat-blue">
+                                        <div>
+                                            <div class="stat-title">Total Karyawan</div>
+                                            <div class="stat-value"><%= totalEmployees %></div>
+                                        </div>
+                                        <div class="stat-icon"><i data-lucide="id-card"></i></div>
+                                    </div>
+                                    <div class="stat-box stat-red">
+                                        <div>
+                                            <div class="stat-title">Admin</div>
+                                            <div class="stat-value"><%= adminEmployees %></div>
+                                        </div>
+                                        <div class="stat-icon"><i data-lucide="shield-check"></i></div>
+                                    </div>
+                                    <div class="stat-box stat-amber">
+                                        <div>
+                                            <div class="stat-title">Operator</div>
+                                            <div class="stat-value"><%= operatorEmployees %></div>
+                                        </div>
+                                        <div class="stat-icon"><i data-lucide="headphones"></i></div>
+                                    </div>
+                                    <div class="stat-box stat-green">
+                                        <div>
+                                            <div class="stat-title">Staff Aktif</div>
+                                            <div class="stat-value"><%= activeEmployees %></div>
+                                        </div>
+                                        <div class="stat-icon"><i data-lucide="check-circle-2"></i></div>
+                                    </div>
+                                </div>
 
                                 <div class="card">
+                                    <div class="card-header">
+                                        <div class="card-title"><i data-lucide="users"></i> Daftar Karyawan Demo</div>
+                                    </div>
                                     <div class="table-wrapper">
                                         <table>
                                             <thead>
@@ -511,11 +546,11 @@
                                                     <tr>
                                                         <td><strong><%= employee.employee_code %></strong></td>
                                                         <td><%= employee.name %></td>
-                                                        <td><%= employee.role %></td>
+                                                        <td><span class="badge badge-<%= String(employee.role || '').toLowerCase().includes('admin') ? 'error' : String(employee.role || '').toLowerCase().includes('operator') ? 'info' : 'warning' %>"><%= employee.role %></span></td>
                                                         <td><%= employee.department %></td>
                                                         <td><%= employee.email %></td>
                                                         <td><%= employee.phone || '-' %></td>
-                                                        <td><span class="badge badge-success"><%= employee.status %></span></td>
+                                                        <td><span class="badge badge-<%= String(employee.status || '').toLowerCase() === 'active' ? 'success' : 'warning' %>"><%= employee.status %></span></td>
                                                     </tr>
                                                 <% }) %>
                                                 <% if (employees.length===0) { %>
@@ -537,7 +572,7 @@
                                         <div class="plugin-card">
                                             <div class="plugin-header">
                                                 <div class="plugin-icon"><i data-lucide="<%= p.icon %>"></i></div><span
-                                                    class="badge badge-success">Enabled</span>
+                                                    class="badge badge-success">Aktif</span>
                                             </div>
                                             <div class="plugin-name">
                                                 <%= p.name %>
@@ -620,6 +655,15 @@
                                             </div>
                                             <div class="stat-icon"><i data-lucide="app-window"></i></div>
                                         </div>
+                                        <div class="stat-box stat-blue">
+                                            <div>
+                                                <div class="stat-title">Service Aktif</div>
+                                                <div class="stat-value">
+                                                    <%= serviceCount %>
+                                                </div>
+                                            </div>
+                                            <div class="stat-icon"><i data-lucide="server"></i></div>
+                                        </div>
                                     </div>
                                     <div class="chart-grid">
                                         <div class="card">
@@ -631,8 +675,7 @@
                                         </div>
                                         <div class="card">
                                             <div class="card-header">
-                                                <div class="card-title"><i data-lucide="trending-up"></i> Traffic
-                                                    Timeline (14 hari)</div>
+                                                <div class="card-title"><i data-lucide="trending-up"></i> Linimasa Traffic (14 hari)</div>
                                             </div>
                                             <div class="chart-box"><canvas id="tlChart"></canvas></div>
                                         </div>
@@ -671,7 +714,7 @@
                                                     <% }) %>
                                                     <% if (serviceEffectiveness.length===0) { %>
                                                         <tr>
-                                                            <td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Belum ada data shadow usage. Jalankan demo seed data atau request gateway.</td>
+                                                            <td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Belum ada data penggunaan shadow. Jalankan seed data demo atau kirim request gateway.</td>
                                                         </tr>
                                                     <% } %>
                                                 </tbody>
@@ -715,8 +758,8 @@
                                     <script>
                                         window.addEventListener('DOMContentLoaded', function () {
                                             var d = JSON.parse(document.getElementById('analyticsChartData').textContent);
-                                            new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: d.svcLabels, datasets: [{ label: 'Requests', data: d.svcData, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-                                            new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: d.tlLabels, datasets: [{ label: 'Requests', data: d.tlData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                                            new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: d.svcLabels, datasets: [{ label: 'Request', data: d.svcData, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+                                            new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: d.tlLabels, datasets: [{ label: 'Request', data: d.tlData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
                                             new Chart(document.getElementById('sourceAppChart'), { type: 'bar', data: { labels: d.sourceLabels, datasets: [{ label: 'Total penggunaan', data: d.sourceData, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
                                             new Chart(document.getElementById('effectivenessChart'), { type: 'bar', data: { labels: d.effectivenessLabels, datasets: [{ label: 'Tingkat sukses (%)', data: d.effectivenessData, backgroundColor: '#22c55e', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(value) { return value + '%'; } } } } } });
                                         });
@@ -866,7 +909,7 @@
                                                         <thead>
                                                             <tr>
                                                                 <th>ID</th>
-                                                                <th>Username</th>
+                                                                <th>Nama Pengguna</th>
                                                                 <th>Role</th>
                                                                 <th>Created</th>
                                                                 <th>Actions</th>
@@ -896,7 +939,7 @@
                                                                             onclick="editUser(this)"
                                                                             title="Edit"><i
                                                                                 data-lucide="pencil"></i></button>
-                                                                        <button class="btn-icon" data-user-id="<%= u.id %>" data-user-name="<%= u.username %>" onclick="openResetPwd(this)" title="Reset Password"><i data-lucide="key-round"></i></button>
+                                                                        <button class="btn-icon" data-user-id="<%= u.id %>" data-user-name="<%= u.username %>" onclick="openResetPwd(this)" title="Atur ulang kata sandi"><i data-lucide="key-round"></i></button>
                                                                         <% if (u.id !==currentUser.id) { %><button
                                                                                 class="btn-icon btn-icon-danger"
                                                                                 data-user-id="<%= u.id %>"
@@ -930,10 +973,10 @@
                                                     <form id="userForm" onsubmit="submitUser(event)">
                                                         <input type="hidden" id="userId">
                                                         <div class="form-group"><label
-                                                                class="form-label">Username</label><input type="text"
+                                                                class="form-label">Nama Pengguna</label><input type="text"
                                                                 id="userName" class="form-control" required></div>
                                                         <div class="form-group"><label class="form-label"
-                                                                id="pwdLabel">Password</label><input type="password"
+                                                                id="pwdLabel">Kata Sandi</label><input type="password"
                                                                 id="userPwd" class="form-control"></div>
                                                         <div class="form-group"><label
                                                                 class="form-label">Role</label><select id="userRole"
@@ -955,8 +998,8 @@
                                             <!-- REVENUE (admin only) -->
                                             <% } else if (section==='revenue' ) { %>
                                                 <div class="page-title" style="display: flex; justify-content: space-between; align-items: center;">
-                                                    Revenue
-                                                    <a href="/dashboard/revenue/export?start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline"><i data-lucide="download"></i> Export CSV</a>
+                                                    Pendapatan
+                                                    <a href="/dashboard/revenue/export?start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline"><i data-lucide="download"></i> Ekspor CSV</a>
                                                 </div>
                                                 <div class="page-subtitle">Pendapatan gateway dari fee layanan
                                                     integrasi. Data bersifat read-only (audit trail).</div>
@@ -1050,7 +1093,7 @@
                                                                                 <td><%= k.username %></td>
                                                                                 <td><code style="font-size:12px"><%= k.api_key_prefix %></code></td>
                                                                                 <td><%= k.usage_today || 0 %> / <%= k.daily_limit || 1000 %></td>
-                                                                                <td><span class="badge badge-<%= k.is_active ? 'success' : 'warning' %>"><%= k.is_active ? 'Aktif' : 'Revoked' %></span></td>
+                                                                                <td><span class="badge badge-<%= k.is_active ? 'success' : 'warning' %>"><%= k.is_active ? 'Aktif' : 'Dicabut' %></span></td>
                                                                                 <td style="font-size:12px;color:var(--muted)"><%= k.last_used ? new Date(k.last_used).toLocaleString('id-ID') : 'Belum digunakan' %></td>
                                                                                 <td style="font-size:12px;color:var(--muted)"><%= new Date(k.created_at).toLocaleString('id-ID') %></td>
                                                                                 <td><% if (k.is_active) { %><button class="btn-icon btn-icon-danger" onclick="revokeKey(<%= k.id %>)" title="Revoke"><i data-lucide="trash-2"></i></button><% } %></td>
@@ -1118,7 +1161,7 @@
                                                                         <option value="DELETE_SERVICE" <%=filterAction==='DELETE_SERVICE'?'selected':''%>>Delete Service</option>
                                                                         <option value="CREATE_USER" <%=filterAction==='CREATE_USER'?'selected':''%>>Create User</option>
                                                                         <option value="DELETE_USER" <%=filterAction==='DELETE_USER'?'selected':''%>>Delete User</option>
-                                                                        <option value="RESET_PASSWORD" <%=filterAction==='RESET_PASSWORD'?'selected':''%>>Reset Password</option>
+                                                                        <option value="RESET_PASSWORD" <%=filterAction==='RESET_PASSWORD'?'selected':''%>>Atur Ulang Kata Sandi</option>
                                                                         <option value="CREATE_API_KEY" <%=filterAction==='CREATE_API_KEY'?'selected':''%>>Create API Key</option>
                                                                         <option value="REVOKE_API_KEY" <%=filterAction==='REVOKE_API_KEY'?'selected':''%>>Revoke API Key</option>
                                                                         <option value="IMPORT_SERVICES" <%=filterAction==='IMPORT_SERVICES'?'selected':''%>>Import Service</option>
@@ -1127,7 +1170,7 @@
                                                                     <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
                                                                     <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> Filter</button>
                                                                     <% if (filterAction || dateStart || dateEnd) { %><a href="/dashboard/audit" class="btn btn-outline">Reset</a><% } %>
-                                                                    <a href="/dashboard/audit/export?action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Export CSV</a>
+                                                                    <a href="/dashboard/audit/export?action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Ekspor CSV</a>
                                                                 </form>
                                                             </div>
                                                             <div class="card">
@@ -1254,7 +1297,7 @@
                                                             <div class="plugin-grid" style="margin-bottom:16px">
                                                                 <% modules.forEach(m => { %>
                                                                     <div class="plugin-card">
-                                                                        <div class="plugin-header"><div class="plugin-icon"><i data-lucide="<%= m.icon %>"></i></div><span class="badge badge-success">Active</span></div>
+                                                                        <div class="plugin-header"><div class="plugin-icon"><i data-lucide="<%= m.icon %>"></i></div><span class="badge badge-success">Aktif</span></div>
                                                                         <div class="plugin-name"><%= m.name %></div>
                                                                         <div class="plugin-desc"><%= m.desc %></div>
                                                                     </div>
@@ -1283,7 +1326,7 @@
                                                                                     <td><code>/integrator/<%= s.nama_service %>/{path}</code></td>
                                                                                     <td><code><%= s.url_tujuan %></code></td>
                                                                                     <td><code><%= s.health_path || '/' %></code></td>
-                                                                                    <td><span class="badge badge-<%= s.status_aktif ? 'success' : 'warning' %>"><%= s.status_aktif ? 'Active' : 'Inactive' %></span></td>
+                                                                                    <td><span class="badge badge-<%= s.status_aktif ? 'success' : 'warning' %>"><%= s.status_aktif ? 'Aktif' : 'Nonaktif' %></span></td>
                                                                                 </tr>
                                                                             <% }) %>
                                                                         </tbody>

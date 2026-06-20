@@ -12,8 +12,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .hero-container {
-            width: min(100%, 1080px);
-            padding: 64px 28px;
+            width: min(100%, 1120px);
+            padding: 68px 28px 36px;
             color: #ffffff;
         }
 
@@ -49,7 +49,7 @@
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
             margin: 46px 0 0;
         }
@@ -68,12 +68,14 @@
         .feature-card:nth-child(2) { animation-delay: 0.4s; }
         .feature-card:nth-child(3) { animation-delay: 0.5s; }
         .feature-card:nth-child(4) { animation-delay: 0.6s; }
+        .feature-card:nth-child(5) { animation-delay: 0.7s; }
+        .feature-card:nth-child(6) { animation-delay: 0.8s; }
 
         .feature-card:hover {
             background: rgba(255, 255, 255, 0.14);
             border-color: rgba(255, 255, 255, 0.24);
             transform: translateY(-4px);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
         }
 
         .feature-icon {
@@ -123,6 +125,44 @@
             border-color: rgba(255, 255, 255, 0.32);
         }
 
+        .stack-strip {
+            margin-top: 42px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.055);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .stack-title {
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .stack-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stack-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #dbeafe;
+            font-weight: 700;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
         @media (max-width: 900px) {
             .hero-title {
                 font-size: 40px;
@@ -144,51 +184,61 @@
 <body class="no-sidebar">
     <div style="position:absolute;top:24px;right:24px;z-index:999"><button class="btn btn-outline" id="darkModeToggle" title="Ubah Mode Gelap" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button></div>
     <div class="hero-container">
-        <div class="hero-top" style="animation: fadeInUp 0.5s ease both;"><i data-lucide="network"></i> API Gateway Integrator</div>
-        <h1 class="hero-title" style="animation: fadeInUp 0.6s ease 0.08s both;">Gateway Integrator untuk Ekosistem UMKM</h1>
+        <div class="hero-top" style="animation: fadeInUp 0.5s ease both;"><i data-lucide="network"></i> RPL Integrator</div>
+        <h1 class="hero-title" style="animation: fadeInUp 0.6s ease 0.08s both;">Satu pintu untuk memantau dan menguji integrasi service</h1>
         <p class="hero-subtitle" style="animation: fadeInUp 0.6s ease 0.16s both;">
-            Middleware operasional untuk routing API, validasi token, logging request, dan pencatatan pendapatan gateway dalam satu panel yang mudah dipantau.
+            Gateway ini membantu tim mendemokan routing API, logging request, API key, tabel shadow, dan analitik penggunaan service dalam satu dashboard yang rapi.
         </p>
 
         <div class="action-buttons" style="animation: fadeInUp 0.6s ease 0.24s both;">
-            <a href="/login" class="btn btn-primary"><i data-lucide="log-in"></i> Login Dashboard</a>
+            <a href="/login" class="btn btn-primary"><i data-lucide="log-in"></i> Masuk ke Dashboard</a>
             <a href="/register" class="btn btn-outline-light"><i data-lucide="user-plus"></i> Daftar Akun</a>
             <a href="/api/status" class="btn btn-outline-light"><i data-lucide="activity"></i> Cek Status API</a>
         </div>
 
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon"><i data-lucide="shield-check"></i></div>
-                <div class="feature-title">Validasi JWT</div>
-                <div class="feature-desc">Request divalidasi sebelum diteruskan ke service tujuan.</div>
-            </div>
-            <div class="feature-card">
                 <div class="feature-icon"><i data-lucide="route"></i></div>
-                <div class="feature-title">Dynamic Routing</div>
-                <div class="feature-desc">Service tujuan dibaca dari tabel api_services, bukan hardcode.</div>
+                <div class="feature-title">Routing Gateway</div>
+                <div class="feature-desc">Request diteruskan ke service aktif berdasarkan konfigurasi database.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i data-lucide="coins"></i></div>
-                <div class="feature-title">Revenue Ledger</div>
-                <div class="feature-desc">Pendapatan fee dipisahkan dari metadata traffic request.</div>
+                <div class="feature-icon"><i data-lucide="clipboard-list"></i></div>
+                <div class="feature-title">Logging Request</div>
+                <div class="feature-desc">Setiap traffic gateway dicatat untuk audit, filter, dan kebutuhan demo.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i data-lucide="key-round"></i></div>
+                <div class="feature-title">Kunci API</div>
+                <div class="feature-desc">User dapat membuat API key dengan batas harian dan scope service.</div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i data-lucide="bar-chart-3"></i></div>
-                <div class="feature-title">Dashboard Statistik</div>
-                <div class="feature-desc">Admin dan operator mendapat insight sesuai role masing-masing.</div>
+                <div class="feature-title">Analitik</div>
+                <div class="feature-desc">Traffic, tingkat sukses, konsumen, dan tren penggunaan ditampilkan ringkas.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i data-lucide="database"></i></div>
+                <div class="feature-title">Tabel Shadow</div>
+                <div class="feature-desc">Penggunaan service dicatat ke tabel shadow_service_usage tanpa mengganggu response.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i data-lucide="id-card"></i></div>
+                <div class="feature-title">Data Karyawan</div>
+                <div class="feature-desc">Data demo EMP001 sampai EMP005 tersedia untuk bukti repository.</div>
             </div>
         </div>
-        <div style="margin-top: 48px; text-align: center; animation: fadeInUp 0.5s ease 0.7s both;">
-            <div style="font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;">Powered By Tech Stack</div>
-            <div style="display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; align-items: center;">
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="server" style="width:16px;height:16px"></i> Node.js</span>
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="layers" style="width:16px;height:16px"></i> Express</span>
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="database" style="width:16px;height:16px"></i> MySQL</span>
-                <span style="display: flex; align-items: center; gap: 8px; color: #bfdbfe; font-weight: 600; background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);"><i data-lucide="layout-template" style="width:16px;height:16px"></i> EJS Templates</span>
+        <div class="stack-strip" style="animation: fadeInUp 0.5s ease 0.7s both;">
+            <div class="stack-title">Teknologi yang digunakan</div>
+            <div class="stack-list">
+                <span class="stack-pill"><i data-lucide="server" style="width:16px;height:16px"></i> Node.js</span>
+                <span class="stack-pill"><i data-lucide="layers" style="width:16px;height:16px"></i> Express</span>
+                <span class="stack-pill"><i data-lucide="database" style="width:16px;height:16px"></i> MySQL</span>
+                <span class="stack-pill"><i data-lucide="layout-template" style="width:16px;height:16px"></i> EJS</span>
             </div>
         </div>
         <footer style="margin-top: 60px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div style="font-size: 13px; color: #64748b;">© 2026 Kelompok 7 — Tugas Besar RPL 2 ULBI</div>
+            <div style="font-size: 13px; color: #94a3b8;">2026 Kelompok 7 - Tugas Besar RPL 2 ULBI</div>
             <div style="display: flex; gap: 16px;">
                 <a href="/download-docs" style="font-size: 13px; color: #93c5fd; text-decoration: none;"><i data-lucide="file-text" style="width: 14px; height: 14px; vertical-align: middle;"></i> Dokumentasi</a>
                 <a href="/api/status" style="font-size: 13px; color: #93c5fd; text-decoration: none;"><i data-lucide="activity" style="width: 14px; height: 14px; vertical-align: middle;"></i> Status</a>
