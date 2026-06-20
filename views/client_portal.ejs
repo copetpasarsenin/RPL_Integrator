@@ -34,16 +34,16 @@
                 </a>
             <% } %>
             <a href="/client-portal" class="menu-item active">
-                <span class="menu-icon"><i data-lucide="zap"></i></span> API Simulator
+                <span class="menu-icon"><i data-lucide="zap"></i></span> Simulator API
             </a>
 
             <% if (currentUser.role !== 'user') { %>
-                <div class="menu-group">Gateway Services</div>
+                <div class="menu-group">Service Gateway</div>
                 <a href="/dashboard" class="menu-item">
-                    <span class="menu-icon"><i data-lucide="server"></i></span> Services
+                    <span class="menu-icon"><i data-lucide="server"></i></span> Service
                 </a>
                 <a href="/api/logs" class="menu-item" target="_blank">
-                    <span class="menu-icon"><i data-lucide="clipboard-list"></i></span> Request Logs
+                    <span class="menu-icon"><i data-lucide="clipboard-list"></i></span> Log Request
                 </a>
             <% } %>
 
@@ -61,10 +61,10 @@
                 <i data-lucide="chevron-right"></i>
                 <a href="#">Gateway System</a>
                 <i data-lucide="chevron-right"></i>
-                <span style="color: var(--ink); font-weight: 700;">API Simulator</span>
+                <span style="color: var(--ink); font-weight: 700;">Simulator API</span>
             </div>
             <div class="topbar-actions">
-                <button class="btn btn-outline" id="darkModeToggle" title="Toggle Dark Mode" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button>
+                <button class="btn btn-outline" id="darkModeToggle" title="Ubah Mode Gelap" style="border-radius: 50%; padding: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"><i data-lucide="moon"></i></button>
                 <% const sessions = allSessions || {}; const sessionCount = Object.keys(sessions).length; %>
                 <% if (sessionCount > 1) { %>
                     <div class="session-switcher">
@@ -84,13 +84,13 @@
                 <form method="POST" action="/logout" class="logout-form">
                     <input type="hidden" name="_csrf" value="<%= csrfToken || '' %>">
                     <input type="hidden" name="role" value="<%= currentUser.role %>">
-                    <button class="btn btn-outline"><i data-lucide="log-out"></i> Logout</button>
+                    <button class="btn btn-outline"><i data-lucide="log-out"></i> Keluar</button>
                 </form>
             </div>
         </div>
 
         <div class="content">
-            <div class="page-title">Client Portal & API Simulator</div>
+            <div class="page-title">Portal Client & Simulator API</div>
             <div class="page-subtitle">Generate token, test endpoint internal, dan simulasikan request ke service ekosistem UMKM.</div>
 
             <div class="stats-grid">
@@ -138,7 +138,7 @@
 
             <div class="card" style="border-color: #bfdbfe;">
                 <div class="card-header">
-                    <div class="card-title" style="color: var(--brand);"><i data-lucide="send"></i> API Simulator - Test 6 Aplikasi</div>
+                    <div class="card-title" style="color: var(--brand);"><i data-lucide="send"></i> Simulator API - Uji 6 Aplikasi</div>
                 </div>
 
                 <div class="form-group">

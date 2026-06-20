@@ -65,7 +65,7 @@ Data demo yang disediakan:
 
 Tabel `shadow_service_usage` mencatat jejak penggunaan service tanpa mengubah perilaku `request_logs`. Tabel ini menyimpan `request_log_id`, `source_app`, `service_name`, `endpoint`, `consumer_id`, `request_method`, `request_status`, `response_code`, dan `used_at`.
 
-Gateway mengisi `source_app` dari header `x-source-app` atau `x-consumer-app`, lalu fallback ke `unknown_app`. `consumer_id` diambil dari token user, body/query `user_id`, atau fallback `anonymous`. Kegagalan insert shadow table tidak menghentikan response gateway.
+Gateway mengisi `source_app` dari header `x-source-app` atau `x-consumer-app`, lalu memakai nilai cadangan `unknown_app`. `consumer_id` diambil dari token user, body/query `user_id`, atau nilai cadangan `anonymous`. Kegagalan insert tabel shadow tidak menghentikan response gateway.
 
 ## 5.1 Kebutuhan Fungsional Tambahan Berdasarkan Evaluasi Dosen
 
@@ -74,7 +74,7 @@ Gateway mengisi `source_app` dari header `x-source-app` atau `x-consumer-app`, l
 | FR-17 Endpoint Verification | Sistem harus menyediakan dokumentasi endpoint aktual yang tersedia. | Endpoint terverifikasi dicatat di README dan menu Dokumentasi API dashboard. |
 | FR-18 One-Click Demo Login | Demo login harus bisa dilakukan tanpa mengetik username/password. | Tombol `Login sebagai Admin`, `Login sebagai Operator`, dan `Login sebagai User` pada `/login`. |
 | FR-19 Employee Demo Data | Repository harus memuat data karyawan. | Tabel `employees`, seed EMP001 sampai EMP005, dan halaman `/dashboard/employees`. |
-| FR-20 Shadow Table | Sistem harus memiliki shadow table untuk jejak penggunaan service. | Tabel `shadow_service_usage` dibuat idempotent dan diisi dari gateway. |
+| FR-20 Shadow Table | Sistem harus memiliki tabel shadow untuk jejak penggunaan service. | Tabel `shadow_service_usage` dibuat idempotent dan diisi dari gateway. |
 | FR-21 Usage Analytics Diagram | Data aplikasi pengguna service harus tampil sebagai diagram efektivitas. | `/dashboard/analytics` menampilkan grafik aplikasi sumber dan bagian `Efektivitas Penggunaan Service`. |
 | FR-22 GitHub Repository Evidence | Repository harus menjadi bukti implementasi data, endpoint, dan revisi. | README, `config/init.sql`, `config/database.js`, dan dashboard berisi bukti implementasi. |
 
