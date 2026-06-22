@@ -1,0 +1,122 @@
+digraph ClassDiagramSebelumRefactoring {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    label="Class Diagram Sebelum Refactoring - RPL Integrator",
+    labelloc=t,
+    fontsize=18
+  ];
+
+  node [
+    shape=record,
+    style="rounded,filled",
+    fillcolor="#f7f7f7",
+    color="#333333",
+    fontname="Arial",
+    fontsize=10
+  ];
+
+  edge [
+    color="#444444",
+    fontname="Arial",
+    fontsize=9
+  ];
+
+  Server [
+    label="{ExpressServer\\n(server.js)|+ konfigurasi Express/EJS/Helmet/CSRF\\l+ login/register/logout/session\\l+ dashboard routes\\l+ CRUD service/user/API key\\l+ analytics/export/audit/docs\\l+ /api/status\\l+ health check scheduler\\l}"
+  ];
+
+  GatewayRouter [
+    label="{GatewayRouter\\n(routes/gateway.js)|+ routing_api/validasi/logging/biaya\\l+ proxyToService()\\l+ idempotency\\l+ request validation\\l+ shadow usage logging\\l+ revenue recording\\l+ gateway fee debit\\l}"
+  ];
+
+  DatabaseConfig [
+    label="{DatabaseConfig\\n(config/database.js)|+ mysql pool\\l+ create tables\\l+ schema migration helpers\\l+ seed api_services\\l+ seed users\\l+ seed employees\\l}"
+  ];
+
+  AuthMiddleware [
+    label="{AuthMiddleware\\n(middleware/auth.js)|+ password hash/verify\\l+ JWT session/API token\\l+ role guard\\l+ token revocation\\l+ audit logging\\l}"
+  ];
+
+  LoggerMiddleware [
+    label="{LoggerMiddleware\\n(middleware/logger.js)|+ insert request_logs\\l+ attach req.logId\\l+ update final response status\\l}"
+  ];
+
+  RateLimitMiddleware [
+    label="{RateLimitMiddleware\\n(middleware/rateLimitPerUser.js)|+ memory sliding window\\l+ optional DB rate limit\\l+ API key daily quota\\l}"
+  ];
+
+  DashboardView [
+    label="{DashboardView\\n(views/dashboard.ejs)|+ overview/services/routes/consumers\\l+ plugins/analytics/logs/users\\l+ revenue/API keys/audit/docs\\l+ inline JavaScript handlers\\l}"
+  ];
+
+  ClientPortalView [
+    label="{ClientPortalView\\n(views/client_portal.ejs)|+ token generation UI\\l+ integration demo\\l+ csrfFetch helper\\l}"
+  ];
+
+  UrlSafety [
+    label="{UrlSafety\\n(utils/urlSafety.js)|+ SSRF protection\\l+ safe DNS lookup\\l+ private IP checks\\l}"
+  ];
+
+  Users [
+    label="{users|id\\lusername\\lpassword_hash\\lrole\\lcreated_at\\l}"
+  ];
+
+  Employees [
+    label="{employees|employee_code\\lname\\lrole\\ldepartment\\lstatus\\l}"
+  ];
+
+  ApiServices [
+    label="{api_services|nama_service\\lurl_tujuan\\lhealth_path\\lstatus_aktif\\l}"
+  ];
+
+  RequestLogs [
+    label="{request_logs|waktu\\lip\\lmetode\\lurl_tujuan\\luser_id\\lservice_tujuan\\lstatus\\l}"
+  ];
+
+  ShadowUsage [
+    label="{shadow_service_usage|source_app\\lservice_name\\lendpoint\\lconsumer_id\\lrequest_status\\l}"
+  ];
+
+  RevenueLogs [
+    label="{revenue_logs|request_id\\lnominal_fee\\lwaktu\\l}"
+  ];
+
+  ApiKeys [
+    label="{api_keys|user_id\\lkey_name\\lapi_key_hash\\ldaily_limit\\lscopes\\l}"
+  ];
+
+  Server -> GatewayRouter [label="app.use('/integrator')"];
+  Server -> DatabaseConfig [label="pool/initDatabase"];
+  Server -> AuthMiddleware [label="auth, role, audit"];
+  Server -> RateLimitMiddleware [label="API limiter"];
+  Server -> DashboardView [label="res.render"];
+  Server -> ClientPortalView [label="res.render"];
+  Server -> UrlSafety [label="service URL checks"];
+
+  GatewayRouter -> DatabaseConfig [label="pool.query"];
+  GatewayRouter -> LoggerMiddleware [label="updates req.logId"];
+  GatewayRouter -> RateLimitMiddleware [label="used after auth"];
+  GatewayRouter -> UrlSafety [label="target URL validation"];
+
+  DatabaseConfig -> Users [label="create/seed"];
+  DatabaseConfig -> Employees [label="create/seed"];
+  DatabaseConfig -> ApiServices [label="create/seed"];
+  DatabaseConfig -> RequestLogs [label="create"];
+  DatabaseConfig -> ShadowUsage [label="create"];
+  DatabaseConfig -> RevenueLogs [label="create"];
+  DatabaseConfig -> ApiKeys [label="create"];
+
+  Server -> Users [label="SQL langsung"];
+  Server -> Employees [label="SQL langsung"];
+  Server -> ApiServices [label="SQL langsung"];
+  Server -> RequestLogs [label="SQL langsung"];
+  Server -> ShadowUsage [label="SQL langsung"];
+  Server -> RevenueLogs [label="SQL langsung"];
+  Server -> ApiKeys [label="SQL langsung"];
+
+  GatewayRouter -> ApiServices [label="lookup service"];
+  GatewayRouter -> RequestLogs [label="update log"];
+  GatewayRouter -> ShadowUsage [label="insert usage"];
+  GatewayRouter -> RevenueLogs [label="insert fee"];
+}

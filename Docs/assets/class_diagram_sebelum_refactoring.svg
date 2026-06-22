@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">Class Diagram Sebelum Refactoring - RPL Integrator</title>
+  <desc id="desc">Diagram visual fallback yang menggambarkan coupling saat ini antara server.js, gateway router, database config, view, middleware, dan tabel database.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#444"/>
+    </marker>
+    <style>
+      .title { font: 700 24px Arial, sans-serif; fill: #111; }
+      .box { fill: #f7f7f7; stroke: #333; stroke-width: 1.5; rx: 8; }
+      .db { fill: #eef5ff; stroke: #2b5f9e; stroke-width: 1.5; rx: 8; }
+      .head { font: 700 14px Arial, sans-serif; fill: #111; }
+      .body { font: 12px Arial, sans-serif; fill: #222; }
+      .edge { stroke: #444; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+      .label { font: 11px Arial, sans-serif; fill: #444; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="760" fill="#fff"/>
+  <text x="640" y="34" text-anchor="middle" class="title">Class Diagram Sebelum Refactoring</text>
+
+  <rect class="box" x="40" y="85" width="250" height="205"/>
+  <text class="head" x="165" y="112" text-anchor="middle">ExpressServer (server.js)</text>
+  <text class="body" x="58" y="140">+ konfigurasi Express/EJS/Helmet</text>
+  <text class="body" x="58" y="160">+ login/register/logout/session</text>
+  <text class="body" x="58" y="180">+ dashboard routes</text>
+  <text class="body" x="58" y="200">+ CRUD service/user/API key</text>
+  <text class="body" x="58" y="220">+ analytics/export/audit/docs</text>
+  <text class="body" x="58" y="240">+ /api/status</text>
+  <text class="body" x="58" y="260">+ health check scheduler</text>
+
+  <rect class="box" x="365" y="80" width="260" height="210"/>
+  <text class="head" x="495" y="107" text-anchor="middle">GatewayRouter (routes/gateway.js)</text>
+  <text class="body" x="383" y="135">+ routing_api/validasi/logging</text>
+  <text class="body" x="383" y="155">+ proxyToService()</text>
+  <text class="body" x="383" y="175">+ idempotency</text>
+  <text class="body" x="383" y="195">+ request validation</text>
+  <text class="body" x="383" y="215">+ shadow usage logging</text>
+  <text class="body" x="383" y="235">+ revenue recording</text>
+  <text class="body" x="383" y="255">+ gateway fee debit</text>
+
+  <rect class="box" x="365" y="355" width="260" height="170"/>
+  <text class="head" x="495" y="382" text-anchor="middle">DatabaseConfig (config/database.js)</text>
+  <text class="body" x="383" y="410">+ mysql pool</text>
+  <text class="body" x="383" y="430">+ create tables</text>
+  <text class="body" x="383" y="450">+ migration helpers</text>
+  <text class="body" x="383" y="470">+ seed api_services</text>
+  <text class="body" x="383" y="490">+ seed users/employees</text>
+
+  <rect class="box" x="40" y="345" width="250" height="120"/>
+  <text class="head" x="165" y="372" text-anchor="middle">DashboardView (dashboard.ejs)</text>
+  <text class="body" x="58" y="400">+ many dashboard sections</text>
+  <text class="body" x="58" y="420">+ inline JavaScript handlers</text>
+  <text class="body" x="58" y="440">+ single large EJS file</text>
+
+  <rect class="box" x="40" y="520" width="250" height="120"/>
+  <text class="head" x="165" y="547" text-anchor="middle">Middleware</text>
+  <text class="body" x="58" y="575">+ auth.js</text>
+  <text class="body" x="58" y="595">+ logger.js</text>
+  <text class="body" x="58" y="615">+ rateLimitPerUser.js</text>
+
+  <rect class="box" x="690" y="95" width="220" height="100"/>
+  <text class="head" x="800" y="122" text-anchor="middle">UrlSafety Utils</text>
+  <text class="body" x="708" y="150">+ SSRF protection</text>
+  <text class="body" x="708" y="170">+ safe DNS lookup</text>
+
+  <rect class="db" x="720" y="300" width="190" height="75"/>
+  <text class="head" x="815" y="327" text-anchor="middle">api_services</text>
+  <text class="body" x="738" y="352">nama_service, url_tujuan</text>
+
+  <rect class="db" x="720" y="405" width="190" height="75"/>
+  <text class="head" x="815" y="432" text-anchor="middle">request_logs</text>
+  <text class="body" x="738" y="457">status, response_status</text>
+
+  <rect class="db" x="720" y="510" width="190" height="75"/>
+  <text class="head" x="815" y="537" text-anchor="middle">revenue_logs</text>
+  <text class="body" x="738" y="562">request_id, nominal_fee</text>
+
+  <rect class="db" x="965" y="300" width="220" height="75"/>
+  <text class="head" x="1075" y="327" text-anchor="middle">shadow_service_usage</text>
+  <text class="body" x="983" y="352">source_app, service_name</text>
+
+  <rect class="db" x="965" y="405" width="220" height="75"/>
+  <text class="head" x="1075" y="432" text-anchor="middle">users / employees</text>
+  <text class="body" x="983" y="457">role, profile, department</text>
+
+  <rect class="db" x="965" y="510" width="220" height="75"/>
+  <text class="head" x="1075" y="537" text-anchor="middle">api_keys</text>
+  <text class="body" x="983" y="562">hash, prefix, daily_limit</text>
+
+  <path class="edge" d="M290 160 C320 155 335 150 365 145"/>
+  <text class="label" x="318" y="143">mount</text>
+  <path class="edge" d="M290 225 C330 280 340 350 365 405"/>
+  <text class="label" x="310" y="312">pool/init</text>
+  <path class="edge" d="M160 290 L160 345"/>
+  <text class="label" x="173" y="324">render</text>
+  <path class="edge" d="M165 520 L165 465"/>
+  <text class="label" x="178" y="498">auth/log</text>
+  <path class="edge" d="M625 185 L690 150"/>
+  <text class="label" x="645" y="152">validate URL</text>
+  <path class="edge" d="M625 245 C665 285 690 310 720 330"/>
+  <path class="edge" d="M625 260 C675 350 685 415 720 440"/>
+  <path class="edge" d="M625 270 C675 450 690 525 720 545"/>
+  <path class="edge" d="M625 250 C750 260 850 300 965 335"/>
+  <path class="edge" d="M625 440 L720 340"/>
+  <path class="edge" d="M625 445 L720 445"/>
+  <path class="edge" d="M625 455 C760 490 840 515 965 545"/>
+  <path class="edge" d="M625 470 C760 430 840 420 965 435"/>
+  <path class="edge" d="M290 255 C430 590 760 605 965 545"/>
+  <text class="label" x="676" y="626">SQL langsung dari server.js dan gateway router</text>
+</svg>

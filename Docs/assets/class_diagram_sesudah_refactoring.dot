@@ -1,0 +1,114 @@
+digraph ClassDiagramSesudahRefactoring {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    label="Class Diagram Sesudah Refactoring - Rancangan Refactoring",
+    labelloc=t,
+    fontsize=18
+  ];
+
+  node [
+    shape=record,
+    style="rounded,filled",
+    fillcolor="#f7f7f7",
+    color="#333333",
+    fontname="Arial",
+    fontsize=10
+  ];
+
+  edge [
+    color="#444444",
+    fontname="Arial",
+    fontsize=9
+  ];
+
+  App [
+    label="{App Bootstrap\\n(server.js)|+ konfigurasi middleware\\l+ mount routes\\l+ start health scheduler\\l}"
+  ];
+
+  DashboardRoutes [
+    label="{DashboardRoutes|+ map URL dashboard\\l+ panggil controller\\l}"
+  ];
+
+  ApiRoutes [
+    label="{ApiRoutes|+ map URL API admin/status\\l+ panggil controller\\l}"
+  ];
+
+  GatewayRoutes [
+    label="{GatewayRoutes|+ routing_api\\l+ validasi_request\\l+ proxy routes\\l}"
+  ];
+
+  DashboardController [
+    label="{DashboardController|+ overview()\\l+ analytics()\\l+ logs()\\l+ revenue()\\l+ docs()\\l}"
+  ];
+
+  ServiceController [
+    label="{ServiceController|+ list()\\l+ create()\\l+ update()\\l+ delete()\\l+ testHealth()\\l}"
+  ];
+
+  ApiKeyController [
+    label="{ApiKeyController|+ list()\\l+ create()\\l+ revoke()\\l+ resetQuota()\\l}"
+  ];
+
+  GatewayController [
+    label="{GatewayController|+ getRoutes()\\l+ validateRequest()\\l+ proxy()\\l+ getFeeSummary()\\l}"
+  ];
+
+  DashboardService [
+    label="{DashboardService|+ compose overview data\\l+ compose analytics data\\l+ export CSV rows\\l}"
+  ];
+
+  GatewayProxyService [
+    label="{GatewayProxyService|+ validate scope\\l+ forward request\\l+ apply idempotency\\l+ calculate gateway fee\\l}"
+  ];
+
+  HealthCheckService [
+    label="{HealthCheckService|+ test service URL\\l+ record health history\\l+ create/resolve alert\\l}"
+  ];
+
+  RevenueService [
+    label="{RevenueService|+ calculate fee\\l+ debit SmartBank\\l+ record revenue\\l}"
+  ];
+
+  RepositoryLayer [
+    label="{Repository Layer|ServiceRepository\\lUserRepository\\lRequestLogRepository\\lRevenueRepository\\lApiKeyRepository\\lShadowUsageRepository\\lHealthRepository\\l}"
+  ];
+
+  ValidatorHelper [
+    label="{Validator/Helper Layer|UrlSafetyValidator\\lServiceNameNormalizer\\lDateRangeParser\\lCsvExporter\\lScopeValidator\\l}"
+  ];
+
+  ViewLayer [
+    label="{View Layer|dashboard/index.ejs\\ldashboard/analytics.ejs\\ldashboard/services.ejs\\ldashboard/apikeys.ejs\\lclient_portal.ejs\\l}"
+  ];
+
+  Database [
+    label="{Database Tables|users\\lemployees\\lapi_services\\lrequest_logs\\lshadow_service_usage\\lrevenue_logs\\lapi_keys\\lapi_key_usage\\laudit_logs\\lservice_health_logs\\lsystem_alerts\\l}"
+  ];
+
+  App -> DashboardRoutes [label="mount"];
+  App -> ApiRoutes [label="mount"];
+  App -> GatewayRoutes [label="mount"];
+
+  DashboardRoutes -> DashboardController;
+  ApiRoutes -> ServiceController;
+  ApiRoutes -> ApiKeyController;
+  GatewayRoutes -> GatewayController;
+
+  DashboardController -> DashboardService;
+  DashboardController -> ViewLayer [label="render"];
+  ServiceController -> HealthCheckService;
+  ServiceController -> RepositoryLayer;
+  ApiKeyController -> RepositoryLayer;
+  GatewayController -> GatewayProxyService;
+
+  DashboardService -> RepositoryLayer;
+  GatewayProxyService -> RepositoryLayer;
+  GatewayProxyService -> ValidatorHelper;
+  GatewayProxyService -> RevenueService;
+  HealthCheckService -> RepositoryLayer;
+  HealthCheckService -> ValidatorHelper;
+  RevenueService -> RepositoryLayer;
+
+  RepositoryLayer -> Database [label="SQL tersentral"];
+}
