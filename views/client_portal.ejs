@@ -112,7 +112,7 @@
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <input type="text" id="tokenOutput" class="form-control" placeholder="Klik Generate untuk membuat token..." readonly style="font-family: Consolas, monospace; font-size: 12px; flex: 1;">
+                        <input type="text" id="tokenOutput" class="form-control key-display" placeholder="Klik Generate untuk membuat token..." readonly>
                         <button class="btn btn-primary" onclick="generateToken()"><i data-lucide="sparkles"></i> Generate</button>
                     </div>
                     <button class="btn btn-outline" style="width: 100%;" onclick="copyToken()"><i data-lucide="copy"></i> Salin Token</button>
@@ -173,7 +173,7 @@
                 </div>
 
 
-                <div id="tokenExpiryWarning" style="display:none;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid;margin-bottom:12px;font-size:13px;font-weight:500"></div>
+                <div id="tokenExpiryWarning" class="token-warning"></div>
                 <div class="action-grid">
                     <button onclick="jalankanDemo()" class="btn btn-success"><i data-lucide="play-circle"></i> Demo Simulasi Sukses</button>
                     <button onclick="jalankanLive()" class="btn btn-dark"><i data-lucide="radio-tower"></i> Live Request</button>
@@ -190,17 +190,17 @@
                     <div class="card-title"><i data-lucide="book-open"></i> Panduan Integrasi</div>
                 </div>
                 <div class="code-block">
-<span style="color: #fbbf24;">Base URL:</span> <span style="color: #67e8f9;">http://localhost:3000/integrator/{service}/{endpoint}</span>
+<span class="syntax-label">Base URL:</span> <span class="syntax-value">http://localhost:3000/integrator/{service}/{endpoint}</span>
 
-<span style="color: #fbbf24;">Header Wajib:</span>
-  <span style="color: #fbbf24;">Authorization:</span> <span style="color: #67e8f9;">Bearer [TOKEN_JWT]</span>
-  <span style="color: #fbbf24;">Content-Type:</span>  <span style="color: #67e8f9;">application/json</span>
+<span class="syntax-label">Header Wajib:</span>
+  <span class="syntax-label">Authorization:</span> <span class="syntax-value">Bearer [TOKEN_JWT]</span>
+  <span class="syntax-label">Content-Type:</span>  <span class="syntax-value">application/json</span>
 
-<span style="color: #fbbf24;">Body (POST):</span>
+<span class="syntax-label">Body (POST):</span>
 {
-  <span style="color: #fbbf24;">"user_id":</span>  <span style="color: #67e8f9;">"714240061"</span>,
-  <span style="color: #fbbf24;">"amount":</span>   <span style="color: #67e8f9;">50000</span>,
-  <span style="color: #fbbf24;">"parameter":</span> <span style="color: #67e8f9;">"deskripsi transaksi"</span>
+  <span class="syntax-label">"user_id":</span>  <span class="syntax-value">"714240061"</span>,
+  <span class="syntax-label">"amount":</span>   <span class="syntax-value">50000</span>,
+  <span class="syntax-label">"parameter":</span> <span class="syntax-value">"deskripsi transaksi"</span>
 }
                 </div>
             </div>
@@ -285,8 +285,45 @@
                 document.getElementById('feePreview').textContent = 'Rp ' + fee.toLocaleString('id-ID');
             }
         }
+        function preserveSidebarScroll() {
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (!sidebarMenu) return;
 
+            const storageKey = 'rplIntegrator.sidebar.scrollTop';
+            const activeItem = sidebarMenu.querySelector('.menu-item.active');
+            const savedScrollTop = sessionStorage.getItem(storageKey);
+
+            if (savedScrollTop !== null) {
+                sidebarMenu.scrollTop = Number(savedScrollTop) || 0;
+            }
+
+            const keepActiveVisible = () => {
+                if (!activeItem) return;
+
+                const menuRect = sidebarMenu.getBoundingClientRect();
+                const activeRect = activeItem.getBoundingClientRect();
+                const isAbove = activeRect.top < menuRect.top;
+                const isBelow = activeRect.bottom > menuRect.bottom;
+
+                if (isAbove || isBelow) {
+                    activeItem.scrollIntoView({ block: 'center', behavior: 'auto' });
+                }
+            };
+
+            requestAnimationFrame(keepActiveVisible);
+
+            const storeScroll = () => {
+                sessionStorage.setItem(storageKey, String(sidebarMenu.scrollTop));
+            };
+
+            sidebarMenu.addEventListener('scroll', storeScroll, { passive: true });
+            sidebarMenu.querySelectorAll('a.menu-item').forEach((item) => {
+                item.addEventListener('click', storeScroll);
+            });
+            window.addEventListener('beforeunload', storeScroll);
+        }
         window.addEventListener('DOMContentLoaded', () => {
+                        preserveSidebarScroll();
                         const toggle = document.getElementById('darkModeToggle');
             if (toggle) {
                 const isDark = localStorage.getItem('darkMode') === 'true';
@@ -328,42 +365,34 @@
             const token = document.getElementById('testToken').value || document.getElementById('tokenOutput').value;
             const warningEl = document.getElementById('tokenExpiryWarning');
             if (!warningEl) return;
-            if (!token || !token.includes('.')) { warningEl.style.display = 'none'; return; }
+            const setTokenWarning = (state, html) => {
+                warningEl.classList.remove('is-visible', 'token-warning-expired', 'token-warning-soon', 'token-warning-valid', 'token-warning-neutral');
+                if (!state) return;
+                warningEl.classList.add('is-visible', 'token-warning-' + state);
+                warningEl.innerHTML = html;
+                lucide.createIcons();
+            };
+            if (!token || !token.includes('.')) { setTokenWarning(); return; }
 
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                if (!payload.exp) { warningEl.style.display = 'none'; return; }
+                if (!payload.exp) { setTokenWarning(); return; }
 
                 const now = Math.floor(Date.now() / 1000);
                 const secsLeft = payload.exp - now;
 
                 if (secsLeft <= 0) {
-                    warningEl.style.display = 'flex';
-                    warningEl.style.background = '#fee2e2';
-                    warningEl.style.borderColor = '#ef4444';
-                    warningEl.style.color = '#991b1b';
-                    warningEl.innerHTML = '<i data-lucide="alert-circle" style="width:16px;height:16px"></i> Token sudah <strong>kadaluwarsa</strong>! Generate token baru.';
-                    lucide.createIcons();
+                    setTokenWarning('expired', '<i data-lucide="alert-circle" class="token-warning-icon"></i> Token sudah <strong>kadaluwarsa</strong>! Generate token baru.');
                 } else if (secsLeft < 1800) {
                     const mins = Math.ceil(secsLeft / 60);
-                    warningEl.style.display = 'flex';
-                    warningEl.style.background = '#fef3c7';
-                    warningEl.style.borderColor = '#f59e0b';
-                    warningEl.style.color = '#92400e';
-                    warningEl.innerHTML = '<i data-lucide="clock" style="width:16px;height:16px"></i> Token akan kadaluwarsa dalam <strong>' + mins + ' menit</strong>. Segera generate ulang!';
-                    lucide.createIcons();
+                    setTokenWarning('soon', '<i data-lucide="clock" class="token-warning-icon"></i> Token akan kadaluwarsa dalam <strong>' + mins + ' menit</strong>. Segera generate ulang!');
                 } else {
                     const hours = Math.floor(secsLeft / 3600);
                     const mins = Math.floor((secsLeft % 3600) / 60);
-                    warningEl.style.display = 'flex';
-                    warningEl.style.background = '#d1fae5';
-                    warningEl.style.borderColor = '#10b981';
-                    warningEl.style.color = '#065f46';
-                    warningEl.innerHTML = '<i data-lucide="check-circle" style="width:16px;height:16px"></i> Token valid &mdash; berlaku <strong>' + hours + 'h ' + mins + 'm</strong> lagi.';
-                    lucide.createIcons();
+                    setTokenWarning('valid', '<i data-lucide="check-circle" class="token-warning-icon"></i> Token valid &mdash; berlaku <strong>' + hours + 'h ' + mins + 'm</strong> lagi.');
                 }
             } catch(e) {
-                warningEl.style.display = 'none';
+                setTokenWarning();
             }
         }
 

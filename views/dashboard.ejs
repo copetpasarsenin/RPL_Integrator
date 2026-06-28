@@ -10,6 +10,56 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta name="csrf-token" content="<%= csrfToken || '' %>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        window.dashboardCharts = window.dashboardCharts || [];
+
+        function getDashboardChartTheme() {
+            var isDark = document.body.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true';
+            return {
+                text: isDark ? '#e5e7eb' : '#0f172a',
+                grid: isDark ? 'rgba(148, 163, 184, 0.22)' : '#e2e8f0',
+                tooltipBg: isDark ? '#0f172a' : '#ffffff',
+                tooltipBorder: isDark ? 'rgba(148, 163, 184, 0.25)' : '#e2e8f0'
+            };
+        }
+
+        function applyDashboardChartTheme(options) {
+            var theme = getDashboardChartTheme();
+            var themedOptions = options || {};
+            themedOptions.plugins = themedOptions.plugins || {};
+            themedOptions.plugins.legend = themedOptions.plugins.legend || {};
+            themedOptions.plugins.legend.labels = Object.assign({}, themedOptions.plugins.legend.labels, { color: theme.text });
+            themedOptions.plugins.tooltip = Object.assign({}, themedOptions.plugins.tooltip, {
+                backgroundColor: theme.tooltipBg,
+                titleColor: theme.text,
+                bodyColor: theme.text,
+                borderColor: theme.tooltipBorder,
+                borderWidth: 1
+            });
+            if (themedOptions.plugins.title) {
+                themedOptions.plugins.title.color = theme.text;
+            }
+            themedOptions.scales = themedOptions.scales || {};
+            ['x', 'y'].forEach(function (axis) {
+                themedOptions.scales[axis] = themedOptions.scales[axis] || {};
+                themedOptions.scales[axis].ticks = Object.assign({}, themedOptions.scales[axis].ticks, { color: theme.text });
+                themedOptions.scales[axis].grid = Object.assign({}, themedOptions.scales[axis].grid, { color: theme.grid });
+            });
+            return themedOptions;
+        }
+
+        function registerDashboardChart(chart) {
+            window.dashboardCharts.push(chart);
+            return chart;
+        }
+
+        function refreshDashboardChartsTheme() {
+            window.dashboardCharts.forEach(function (chart) {
+                applyDashboardChartTheme(chart.options);
+                chart.update();
+            });
+        }
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
@@ -61,7 +111,7 @@
                                 class="menu-icon"><i data-lucide="shield-alert"></i></span> Log Audit</a>
                         <% } %>
                         <a href="/dashboard/health-history" class="menu-item <%= section === 'health_history' ? 'active' : '' %>"><span
-                                class="menu-icon"><i data-lucide="heartbeat"></i></span> Riwayat Health</a>
+                                class="menu-icon"><i data-lucide="heart-pulse"></i></span> Riwayat Health</a>
 
             <div class="menu-group">Alat</div>
                             <a href="/client-portal" class="menu-item"><span class="menu-icon"><i
@@ -129,7 +179,7 @@
                 <div class="page-title">Ringkasan Gateway</div>
                 <div class="page-subtitle">Ringkasan status gateway, traffic, dan aktivitas terkini.</div>
 
-                <div class="status-bar" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+                <div class="status-bar">
                     <span><span class="status-dot online"></span> Gateway <strong>ONLINE</strong> —
                     Uptime: <%= Math.floor(uptime / 3600) %>h <%= Math.floor((uptime % 3600) / 60) %>m</span>
                     <% if (isAdmin) { %>
@@ -138,7 +188,7 @@
                 </div>
 
                 <% if (alerts && alerts.length > 0) { %>
-                    <div class="card" style="margin-bottom:16px;border-color:#fbbf24;background:#fffbeb">
+                    <div class="card card-alert">
                         <div class="card-header">
                             <div class="card-title"><i data-lucide="bell-ring"></i> Active Alerts</div>
                             <a href="/dashboard/alerts" class="btn btn-outline btn-sm">Lihat Semua</a>
@@ -149,8 +199,8 @@
                                     <% alerts.forEach(a => { %>
                                         <tr>
                                             <td><span class="badge badge-<%= a.severity === 'critical' ? 'error' : a.severity === 'warning' ? 'warning' : 'info' %>"><%= a.severity %></span></td>
-                                            <td><strong><%= a.title %></strong><div style="font-size:12px;color:var(--muted)"><%= a.message || '-' %></div></td>
-                                            <td style="font-size:12px;color:var(--muted)"><%= new Date(a.created_at).toLocaleString('id-ID') %></td>
+                                            <td><strong><%= a.title %></strong><div class="card-note-strong"><%= a.message || '-' %></div></td>
+                                            <td class="card-note-strong"><%= new Date(a.created_at).toLocaleString('id-ID') %></td>
                                         </tr>
                                     <% }) %>
                                 </tbody>
@@ -230,7 +280,7 @@
                                         <tr>
                                             <td style="color:var(--muted)">#<%= log.id %>
                                             </td>
-                                            <td style="font-size:12px;color:var(--muted)">
+                                            <td class="card-note-strong">
                                                 <%= log.waktu %>
                                             </td>
                                             <td>
@@ -261,17 +311,17 @@
                 <script>
                     window.addEventListener('DOMContentLoaded', function () {
                         var d = JSON.parse(document.getElementById('overviewChartData').textContent);
-                        new Chart(document.getElementById('overviewChart'), {
+                        registerDashboardChart(new Chart(document.getElementById('overviewChart'), {
                             type: 'line', data: { labels: d.labels, datasets: [{ label: 'Requests', data: d.data, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.35, fill: true }] },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-                        });
+                            options: applyDashboardChartTheme({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } })
+                        }));
                     });
                 </script>
 
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <!-- SERVICES -->
                 <% } else if (section==='services' ) { %>
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                    <div class="page-header-with-action">
                         <div>
                             <div class="page-title">Service</div>
                             <div class="page-subtitle">Kelola API service yang terdaftar di gateway.</div>
@@ -330,7 +380,7 @@
                                             <td>
                                                 <%= st.total_requests || 0 %>
                                             </td>
-                                            <td style="font-size:12px;color:var(--muted)">
+                                            <td class="card-note-strong">
                                                 <%= st.last_activity ? new
                                                     Date(st.last_activity).toLocaleString('id-ID') : '-' %>
                                             </td>
@@ -417,6 +467,13 @@
                                                 <td><span class="badge badge-success">JWT Bearer</span></td>
                                             </tr>
                                             <% }) %>
+                                                <% if (services.length===0) { %>
+                                                    <tr>
+                                                        <td colspan="5"
+                                                            style="text-align:center;padding:24px;color:var(--muted)">
+                                                            Belum ada rute. Tambahkan service untuk membuat route dinamis.</td>
+                                                    </tr>
+                                                    <% } %>
                                     </tbody>
                                 </table>
                             </div>
@@ -456,11 +513,11 @@
                                                     <td>
                                                         <%= c.total_requests %>
                                                     </td>
-                                                    <td style="font-size:12px;color:var(--muted)">
+                                                    <td class="card-note-strong">
                                                         <%= c.first_seen ? new
                                                             Date(c.first_seen).toLocaleString('id-ID') : '-' %>
                                                     </td>
-                                                    <td style="font-size:12px;color:var(--muted)">
+                                                    <td class="card-note-strong">
                                                         <%= c.last_seen ? new Date(c.last_seen).toLocaleString('id-ID')
                                                             : '-' %>
                                                     </td>
@@ -536,7 +593,7 @@
                                     <% plugins.forEach(p=> { %>
                                         <div class="plugin-card">
                                             <div class="plugin-header">
-                                                <div class="plugin-icon"><i data-lucide="<%= p.icon %>"></i></div><span
+                                                <div class="plugin-icon"><i data-lucide="<%= p.icon === 'heartbeat' ? 'heart-pulse' : p.icon %>"></i></div><span
                                                     class="badge badge-success">Enabled</span>
                                             </div>
                                             <div class="plugin-name">
@@ -569,7 +626,7 @@
                                             <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
                                             <button class="btn btn-primary" type="submit"><i data-lucide="filter"></i> Filter</button>
                                             <a href="/dashboard/analytics" class="btn btn-outline">Reset</a>
-                                            <a href="/dashboard/analytics/export?start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Ekspor CSV</a>
+                                            <a href="/dashboard/analytics/export?start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline filter-action-spacer"><i data-lucide="download"></i> Ekspor CSV</a>
                                         </form>
                                     </div>
                                     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
@@ -715,10 +772,10 @@
                                     <script>
                                         window.addEventListener('DOMContentLoaded', function () {
                                             var d = JSON.parse(document.getElementById('analyticsChartData').textContent);
-                                            new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: d.svcLabels, datasets: [{ label: 'Requests', data: d.svcData, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-                                            new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: d.tlLabels, datasets: [{ label: 'Requests', data: d.tlData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-                                            new Chart(document.getElementById('sourceAppChart'), { type: 'bar', data: { labels: d.sourceLabels, datasets: [{ label: 'Total penggunaan', data: d.sourceData, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
-                                            new Chart(document.getElementById('effectivenessChart'), { type: 'bar', data: { labels: d.effectivenessLabels, datasets: [{ label: 'Tingkat sukses (%)', data: d.effectivenessData, backgroundColor: '#22c55e', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(value) { return value + '%'; } } } } } });
+                                            registerDashboardChart(new Chart(document.getElementById('svcChart'), { type: 'bar', data: { labels: d.svcLabels, datasets: [{ label: 'Requests', data: d.svcData, backgroundColor: '#3b82f6', borderRadius: 6 }] }, options: applyDashboardChartTheme({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }) }));
+                                            registerDashboardChart(new Chart(document.getElementById('tlChart'), { type: 'line', data: { labels: d.tlLabels, datasets: [{ label: 'Requests', data: d.tlData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.35, fill: true }] }, options: applyDashboardChartTheme({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }) }));
+                                            registerDashboardChart(new Chart(document.getElementById('sourceAppChart'), { type: 'bar', data: { labels: d.sourceLabels, datasets: [{ label: 'Total penggunaan', data: d.sourceData, backgroundColor: '#f59e0b', borderRadius: 6 }] }, options: applyDashboardChartTheme({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }) }));
+                                            registerDashboardChart(new Chart(document.getElementById('effectivenessChart'), { type: 'bar', data: { labels: d.effectivenessLabels, datasets: [{ label: 'Tingkat sukses (%)', data: d.effectivenessData, backgroundColor: '#22c55e', borderRadius: 6 }] }, options: applyDashboardChartTheme({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: function(value) { return value + '%'; } } } } }) }));
                                         });
                                     </script>
 
@@ -757,7 +814,7 @@
                                                 <% if (filterService || filterStatus || filterSearch || dateStart || dateEnd) { %><a
                                                         href="/dashboard/logs" class="btn btn-outline">Reset</a>
                                                     <% } %>
-                                                <a href="/dashboard/logs/export?service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Ekspor CSV</a>
+                                                <a href="/dashboard/logs/export?service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline filter-action-spacer"><i data-lucide="download"></i> Ekspor CSV</a>
                                             </form>
                                         </div>
 
@@ -785,7 +842,7 @@
                                                             <tr>
                                                                 <td style="color:var(--muted)">#<%= log.id %>
                                                                 </td>
-                                                                <td style="font-size:12px;color:var(--muted)">
+                                                                <td class="card-note-strong">
                                                                     <%= log.waktu %>
                                                                 </td>
                                                                 <td style="font-size:12px">
@@ -797,7 +854,7 @@
                                                                 <td>
                                                                     <%= log.service_tujuan || '-' %>
                                                                 </td>
-                                                                <td style="font-family:monospace;font-size:12px">
+                                                                <td class="mono-small">
                                                                     <%= log.url_tujuan %>
                                                                 </td>
                                                                 <td>
@@ -823,7 +880,7 @@
                                                 <div class="pagination">
                                                     <% if (page> 1) { %><a
                                                             href="/dashboard/logs?page=<%= page - 1 %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>"
-                                                            class="btn btn-outline btn-sm">&laquo; Prev</a>
+                                                            class="btn btn-outline btn-sm">&laquo; Sebelumnya</a>
                                                         <% } %>
                                                             <% for (let i=1; i <=totalPages; i++) { %><a
                                                                     href="/dashboard/logs?page=<%= i %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>"
@@ -833,7 +890,7 @@
                                                                 <% } %>
                                                                     <% if (page < totalPages) { %><a
                                                                             href="/dashboard/logs?page=<%= page + 1 %>&service=<%= filterService %>&status=<%= filterStatus %>&search=<%= filterSearch %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>"
-                                                                            class="btn btn-outline btn-sm">Next
+                                                                            class="btn btn-outline btn-sm">Berikutnya
                                                                             &raquo;</a>
                                                                         <% } %>
                                                 </div>
@@ -843,8 +900,7 @@
                                         <!-- ═══════════════════════════════════════════════════════ -->
                                         <!-- USER MANAGEMENT (admin only) -->
                                         <% } else if (section==='users' ) { %>
-                                            <div
-                                                style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                                            <div class="page-header-with-action">
                                                 <div>
                                                     <div class="page-title">Manajemen User</div>
                                                     <div class="page-subtitle">Kelola akun admin, operator, dan user.
@@ -884,7 +940,7 @@
                                                                             class="badge badge-<%= u.role === 'admin' ? 'error' : u.role === 'operator' ? 'info' : 'success' %>">
                                                                             <%= u.role %>
                                                                         </span></td>
-                                                                    <td style="font-size:12px;color:var(--muted)">
+                                                                    <td class="card-note-strong">
                                                                         <%= u.created_at ? new
                                                                             Date(u.created_at).toLocaleString('id-ID')
                                                                             : '-' %>
@@ -914,7 +970,7 @@
                                                 <% if (totalPages > 1) { %>
                                                 <div class="pagination" style="padding: 16px; display: flex; gap: 8px; justify-content: center; align-items: center; border-top: 1px solid var(--border)">
                                                     <% if (page > 1) { %><a href="/dashboard/users?page=<%= page - 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Sebelumnya</a><% } %>
-                                                    <span class="pagination-info" style="color: var(--muted); font-size: 14px;">Page <%= page %> of <%= totalPages %></span>
+                                                    <span class="pagination-info" style="color: var(--muted); font-size: 14px;">Halaman <%= page %> dari <%= totalPages %></span>
                                                     <% if (page < totalPages) { %><a href="/dashboard/users?page=<%= page + 1 %>&search=<%= filterSearch %>" class="btn btn-outline btn-sm">Berikutnya</a><% } %>
                                                 </div>
                                                 <% } %>
@@ -1025,13 +1081,13 @@
                                                         <script>
                                                             window.addEventListener('DOMContentLoaded', function () {
                                                                 var d = JSON.parse(document.getElementById('revenueChartData').textContent);
-                                                                new Chart(document.getElementById('revChart'), { type: 'line', data: { labels: d.labels, datasets: [{ label: 'Pendapatan', data: d.data, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+                                                                registerDashboardChart(new Chart(document.getElementById('revChart'), { type: 'line', data: { labels: d.labels, datasets: [{ label: 'Pendapatan', data: d.data, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.35, fill: true }] }, options: applyDashboardChartTheme({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }) }));
                                                             });
                                                         </script>
 
                                                         <!-- API KEYS -->
                                                         <% } else if (section==='apikeys') { %>
-                                                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+                                                            <div class="page-header-with-action">
                                                                 <div>
                                                                     <div class="page-title">Kunci API</div>
                                                                     <div class="page-subtitle">Kelola API Key untuk akses gateway tanpa login. Gunakan prefix <code>igw_</code> sebagai Bearer token.</div>
@@ -1051,8 +1107,8 @@
                                                                                 <td><code style="font-size:12px"><%= k.api_key_prefix %></code></td>
                                                                                 <td><%= k.usage_today || 0 %> / <%= k.daily_limit || 1000 %></td>
                                                                                 <td><span class="badge badge-<%= k.is_active ? 'success' : 'warning' %>"><%= k.is_active ? 'Aktif' : 'Revoked' %></span></td>
-                                                                                <td style="font-size:12px;color:var(--muted)"><%= k.last_used ? new Date(k.last_used).toLocaleString('id-ID') : 'Belum digunakan' %></td>
-                                                                                <td style="font-size:12px;color:var(--muted)"><%= new Date(k.created_at).toLocaleString('id-ID') %></td>
+                                                                                <td class="card-note-strong"><%= k.last_used ? new Date(k.last_used).toLocaleString('id-ID') : 'Belum digunakan' %></td>
+                                                                                <td class="card-note-strong"><%= new Date(k.created_at).toLocaleString('id-ID') %></td>
                                                                                 <td><% if (k.is_active) { %><button class="btn-icon btn-icon-danger" onclick="revokeKey(<%= k.id %>)" title="Revoke"><i data-lucide="trash-2"></i></button><% } %></td>
                                                                             </tr>
                                                                         <% }) %>
@@ -1068,8 +1124,8 @@
                                                                     <div class="form-group"><label class="form-label">Nama Key</label><input type="text" id="newKeyName" class="form-control" placeholder="cth: Production Key, Testing Key..."></div>
                                                                     <div class="form-group"><label class="form-label">Limit Harian</label><input type="number" id="newKeyDailyLimit" class="form-control" min="1" max="100000" value="1000"></div>
                                                                     <div id="newKeyResult" style="margin:12px 0;display:none">
-                                                                        <div class="card-note" style="background:#fef08a;color:#713f12;border-color:#fbbf24;font-weight:600">⚠️ Salin API Key berikut sekarang! Tidak akan ditampilkan lagi.</div>
-                                                                        <input type="text" id="newKeyValue" class="form-control" readonly style="font-family:monospace;font-size:12px;margin-top:8px">
+                                                                        <div class="warning-box-critical">⚠️ Salin API Key berikut sekarang! Tidak akan ditampilkan lagi.</div>
+                                                                        <input type="text" id="newKeyValue" class="form-control key-display" readonly>
                                                                         <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="copyNewKey()"><i data-lucide="copy"></i> Salin Key</button>
                                                                     </div>
                                                                     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('newKeyModal')">Tutup</button><button class="btn btn-success" onclick="generateApiKey()"><i data-lucide="sparkles"></i> Generate</button></div>
@@ -1127,7 +1183,7 @@
                                                                     <input type="date" name="end" class="form-control" value="<%= dateEnd || '' %>" style="width:auto">
                                                                     <button class="btn btn-primary" type="submit"><i data-lucide="search"></i> Filter</button>
                                                                     <% if (filterAction || dateStart || dateEnd) { %><a href="/dashboard/audit" class="btn btn-outline">Reset</a><% } %>
-                                                                    <a href="/dashboard/audit/export?action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline" style="margin-left:auto"><i data-lucide="download"></i> Export CSV</a>
+                                                                    <a href="/dashboard/audit/export?action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline filter-action-spacer"><i data-lucide="download"></i> Export CSV</a>
                                                                 </form>
                                                             </div>
                                                             <div class="card">
@@ -1139,11 +1195,11 @@
                                                                         <% auditLogs.forEach(log => { %>
                                                                             <tr>
                                                                                 <td style="color:var(--muted)">#<%= log.id %></td>
-                                                                                <td style="font-size:12px;color:var(--muted)"><%= new Date(log.created_at).toLocaleString('id-ID') %></td>
+                                                                                <td class="card-note-strong"><%= new Date(log.created_at).toLocaleString('id-ID') %></td>
                                                                                 <td><strong><%= log.username || '-' %></strong></td>
                                                                                 <td><span class="badge badge-<%= log.action.includes('DELETE')||log.action.includes('REVOKE') ? 'error' : log.action.includes('CREATE')||log.action.includes('IMPORT') ? 'success' : 'info' %>"><%= log.action %></span></td>
                                                                                 <td><%= log.resource || '-' %></td>
-                                                                                <td style="font-size:12px;color:var(--muted)"><%= log.detail || '-' %></td>
+                                                                                <td class="card-note-strong"><%= log.detail || '-' %></td>
                                                                                 <td style="font-size:12px"><%= log.ip || '-' %></td>
                                                                             </tr>
                                                                         <% }) %>
@@ -1153,9 +1209,9 @@
                                                                 </div>
                                                                 <% if (totalPages > 1) { %>
                                                                 <div style="padding:16px;display:flex;gap:8px;justify-content:center;border-top:1px solid var(--border)">
-                                                                    <% if (page > 1) { %><a href="/dashboard/audit?page=<%= page-1 %>&action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline btn-sm">Prev</a><% } %>
-                                                                    <span style="color:var(--muted);font-size:14px">Page <%= page %> of <%= totalPages %></span>
-                                                                    <% if (page < totalPages) { %><a href="/dashboard/audit?page=<%= page+1 %>&action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline btn-sm">Next</a><% } %>
+                                                                    <% if (page > 1) { %><a href="/dashboard/audit?page=<%= page-1 %>&action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline btn-sm">Sebelumnya</a><% } %>
+                                                                    <span style="color:var(--muted);font-size:14px">Halaman <%= page %> dari <%= totalPages %></span>
+                                                                    <% if (page < totalPages) { %><a href="/dashboard/audit?page=<%= page+1 %>&action=<%= filterAction %>&start=<%= dateStart || '' %>&end=<%= dateEnd || '' %>" class="btn btn-outline btn-sm">Berikutnya</a><% } %>
                                                                 </div>
                                                                 <% } %>
                                                             </div>
@@ -1178,7 +1234,7 @@
                                                                     <div>
                                                                         <div class="stat-title"><%= svc %></div>
                                                                         <div class="stat-value"><%= pct %>%</div>
-                                                                        <div class="stat-desc">Uptime 24 jam &bull; <span style="color:#86efac"><%= s.online %> Online</span> / <span style="color:#fca5a5"><%= s.down %> Down</span></div>
+                                                                        <div class="stat-desc">Uptime 24 jam &bull; <span class="uptime-good"><%= s.online %> Online</span> / <span class="uptime-bad"><%= s.down %> Down</span></div>
                                                                     </div>
                                                                     <div class="stat-icon"><i data-lucide="<%= pct >= 90 ? 'check-circle' : pct >= 50 ? 'alert-circle' : 'x-circle' %>"></i></div>
                                                                 </div>
@@ -1197,7 +1253,7 @@
                                                                             <tr>
                                                                                 <td><strong><%= log.service_name %></strong></td>
                                                                                 <td><span class="badge badge-<%= log.status==='Online'?'success':'error' %>"><%= log.status %></span></td>
-                                                                                <td style="font-size:12px;color:var(--muted)"><%= new Date(log.checked_at).toLocaleString('id-ID') %></td>
+                                                                                <td class="card-note-strong"><%= new Date(log.checked_at).toLocaleString('id-ID') %></td>
                                                                             </tr>
                                                                         <% }) %>
                                                                         <% if (healthLogs.length === 0) { %><tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted)">Belum ada data.</td></tr><% } %>
@@ -1230,9 +1286,9 @@
                                                                                     <td><span class="badge badge-<%= a.severity === 'critical' ? 'error' : a.severity === 'warning' ? 'warning' : 'info' %>"><%= a.severity %></span></td>
                                                                                     <td><code><%= a.source %></code></td>
                                                                                     <td><strong><%= a.title %></strong></td>
-                                                                                    <td style="font-size:12px;color:var(--muted)"><%= a.message || '-' %></td>
+                                                                                    <td class="card-note-strong"><%= a.message || '-' %></td>
                                                                                     <td><span class="badge badge-<%= a.is_resolved ? 'success' : 'error' %>"><%= a.is_resolved ? 'Resolved' : 'Open' %></span></td>
-                                                                                    <td style="font-size:12px;color:var(--muted)"><%= new Date(a.created_at).toLocaleString('id-ID') %></td>
+                                                                                    <td class="card-note-strong"><%= new Date(a.created_at).toLocaleString('id-ID') %></td>
                                                                                     <td><% if (!a.is_resolved) { %><button class="btn btn-outline btn-sm" onclick="resolveAlert(<%= a.id %>)"><i data-lucide="check-circle"></i> Resolve</button><% } %></td>
                                                                                 </tr>
                                                                             <% }) %>
@@ -1242,9 +1298,9 @@
                                                                 </div>
                                                                 <% if (totalPages > 1) { %>
                                                                     <div class="pagination">
-                                                                        <% if (page > 1) { %><a href="/dashboard/alerts?page=<%= page - 1 %>&status=<%= alertStatus %>" class="btn btn-outline btn-sm">Prev</a><% } %>
-                                                                        <span style="color:var(--muted);font-size:14px">Page <%= page %> of <%= totalPages %></span>
-                                                                        <% if (page < totalPages) { %><a href="/dashboard/alerts?page=<%= page + 1 %>&status=<%= alertStatus %>" class="btn btn-outline btn-sm">Next</a><% } %>
+                                                                        <% if (page > 1) { %><a href="/dashboard/alerts?page=<%= page - 1 %>&status=<%= alertStatus %>" class="btn btn-outline btn-sm">Sebelumnya</a><% } %>
+                                                                        <span style="color:var(--muted);font-size:14px">Halaman <%= page %> dari <%= totalPages %></span>
+                                                                        <% if (page < totalPages) { %><a href="/dashboard/alerts?page=<%= page + 1 %>&status=<%= alertStatus %>" class="btn btn-outline btn-sm">Berikutnya</a><% } %>
                                                                     </div>
                                                                 <% } %>
                                                             </div>
@@ -1291,10 +1347,13 @@
                                                                 </div>
                                                             </div>
                                                         <% } else if (section==='docs') { %>
-                                                            <div class="page-title">API Documentation</div>
+                                                            <div class="page-title">Dokumentasi API</div>
                                                             <div class="page-subtitle">Referensi endpoint gateway, format autentikasi, dan route service dinamis.</div>
+                                                            <div class="card surface-note" style="margin-bottom:16px">
+                                                                Endpoint utama bersifat statis, sedangkan route dinamis mengikuti data service aktif di database.
+                                                            </div>
                                                             <div class="card" style="margin-bottom:16px">
-                                                                <div class="card-header"><div class="card-title"><i data-lucide="key-round"></i> Authentication</div></div>
+                                                                <div class="card-header"><div class="card-title"><i data-lucide="key-round"></i> Autentikasi</div></div>
                                                                 <div class="card-note">Gunakan header <code>Authorization: Bearer &lt;JWT atau API Key igw_...&gt;</code>. JWT bisa dibuat dari Simulator API, sedangkan API Key dikelola dari menu Kunci API.</div>
                                                             </div>
                                                             <div class="card" style="margin-bottom:16px">
@@ -1330,6 +1389,11 @@
                                                                                     <td><span class="badge badge-<%= s.status_aktif ? 'success' : 'warning' %>"><%= s.status_aktif ? 'Aktif' : 'Nonaktif' %></span></td>
                                                                                 </tr>
                                                                             <% }) %>
+                                                                            <% if (services.length===0) { %>
+                                                                                <tr>
+                                                                                    <td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Belum ada route dinamis. Tambahkan service untuk menampilkan gateway URL.</td>
+                                                                                </tr>
+                                                                            <% } %>
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -1524,8 +1588,46 @@
             } catch(e) { alert('Gagal: ' + e.message); }
             finally { btn.disabled = false; btn.textContent = 'Import'; }
         }
+        function preserveSidebarScroll() {
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (!sidebarMenu) return;
+
+            const storageKey = 'rplIntegrator.sidebar.scrollTop';
+            const activeItem = sidebarMenu.querySelector('.menu-item.active');
+            const savedScrollTop = sessionStorage.getItem(storageKey);
+
+            if (savedScrollTop !== null) {
+                sidebarMenu.scrollTop = Number(savedScrollTop) || 0;
+            }
+
+            const keepActiveVisible = () => {
+                if (!activeItem) return;
+
+                const menuRect = sidebarMenu.getBoundingClientRect();
+                const activeRect = activeItem.getBoundingClientRect();
+                const isAbove = activeRect.top < menuRect.top;
+                const isBelow = activeRect.bottom > menuRect.bottom;
+
+                if (isAbove || isBelow) {
+                    activeItem.scrollIntoView({ block: 'center', behavior: 'auto' });
+                }
+            };
+
+            requestAnimationFrame(keepActiveVisible);
+
+            const storeScroll = () => {
+                sessionStorage.setItem(storageKey, String(sidebarMenu.scrollTop));
+            };
+
+            sidebarMenu.addEventListener('scroll', storeScroll, { passive: true });
+            sidebarMenu.querySelectorAll('a.menu-item').forEach((item) => {
+                item.addEventListener('click', storeScroll);
+            });
+            window.addEventListener('beforeunload', storeScroll);
+        }
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            preserveSidebarScroll();
 
             const toggle = document.getElementById('darkModeToggle');
             if (toggle) {
@@ -1545,6 +1647,7 @@
 
                     newToggle.innerHTML = dark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
                     if (window.lucide) lucide.createIcons();
+                    if (window.refreshDashboardChartsTheme) refreshDashboardChartsTheme();
                 });
             } else {
                 if (localStorage.getItem('darkMode') === 'true') {
