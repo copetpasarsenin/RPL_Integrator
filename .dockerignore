@@ -1,6 +1,10 @@
 node_modules
 npm-debug.log
-.git
 .env
-Docs/images/*.png
-ATS
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+Docs/*.docx
+coverage
+.DS_Store

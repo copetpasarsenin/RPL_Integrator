@@ -15,6 +15,49 @@ npm start
 
 Saat server berjalan, `config/database.js` akan membuat tabel yang belum ada dan melakukan seed data demo secara idempotent.
 
+## Menjalankan dengan Docker Desktop
+
+Mode ini menjalankan aplikasi dan MySQL sepenuhnya di Docker, sehingga MySQL dari Laragon tidak diperlukan.
+
+Persyaratan:
+
+- Docker Desktop sudah terpasang dan sedang berjalan.
+- Untuk Windows, disarankan memakai Docker Desktop dengan backend WSL 2.
+
+Jalankan aplikasi:
+
+```bash
+docker compose up --build
+```
+
+Buka URL berikut setelah container aktif:
+
+```text
+http://localhost:3000/login
+http://localhost:3000/api/status
+```
+
+Akun demo:
+
+```text
+admin / admin123
+operator / operator123
+user / user123
+```
+
+Hentikan container tanpa menghapus data database:
+
+```bash
+docker compose down
+```
+
+Data MySQL disimpan di Docker volume bernama `mysql_data`, sehingga data tetap ada setelah container dihentikan. Untuk reset database dan menghapus volume:
+
+```bash
+docker compose down -v
+```
+
+
 ## Akun Demo Satu Klik
 
 Halaman `GET /login` menyediakan tombol demo tanpa mengetik username/password:

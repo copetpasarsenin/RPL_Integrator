@@ -4,31 +4,22 @@ services:
     container_name: rpl-integrator-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-rpl_root_password}"
       MYSQL_DATABASE: "${DB_NAME:-rpl_integrator}"
-    ports:
-      - "3307:3306"
+      MYSQL_USER: "${DB_USER:-rpl_user}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-rpl_password}"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./config/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-uroot",
-          "-p${MYSQL_ROOT_PASSWORD}",
-        ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER:-rpl_user}", "-p${DB_PASSWORD:-rpl_password}"]
       interval: 10s
       timeout: 5s
       retries: 10
 
-  gateway:
+  app:
     build: .
-    container_name: rpl-integrator-gateway
+    container_name: rpl-integrator-app
     restart: unless-stopped
     depends_on:
       mysql:
@@ -36,22 +27,25 @@ services:
     environment:
       PORT: "${PORT:-3000}"
       NODE_ENV: "${NODE_ENV:-development}"
-      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env with at least 32 random characters}"
       DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: "${DB_USER:-root}"
-      DB_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_USER: "${DB_USER:-rpl_user}"
+      DB_PASSWORD: "${DB_PASSWORD:-rpl_password}"
       DB_NAME: "${DB_NAME:-rpl_integrator}"
-      GATEWAY_FEE_PERCENT: "${GATEWAY_FEE_PERCENT:-0.5}"
+      JWT_SECRET: "${JWT_SECRET:-rpl_integrator_very_secure_demo_jwt_secret_key_32_chars}"
+      JWT_ISSUER: "${JWT_ISSUER:-rpl-integrator}"
+      JWT_API_AUDIENCE: "${JWT_API_AUDIENCE:-integrator-api}"
       SEED_DEFAULT_USERS: "${SEED_DEFAULT_USERS:-true}"
-      SMARTBANK_URL: http://host.docker.internal:3001
-      MARKETPLACE_URL: http://host.docker.internal:3002
-      POS_URL: http://host.docker.internal:3003
-      SUPPLIERHUB_URL: http://host.docker.internal:3004
-      LOGISTIKITA_URL: http://host.docker.internal:3005
-      UMKM_INSIGHT_URL: http://host.docker.internal:3006
-      USER_RATE_WINDOW_MS: 60000
-      USER_RATE_MAX: 30
+      TRUST_PROXY: "${TRUST_PROXY:-false}"
+      GATEWAY_FEE_PERCENT: "${GATEWAY_FEE_PERCENT:-0.5}"
+      SMARTBANK_URL: "${SMARTBANK_URL:-http://host.docker.internal:3001}"
+      MARKETPLACE_URL: "${MARKETPLACE_URL:-http://host.docker.internal:3002}"
+      POS_URL: "${POS_URL:-http://host.docker.internal:3003}"
+      SUPPLIERHUB_URL: "${SUPPLIERHUB_URL:-http://host.docker.internal:3004}"
+      LOGISTIKITA_URL: "${LOGISTIKITA_URL:-http://host.docker.internal:3005}"
+      UMKM_INSIGHT_URL: "${UMKM_INSIGHT_URL:-http://host.docker.internal:3006}"
+      USER_RATE_WINDOW_MS: "60000"
+      USER_RATE_MAX: "30"
     ports:
       - "3000:3000"
 
