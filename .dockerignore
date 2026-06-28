@@ -13,3 +13,5 @@ coverage
 *.old
 .DS_Store
 Thumbs.db
+
+.env
