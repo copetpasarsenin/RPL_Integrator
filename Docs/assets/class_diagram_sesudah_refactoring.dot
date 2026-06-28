@@ -1,47 +1,142 @@
-﻿digraph AfterRefactoring {
-  graph [rankdir=LR, bgcolor="white", label="Class Diagram Sesudah Refactoring - Suggested Design", labelloc="t", fontsize=18, fontname="Calibri"];
-  node [shape=record, style="rounded,filled", fillcolor="#EAF2F8", color="#1F4E79", fontname="Calibri", fontsize=10];
-  edge [color="#555555", arrowsize=0.8, fontname="Calibri", fontsize=9];
+digraph AfterRefactoring {
+  graph [
+    rankdir=TB, bgcolor="white", compound=true,
+    label="Class Diagram Sesudah Refactoring\nRekomendasi Arsitektur Berlapis",
+    labelloc="t", fontsize=16, fontname="Calibri Bold",
+    ranksep=0.6, nodesep=0.35, pad=0.3,
+    size="11,7!"
+  ];
+  node [shape=record, style="rounded,filled", fillcolor="#EBF5FB",
+        color="#2C3E50", fontname="Calibri", fontsize=9, penwidth=1.2];
+  edge [color="#7F8C8D", arrowsize=0.7, fontname="Calibri", fontsize=8];
 
-  AppBootstrap [label="{AppBootstrap|+ configureExpress()\l+ registerMiddleware()\l+ registerRoutes()\l+ startHealthScheduler()\l}"];
-  DashboardRouter [label="{DashboardRouter|+ map dashboard routes\l+ delegate to controllers\l}"];
-  DashboardController [label="{DashboardController|+ overview()\l+ services()\l+ analytics()\l+ revenue()\l}"];
-  GatewayRouter [label="{GatewayRouter|+ map /integrator routes\l+ call GatewayController\l}"];
-  GatewayController [label="{GatewayController|+ handleProxy(req,res)\l+ build response DTO\l}"];
-  GatewayService [label="{GatewayService|+ resolveService()\l+ forwardRequest()\l+ calculateFee()\l+ handleIdempotency()\l}"];
-  AuthService [label="{AuthService|+ verifySession()\l+ verifyApiToken()\l+ issueToken()\l+ revokeToken()\l}"];
-  RateLimitService [label="{RateLimitService|+ checkApiKeyQuota()\l+ checkUserLimit()\l}"];
-  HealthService [label="{HealthService|+ checkServices()\l+ saveHistory()\l+ raiseAlert()\l}"];
-  ServiceRepository [label="{ServiceRepository|+ findActiveService()\l+ listServices()\l+ updateService()\l}", fillcolor="#EAFAF1"];
-  LogRepository [label="{LogRepository|+ saveRequestLog()\l+ saveRevenueLog()\l+ saveAuditLog()\l}", fillcolor="#EAFAF1"];
-  UserRepository [label="{UserRepository|+ findUser()\l+ listUsers()\l+ saveApiKey()\l}", fillcolor="#EAFAF1"];
-  UrlValidator [label="{UrlValidator|+ assertSafeHttpUrl()\l+ createSafeLookup()\l}"];
-  DashboardPresenter [label="{DashboardPresenter|+ formatOverview()\l+ formatCharts()\l+ formatTables()\l}"];
-  ViewPartials [label="{EJS Partials|sidebar.ejs\loverview.ejs\lanalytics.ejs\lrevenue.ejs\l}", fillcolor="#F4ECF7"];
-  MySQL [label="{MySQL Database|users\lapi_services\lrequest_logs\lrevenue_logs\lapi_keys\l}", fillcolor="#FDEBD0"];
-  Upstream [label="{Upstream Services|SmartBank\lMarketplace\lPOS\lSupplierHub\lLogistiKita\lUMKM Insight\l}", fillcolor="#EAFAF1"];
+  /* ── Layer 1: Entry ── */
+  subgraph cluster_entry {
+    label="Entry"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
 
+    AppBootstrap [label="{AppBootstrap|+ configureExpress()\l+ registerMiddleware()\l+ registerRoutes()\l+ startServer()\l}"];
+  }
+
+  /* ── Layer 2: Routing ── */
+  subgraph cluster_routing {
+    label="Routing"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    DashboardRouter [label="{DashboardRouter|+ mapDashboardRoutes()\l+ delegateToController()\l}"];
+    GatewayRouter [label="{GatewayRouter|+ mapIntegratorRoutes()\l+ delegateToController()\l}"];
+  }
+
+  /* ── Layer 3: Middleware ── */
+  subgraph cluster_middleware {
+    label="Middleware"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    AuthMiddleware [label="{AuthMiddleware|+ verifyToken()\l+ attachUserContext()\l}"];
+    AuthzMiddleware [label="{AuthorizationMiddleware|+ requireRole(roles)\l+ guardAccess()\l}"];
+  }
+
+  /* ── Layer 4: Controllers ── */
+  subgraph cluster_controllers {
+    label="Controllers"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    DashboardCtrl [label="{DashboardController|+ overview(req, res)\l+ services(req, res)\l+ analytics(req, res)\l+ revenue(req, res)\l+ users(req, res)\l}"];
+    GatewayCtrl [label="{GatewayController|+ handleProxy(req, res)\l+ routingApi(req, res)\l+ validasiRequest(req, res)\l}"];
+  }
+
+  /* ── Layer 5: Services ── */
+  subgraph cluster_services {
+    label="Services (Business Logic)"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    DashboardSvc [label="{DashboardService|+ getOverviewStats()\l+ getAnalyticsData()\l}"];
+    GatewaySvc [label="{GatewayService|+ resolveService()\l+ forwardRequest()\l+ handleIdempotency()\l}"];
+    ApiKeySvc [label="{ApiKeyService|+ createKey()\l+ revokeKey()\l+ validateKey()\l}"];
+    AuditSvc [label="{AuditService|+ logAction()\l+ getAuditTrail()\l}"];
+    RevenueSvc [label="{RevenueService|+ calculateFee()\l+ recordRevenue()\l}"];
+    RateLimitSvc [label="{RateLimitService|+ checkUserLimit()\l+ checkApiKeyQuota()\l}"];
+    HealthSvc [label="{HealthService|+ checkAllServices()\l+ saveHistory()\l+ raiseAlert()\l}"];
+    SeedSvc [label="{SeedService|+ seedUsers()\l+ seedServices()\l+ seedEmployees()\l}"];
+  }
+
+  /* ── Layer 6: Repositories & Infrastructure ── */
+  subgraph cluster_repos {
+    label="Repositories & Infrastructure"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    ServiceRepo [label="{ServiceRepository|+ findActive()\l+ listAll()\l+ save()\l}", fillcolor="#E8F8F5"];
+    LogRepo [label="{LogRepository|+ saveRequestLog()\l+ saveRevenueLog()\l+ saveAuditLog()\l}", fillcolor="#E8F8F5"];
+    UserRepo [label="{UserRepository|+ findByUsername()\l+ listAll()\l+ save()\l}", fillcolor="#E8F8F5"];
+    ApiKeyRepo [label="{ApiKeyRepository|+ findByPrefix()\l+ save()\l+ updateUsage()\l}", fillcolor="#E8F8F5"];
+    DbConn [label="{DatabaseConnection|+ getPool()\l+ query()\l+ transaction()\l}", fillcolor="#E8F8F5"];
+    SchemaMigrator [label="{SchemaMigrator|+ createTables()\l+ runMigrations()\l}", fillcolor="#E8F8F5"];
+  }
+
+  /* ── Layer 7a: Presentation ── */
+  subgraph cluster_presentation {
+    label="Presentation"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    Presenter [label="{DashboardPresenter|+ formatOverview()\l+ formatChartData()\l+ formatTables()\l}", fillcolor="#F4ECF7"];
+    Partials [label="{EJS Partials / Static JS|_sidebar.ejs\l_overview.ejs\l_analytics.ejs\l_revenue.ejs\ldashboard.js\l}", fillcolor="#F4ECF7"];
+  }
+
+  /* ── Layer 7b: External ── */
+  subgraph cluster_external {
+    label="External"; style="rounded,filled";
+    fillcolor="#F8F9FA"; color="#BDC3C7"; fontname="Calibri"; fontsize=11;
+
+    UpstreamAdapter [label="{UpstreamServiceAdapter|+ forwardGet()\l+ forwardPost()\l+ healthCheck()\l}", fillcolor="#EAFAF1"];
+    MySQL [label="{MySQL Database|Connection Pool\l}", fillcolor="#FDEBD0"];
+  }
+
+  /* ── Edges: clean layered flow ── */
+
+  // Entry -> Routing
   AppBootstrap -> DashboardRouter;
   AppBootstrap -> GatewayRouter;
-  DashboardRouter -> DashboardController;
-  DashboardController -> DashboardPresenter;
-  DashboardController -> ServiceRepository;
-  DashboardController -> LogRepository;
-  DashboardController -> UserRepository;
-  DashboardController -> ViewPartials;
-  GatewayRouter -> GatewayController;
-  GatewayController -> AuthService;
-  GatewayController -> RateLimitService;
-  GatewayController -> GatewayService;
-  GatewayService -> ServiceRepository;
-  GatewayService -> LogRepository;
-  GatewayService -> UrlValidator;
-  GatewayService -> Upstream;
-  AuthService -> UserRepository;
-  RateLimitService -> UserRepository;
-  HealthService -> ServiceRepository;
-  HealthService -> LogRepository;
-  ServiceRepository -> MySQL;
-  LogRepository -> MySQL;
-  UserRepository -> MySQL;
+  AppBootstrap -> AuthMiddleware [style=dashed, label="register"];
+  AppBootstrap -> AuthzMiddleware [style=dashed, label="register"];
+
+  // Routing -> Controllers
+  DashboardRouter -> DashboardCtrl;
+  GatewayRouter -> GatewayCtrl;
+
+  // Controllers -> Services
+  DashboardCtrl -> DashboardSvc;
+  DashboardCtrl -> Presenter;
+  GatewayCtrl -> GatewaySvc;
+  GatewayCtrl -> AuditSvc;
+
+  // Services -> Services (internal)
+  GatewaySvc -> RevenueSvc;
+  GatewaySvc -> UpstreamAdapter;
+
+  // Services -> Repositories
+  DashboardSvc -> ServiceRepo;
+  DashboardSvc -> LogRepo;
+  DashboardSvc -> UserRepo;
+  GatewaySvc -> ServiceRepo;
+  GatewaySvc -> LogRepo;
+  ApiKeySvc -> ApiKeyRepo;
+  AuditSvc -> LogRepo;
+  RevenueSvc -> LogRepo;
+  RateLimitSvc -> ApiKeyRepo;
+  HealthSvc -> ServiceRepo;
+  SeedSvc -> ServiceRepo;
+  SeedSvc -> UserRepo;
+
+  // Presentation
+  Presenter -> Partials;
+
+  // Repositories -> Infrastructure
+  ServiceRepo -> DbConn;
+  LogRepo -> DbConn;
+  UserRepo -> DbConn;
+  ApiKeyRepo -> DbConn;
+  SchemaMigrator -> DbConn;
+
+  // Infrastructure -> External
+  DbConn -> MySQL;
 }
