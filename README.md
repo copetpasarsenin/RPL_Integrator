@@ -6,8 +6,32 @@ Project ini disiapkan untuk kebutuhan pembelajaran, demo, evaluasi RPL, dan pres
 
 ---
 
+## Konteks Akademik
+
+| Informasi | Keterangan |
+|---|---|
+| Mata Kuliah | [isi sesuai data] |
+| Dosen Pengampu | [isi sesuai data] |
+| Kelas | [isi sesuai data] |
+| Semester/Tahun Akademik | [isi sesuai data] |
+| Institusi | [isi sesuai data] |
+
+---
+
+## Tim Pengembang
+
+| Nama | NPM/NIM | Role | Kontribusi |
+|---|---|---|---|
+| [Nama Anggota 1] | [NPM/NIM] | [Role] | [Kontribusi] |
+
+> Lengkapi data tim dengan informasi asli sebelum pengumpulan. Jangan menggunakan nama, NPM/NIM, atau kontribusi yang belum terverifikasi.
+
+---
+
 ## Daftar Isi
 
+- [Konteks Akademik](#konteks-akademik)
+- [Tim Pengembang](#tim-pengembang)
 - [Tujuan Project](#tujuan-project)
 - [Fitur Utama](#fitur-utama)
 - [Tech Stack](#tech-stack)
@@ -23,6 +47,7 @@ Project ini disiapkan untuk kebutuhan pembelajaran, demo, evaluasi RPL, dan pres
 - [Screenshots](#screenshots)
 - [Troubleshooting](#troubleshooting)
 - [Catatan Evaluasi](#catatan-evaluasi)
+- [Testing / Validasi](#testing--validasi)
 
 ---
 
@@ -342,15 +367,18 @@ Catatan penting:
 
 Belum ada screenshot yang ditambahkan ke repository ini.
 
-Placeholder yang disarankan untuk dokumentasi GitHub:
+Screenshot untuk dokumentasi harus menggunakan tangkapan layar asli dari aplikasi yang berjalan lokal. Jika belum tersedia, biarkan bagian ini sebagai daftar kebutuhan dokumentasi.
 
 | Tampilan | Screenshot |
 |---|---|
 | Landing Page | Tambahkan screenshot asli landing page. |
-| Login Demo | Tambahkan screenshot asli halaman login. |
-| Dashboard Monitoring | Tambahkan screenshot asli dashboard. |
+| Login | Tambahkan screenshot asli halaman login. |
+| Dashboard | Tambahkan screenshot asli dashboard. |
+| Services | Tambahkan screenshot asli halaman services. |
+| Analytics | Tambahkan screenshot asli halaman analytics. |
+| Revenue | Tambahkan screenshot asli halaman revenue. |
 | Client Portal | Tambahkan screenshot asli client portal. |
-| Analytics | Tambahkan screenshot asli grafik analytics. |
+| Dokumentasi API | Tambahkan screenshot asli dokumentasi API. |
 
 > Jangan menambahkan screenshot palsu. Gunakan gambar asli dari aplikasi yang berjalan lokal.
 
@@ -385,14 +413,19 @@ Beberapa kebutuhan tambahan yang sudah diakomodasi dalam implementasi dan dokume
 
 ---
 
-## Validasi Project
+## Testing / Validasi
 
-Perintah validasi yang relevan:
+Validasi project dapat dilakukan secara bertahap sesuai kebutuhan review:
+
+- `npm run check` digunakan untuk memvalidasi sintaks JavaScript pada file-file utama yang ditentukan di repository.
+- `npm test` dapat digunakan jika test tersedia dan dikonfigurasi di repository.
+- Validasi Docker dapat dilakukan dengan menjalankan aplikasi lalu mengecek endpoint status.
 
 ```bash
 npm run check
+npm test
 docker compose up --build -d
 curl.exe http://localhost:3000/api/status
 ```
 
-Dokumentasi ini hanya menjelaskan fitur yang tersedia dari kode saat ini dan tidak mengubah logic aplikasi, frontend UI, backend, Docker configuration, database schema, route, auth, atau perilaku API.
+Dokumentasi ini tidak menyatakan cakupan test detail kecuali sudah diverifikasi dari file test aktual. Perubahan dokumentasi juga tidak mengubah logic aplikasi, frontend UI, backend, Docker configuration, database schema, route, auth, atau perilaku API.
