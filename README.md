@@ -10,11 +10,11 @@ Project ini disiapkan untuk kebutuhan pembelajaran, demo, evaluasi RPL, dan pres
 
 | Informasi | Keterangan |
 |---|---|
-| Mata Kuliah | [isi sesuai data] |
-| Dosen Pengampu | [isi sesuai data] |
-| Kelas | [isi sesuai data] |
-| Semester/Tahun Akademik | [isi sesuai data] |
-| Institusi | [isi sesuai data] |
+| Mata Kuliah | RPL 2 |
+| Dosen Pengampu | M. Yusril Helmi Setyawan, S.Kom., M.Kom. |
+| Kelas | 2C-D4-TI |
+| Semester/Tahun Akademik | Genap 2025/2026 |
+| Institusi/Kampus | D4 Teknik Informatika - ULBI |
 
 ---
 
@@ -22,7 +22,8 @@ Project ini disiapkan untuk kebutuhan pembelajaran, demo, evaluasi RPL, dan pres
 
 | Nama | NPM/NIM | Role | Kontribusi |
 |---|---|---|---|
-| [Nama Anggota 1] | [NPM/NIM] | [Role] | [Kontribusi] |
+| Zidan Hairra Ramadhan | 714240061 | Backend Developer | Pengembangan backend, integrasi API gateway, dan validasi fitur. |
+| Richard Firmansyah | 714240047 | Backend Developer | Pengembangan backend, dokumentasi project, validasi Docker, dan pengujian aplikasi. |
 
 > Lengkapi data tim dengan informasi asli sebelum pengumpulan. Jangan menggunakan nama, NPM/NIM, atau kontribusi yang belum terverifikasi.
 
@@ -110,12 +111,14 @@ RPL_Integrator/
 ├── middleware/
 │   ├── auth.js              # Session/JWT auth dan role guard
 │   ├── csrf.js              # Proteksi CSRF untuk form/API internal
+│   ├── logger.js            # Middleware pencatatan request gateway
 │   └── rateLimitPerUser.js  # Rate limit request gateway per user/API consumer
 ├── routes/
 │   └── gateway.js           # Routing utama API gateway `/integrator`
 ├── tests/
 │   └── *.test.js            # Test struktur dan integrasi aplikasi
 ├── utils/
+│   ├── gatewayUtils.js      # Helper/utilitas gateway
 │   └── urlSafety.js         # Helper validasi URL target service
 ├── views/
 │   ├── dashboard.ejs        # Dashboard monitoring dan admin panel
